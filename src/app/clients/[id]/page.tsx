@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { Client, Budget, CategoryWithSpend, LineItem, formatCurrency, formatDate, getBudgetStatus, parseNumericInput, sanitizeNumericString } from '@/lib/types';
+import { Client, Budget, CategoryWithSpend, LineItem, formatCurrency, formatDate, formatPercent, getBudgetStatus, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import CategoryTable from '@/components/budget/CategoryTable';
 import BudgetSummary from '@/components/budget/BudgetSummary';
 
@@ -25,6 +25,10 @@ export default function ClientBudgetPage() {
   const [, setBudgetUpdateLoading] = useState(false);
   const [budgetUpdateError, setBudgetUpdateError] = useState<string | null>(null);
   const budgetInputRef = useRef<HTMLInputElement>(null);
+
+  // Sticky header state
+  const [showStickyHeader, setShowStickyHeader] = useState(false);
+  const clientInfoRef = useRef<HTMLDivElement>(null);
 
   const supabase = createClient();
 
@@ -93,6 +97,20 @@ export default function ClientBudgetPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Track scroll to show/hide sticky header
+  useEffect(() => {
+    const handleScroll = () => {
+      if (clientInfoRef.current) {
+        const rect = clientInfoRef.current.getBoundingClientRect();
+        // Show sticky header when the client info section is scrolled out of view
+        setShowStickyHeader(rect.bottom < 60);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Handle budget update
   const handleBudgetEdit = () => {
@@ -180,6 +198,22 @@ export default function ClientBudgetPage() {
   const budgetStatus = getBudgetStatus(Number(client.total_budget), totalSpent);
   const remaining = Number(client.total_budget) - totalSpent;
 
+  // Calculate allocation percentage and status
+  const totalBudget = Number(client.total_budget);
+  const totalAllocationPercent = totalBudget > 0 ? (totalTarget / totalBudget) * 100 : 0;
+
+  const getAllocationStatus = () => {
+    if (totalAllocationPercent < 99) {
+      return { label: 'Under-allocated', color: 'text-yellow-600' };
+    } else if (totalAllocationPercent <= 101) {
+      return { label: 'Fully allocated', color: 'text-green-600' };
+    } else {
+      return { label: 'Over-allocated', color: 'text-red-600' };
+    }
+  };
+
+  const allocationStatus = getAllocationStatus();
+
   const statusColors = {
     green: 'bg-green-100 text-green-800',
     yellow: 'bg-yellow-100 text-yellow-800',
@@ -225,9 +259,43 @@ export default function ClientBudgetPage() {
         </div>
       </header>
 
+      {/* Sticky Budget Summary Header */}
+      <div
+        className={`fixed top-0 left-0 right-0 z-40 bg-white border-b border-slate-200 shadow-sm transition-transform duration-200 ${
+          showStickyHeader ? 'translate-y-0' : '-translate-y-full'
+        }`}
+      >
+        <div className="max-w-6xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between gap-6">
+            <span className="font-semibold text-slate-900 truncate">{client.name}</span>
+            <div className="flex items-center gap-6 text-sm">
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-500">Budget:</span>
+                <span className="font-medium text-slate-900">{formatCurrency(totalBudget)}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-500">Spent:</span>
+                <span className="font-medium text-slate-900">{formatCurrency(totalSpent)}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-500">Remaining:</span>
+                <span className={`font-medium ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {remaining >= 0 ? '+' : '-'}{formatCurrency(Math.abs(remaining))}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-500">Allocated:</span>
+                <span className="font-medium text-slate-900">{formatPercent(totalAllocationPercent)}</span>
+                <span className={`text-xs ${allocationStatus.color}`}>({allocationStatus.label})</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Client Info */}
-        <div className="bg-white border border-slate-200 rounded-lg p-6 mb-6">
+        <div ref={clientInfoRef} className="bg-white border border-slate-200 rounded-lg p-6 mb-6">
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-2xl font-bold text-slate-900">{client.name}</h2>
