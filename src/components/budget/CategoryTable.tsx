@@ -59,8 +59,8 @@ export default function CategoryTable({
 
   return (
     <>
-      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden print:rounded-none print:border-slate-300">
+        <table className="w-full print:text-sm">
           <thead className="bg-slate-50">
             <tr className="border-b border-slate-200">
               <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
@@ -115,18 +115,18 @@ export default function CategoryTable({
           </tbody>
           {categories.length > 0 && (
             <tfoot className="bg-slate-50 border-t border-slate-200">
-              <tr>
+              <tr className="break-inside-avoid">
                 <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900`}>Total</td>
-                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right`}>
+                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right whitespace-nowrap`}>
                   {formatCurrency(totalAllocated)}
                 </td>
-                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-right`}>
+                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-right whitespace-nowrap`}>
                   <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-sm font-medium ${allocationStatus.bg} ${allocationStatus.color}`}>
                     {formatPercent(totalAllocationPercent)}
                     <span className="text-xs font-normal">({allocationStatus.label})</span>
                   </span>
                 </td>
-                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right`}>
+                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right whitespace-nowrap`}>
                   {formatCurrency(categories.reduce((sum, cat) => sum + cat.actual_spend, 0))}
                 </td>
                 <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'}`}></td>

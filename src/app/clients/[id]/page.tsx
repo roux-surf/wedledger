@@ -260,8 +260,8 @@ export default function ClientBudgetPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200">
+    <div className="min-h-screen bg-slate-50 print:bg-white print:min-h-0">
+      <header className="bg-white border-b border-slate-200 print:hidden">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/dashboard" className="text-slate-600 hover:text-slate-900">
@@ -294,7 +294,7 @@ export default function ClientBudgetPage() {
 
       {/* Sticky Budget Summary Header */}
       <div
-        className={`fixed top-0 left-0 right-0 z-40 transition-transform duration-200 ${
+        className={`fixed top-0 left-0 right-0 z-40 transition-transform duration-200 print:hidden ${
           showStickyHeader ? 'translate-y-0' : '-translate-y-full'
         } ${isClientView ? 'bg-slate-900 text-white border-b border-slate-700' : 'bg-white border-b border-slate-200 shadow-sm'}`}
       >
@@ -328,23 +328,23 @@ export default function ClientBudgetPage() {
         </div>
       </div>
 
-      <main className={`max-w-6xl mx-auto px-4 ${isClientView ? 'py-10' : 'py-8'}`}>
+      <main className={`max-w-6xl mx-auto px-4 print:px-0 print:max-w-none ${isClientView ? 'py-10 print:py-6' : 'py-8 print:py-6'}`}>
         {isClientView ? (
           <>
             {/* Client View: Prominent Budget Summary */}
-            <div ref={clientInfoRef} className="bg-slate-900 text-white rounded-lg p-8 mb-8">
+            <div ref={clientInfoRef} className="bg-slate-900 text-white rounded-lg print:rounded-none p-8 mb-8 break-inside-avoid">
               <div className="grid grid-cols-3 gap-8 text-center">
                 <div>
                   <p className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-2">Total Budget</p>
-                  <p className="text-4xl font-bold">{formatCurrency(totalBudget)}</p>
+                  <p className="text-4xl font-bold whitespace-nowrap">{formatCurrency(totalBudget)}</p>
                 </div>
                 <div className="border-x border-slate-700">
                   <p className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-2">Total Committed</p>
-                  <p className="text-4xl font-bold">{formatCurrency(totalSpent)}</p>
+                  <p className="text-4xl font-bold whitespace-nowrap">{formatCurrency(totalSpent)}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-2">Remaining</p>
-                  <p className={`text-4xl font-bold ${remaining >= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  <p className={`text-4xl font-bold whitespace-nowrap ${remaining >= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
                     {remaining >= 0 ? '' : '-'}{formatCurrency(Math.abs(remaining))}
                   </p>
                 </div>

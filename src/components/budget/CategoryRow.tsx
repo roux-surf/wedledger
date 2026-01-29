@@ -191,9 +191,9 @@ export default function CategoryRow({
   };
 
   return (
-    <tr ref={rowRef} className={getRowBackground()}>
+    <tr ref={rowRef} className={`break-inside-avoid ${getRowBackground()}`}>
       <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900`}>{category.name}</td>
-      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right`}>
+      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right whitespace-nowrap`}>
         {isEditing && !isClientView ? (
           <div className="flex items-center gap-2 justify-end">
             <span className="text-slate-500">$</span>
@@ -222,7 +222,7 @@ export default function CategoryRow({
           </span>
         )}
       </td>
-      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right`}>
+      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right whitespace-nowrap`}>
         {isEditing && !isClientView ? (
           <div className="flex items-center gap-1 justify-end">
             <input
@@ -253,8 +253,8 @@ export default function CategoryRow({
           </span>
         )}
       </td>
-      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right`}>{formatCurrency(category.actual_spend)}</td>
-      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-right ${getDifferenceColor()}`}>
+      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right whitespace-nowrap`}>{formatCurrency(category.actual_spend)}</td>
+      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-right whitespace-nowrap ${getDifferenceColor()}`}>
         {isOver ? '-' : '+'}
         {formatCurrency(Math.abs(difference))}
       </td>
