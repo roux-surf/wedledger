@@ -273,104 +273,138 @@ export default function ClientBudgetPage() {
 
       {/* Sticky Budget Summary Header */}
       <div
-        className={`fixed top-0 left-0 right-0 z-40 bg-white border-b border-slate-200 shadow-sm transition-transform duration-200 ${
+        className={`fixed top-0 left-0 right-0 z-40 transition-transform duration-200 ${
           showStickyHeader ? 'translate-y-0' : '-translate-y-full'
-        }`}
+        } ${isClientView ? 'bg-slate-900 text-white border-b border-slate-700' : 'bg-white border-b border-slate-200 shadow-sm'}`}
       >
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-6">
-            <span className="font-semibold text-slate-900 truncate">{client.name}</span>
+            <span className={`font-semibold truncate ${isClientView ? 'text-white' : 'text-slate-900'}`}>{client.name}</span>
             <div className="flex items-center gap-6 text-sm">
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-500">Budget:</span>
-                <span className="font-medium text-slate-900">{formatCurrency(totalBudget)}</span>
+                <span className={isClientView ? 'text-slate-400' : 'text-slate-500'}>Budget:</span>
+                <span className={`font-medium ${isClientView ? 'text-white' : 'text-slate-900'}`}>{formatCurrency(totalBudget)}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-500">Spent:</span>
-                <span className="font-medium text-slate-900">{formatCurrency(totalSpent)}</span>
+                <span className={isClientView ? 'text-slate-400' : 'text-slate-500'}>{isClientView ? 'Committed:' : 'Spent:'}</span>
+                <span className={`font-medium ${isClientView ? 'text-white' : 'text-slate-900'}`}>{formatCurrency(totalSpent)}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-500">Remaining:</span>
-                <span className={`font-medium ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {remaining >= 0 ? '+' : '-'}{formatCurrency(Math.abs(remaining))}
+                <span className={isClientView ? 'text-slate-400' : 'text-slate-500'}>Remaining:</span>
+                <span className={`font-medium ${remaining >= 0 ? (isClientView ? 'text-emerald-400' : 'text-green-600') : (isClientView ? 'text-red-400' : 'text-red-600')}`}>
+                  {formatCurrency(Math.abs(remaining))}
                 </span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-slate-500">Allocated:</span>
-                <span className="font-medium text-slate-900">{formatPercent(totalAllocationPercent)}</span>
-                <span className={`text-xs ${allocationStatus.color}`}>({allocationStatus.label})</span>
-              </div>
+              {!isClientView && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-500">Allocated:</span>
+                  <span className="font-medium text-slate-900">{formatPercent(totalAllocationPercent)}</span>
+                  <span className={`text-xs ${allocationStatus.color}`}>({allocationStatus.label})</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       <main className={`max-w-6xl mx-auto px-4 ${isClientView ? 'py-10' : 'py-8'}`}>
-        {/* Client Info */}
-        <div ref={clientInfoRef} className={`bg-white border border-slate-200 rounded-lg p-6 ${isClientView ? 'mb-8' : 'mb-6'}`}>
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900">{client.name}</h2>
-              <p className="text-slate-600 mt-1">
-                {client.city}, {client.state} &bull; {formatDate(client.wedding_date)} &bull; {client.guest_count} guests
-              </p>
-            </div>
-            <span className={`px-3 py-1 text-sm font-medium rounded-full ${statusColors[budgetStatus]}`}>
-              {statusLabels[budgetStatus]}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-4 gap-6 mt-6 pt-6 border-t border-slate-100">
-            <div>
-              <p className="text-xs text-slate-500 uppercase tracking-wider">Total Budget</p>
-              {isEditingBudget && !isClientView ? (
-                <div className="mt-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-500 text-2xl font-bold">$</span>
-                    <input
-                      ref={budgetInputRef}
-                      type="text"
-                      inputMode="decimal"
-                      value={budgetValue}
-                      onChange={(e) => setBudgetValue(e.target.value)}
-                      onKeyDown={handleBudgetKeyDown}
-                      onBlur={(e) => {
-                        const value = parseNumericInput(e.target.value);
-                        setBudgetValue(sanitizeNumericString(Math.max(0, value)));
-                        handleBudgetBlur();
-                      }}
-                      className="w-32 px-2 py-1 border border-slate-300 rounded text-2xl font-bold"
-                    />
-                  </div>
-                  {budgetUpdateError && (
-                    <p className="text-red-600 text-xs mt-1">{budgetUpdateError}</p>
-                  )}
+        {isClientView ? (
+          <>
+            {/* Client View: Prominent Budget Summary */}
+            <div ref={clientInfoRef} className="bg-slate-900 text-white rounded-lg p-8 mb-8">
+              <div className="grid grid-cols-3 gap-8 text-center">
+                <div>
+                  <p className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-2">Total Budget</p>
+                  <p className="text-4xl font-bold">{formatCurrency(totalBudget)}</p>
                 </div>
-              ) : (
-                <p
-                  onClick={isClientView ? undefined : () => handleBudgetEdit()}
-                  className={`text-2xl font-bold text-slate-900 mt-1 ${isClientView ? '' : 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded'}`}
-                >
-                  {formatCurrency(Number(client.total_budget))}
+                <div className="border-x border-slate-700">
+                  <p className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-2">Total Committed</p>
+                  <p className="text-4xl font-bold">{formatCurrency(totalSpent)}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-2">Remaining</p>
+                  <p className={`text-4xl font-bold ${remaining >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {formatCurrency(Math.abs(remaining))}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6 pt-6 border-t border-slate-700 flex items-center justify-between">
+                <p className="text-slate-400">
+                  {client.city}, {client.state} &bull; {formatDate(client.wedding_date)} &bull; {client.guest_count} guests
                 </p>
-              )}
+                <span className={`px-3 py-1 text-sm font-medium rounded-full ${statusColors[budgetStatus]}`}>
+                  {statusLabels[budgetStatus]}
+                </span>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-slate-500 uppercase tracking-wider">Allocated to Categories</p>
-              <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(totalTarget)}</p>
+          </>
+        ) : (
+          /* Coordinator View: Detailed Info */
+          <div ref={clientInfoRef} className="bg-white border border-slate-200 rounded-lg p-6 mb-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">{client.name}</h2>
+                <p className="text-slate-600 mt-1">
+                  {client.city}, {client.state} &bull; {formatDate(client.wedding_date)} &bull; {client.guest_count} guests
+                </p>
+              </div>
+              <span className={`px-3 py-1 text-sm font-medium rounded-full ${statusColors[budgetStatus]}`}>
+                {statusLabels[budgetStatus]}
+              </span>
             </div>
-            <div>
-              <p className="text-xs text-slate-500 uppercase tracking-wider">Total Spent</p>
-              <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(totalSpent)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 uppercase tracking-wider">Remaining</p>
-              <p className={`text-2xl font-bold mt-1 ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {remaining >= 0 ? '+' : '-'}{formatCurrency(Math.abs(remaining))}
-              </p>
+
+            <div className="grid grid-cols-4 gap-6 mt-6 pt-6 border-t border-slate-100">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wider">Total Budget</p>
+                {isEditingBudget ? (
+                  <div className="mt-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500 text-2xl font-bold">$</span>
+                      <input
+                        ref={budgetInputRef}
+                        type="text"
+                        inputMode="decimal"
+                        value={budgetValue}
+                        onChange={(e) => setBudgetValue(e.target.value)}
+                        onKeyDown={handleBudgetKeyDown}
+                        onBlur={(e) => {
+                          const value = parseNumericInput(e.target.value);
+                          setBudgetValue(sanitizeNumericString(Math.max(0, value)));
+                          handleBudgetBlur();
+                        }}
+                        className="w-32 px-2 py-1 border border-slate-300 rounded text-2xl font-bold"
+                      />
+                    </div>
+                    {budgetUpdateError && (
+                      <p className="text-red-600 text-xs mt-1">{budgetUpdateError}</p>
+                    )}
+                  </div>
+                ) : (
+                  <p
+                    onClick={() => handleBudgetEdit()}
+                    className="text-2xl font-bold text-slate-900 mt-1 cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded"
+                  >
+                    {formatCurrency(Number(client.total_budget))}
+                  </p>
+                )}
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wider">Allocated to Categories</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(totalTarget)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wider">Total Spent</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(totalSpent)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wider">Remaining</p>
+                <p className={`text-2xl font-bold mt-1 ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {remaining >= 0 ? '+' : '-'}{formatCurrency(Math.abs(remaining))}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Categories Table */}
         <div className={isClientView ? 'mb-8' : 'mb-6'}>
