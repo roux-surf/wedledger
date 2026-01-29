@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CategoryWithSpend, LineItem, formatCurrency } from '@/lib/types';
+import { CategoryWithSpend, LineItem, formatCurrency, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
@@ -42,9 +42,9 @@ export default function LineItemsModal({
       const { error } = await supabase.from('line_items').insert({
         category_id: category.id,
         vendor_name: newItem.vendor_name.trim(),
-        estimated_cost: parseFloat(newItem.estimated_cost) || 0,
-        actual_cost: parseFloat(newItem.actual_cost) || 0,
-        paid_to_date: parseFloat(newItem.paid_to_date) || 0,
+        estimated_cost: parseNumericInput(newItem.estimated_cost),
+        actual_cost: parseNumericInput(newItem.actual_cost),
+        paid_to_date: parseNumericInput(newItem.paid_to_date),
         notes: newItem.notes || null,
       });
 
@@ -64,6 +64,15 @@ export default function LineItemsModal({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNumericBlur = (fieldName: string, value: string) => {
+    const numValue = parseNumericInput(value);
+    const clampedValue = Math.max(0, numValue);
+    setNewItem((prev) => ({
+      ...prev,
+      [fieldName]: clampedValue > 0 ? sanitizeNumericString(clampedValue) : '',
+    }));
   };
 
   const handleDeleteItem = async (itemId: string) => {
@@ -156,46 +165,37 @@ export default function LineItemsModal({
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Estimated Cost</label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     value={newItem.estimated_cost}
-                    onChange={(e) => {
-                      const value = parseFloat(e.target.value) || 0;
-                      setNewItem((prev) => ({ ...prev, estimated_cost: Math.max(0, value).toString() }));
-                    }}
+                    onChange={(e) => setNewItem((prev) => ({ ...prev, estimated_cost: e.target.value }))}
+                    onBlur={(e) => handleNumericBlur('estimated_cost', e.target.value)}
                     className="w-full px-3 py-2 border border-slate-300 rounded text-sm"
                     placeholder="0"
-                    min="0"
-                    step="0.01"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Actual Cost</label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     value={newItem.actual_cost}
-                    onChange={(e) => {
-                      const value = parseFloat(e.target.value) || 0;
-                      setNewItem((prev) => ({ ...prev, actual_cost: Math.max(0, value).toString() }));
-                    }}
+                    onChange={(e) => setNewItem((prev) => ({ ...prev, actual_cost: e.target.value }))}
+                    onBlur={(e) => handleNumericBlur('actual_cost', e.target.value)}
                     className="w-full px-3 py-2 border border-slate-300 rounded text-sm"
                     placeholder="0"
-                    min="0"
-                    step="0.01"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Paid to Date</label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     value={newItem.paid_to_date}
-                    onChange={(e) => {
-                      const value = parseFloat(e.target.value) || 0;
-                      setNewItem((prev) => ({ ...prev, paid_to_date: Math.max(0, value).toString() }));
-                    }}
+                    onChange={(e) => setNewItem((prev) => ({ ...prev, paid_to_date: e.target.value }))}
+                    onBlur={(e) => handleNumericBlur('paid_to_date', e.target.value)}
                     className="w-full px-3 py-2 border border-slate-300 rounded text-sm"
                     placeholder="0"
-                    min="0"
-                    step="0.01"
                   />
                 </div>
               </div>

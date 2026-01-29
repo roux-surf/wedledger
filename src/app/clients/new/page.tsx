@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { DEFAULT_CATEGORIES, US_STATES } from '@/lib/constants';
+import { parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Link from 'next/link';
@@ -24,20 +25,19 @@ export default function NewClientPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    const numericFields = ['guest_count', 'total_budget'];
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-    if (numericFields.includes(name)) {
-      const numValue = parseFloat(value) || 0;
-      setFormData((prev) => ({
-        ...prev,
-        [name]: Math.max(0, numValue).toString(),
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+  const handleNumericBlur = (fieldName: string) => {
+    const value = parseNumericInput(formData[fieldName as keyof typeof formData] as string);
+    const clampedValue = Math.max(0, value);
+    setFormData((prev) => ({
+      ...prev,
+      [fieldName]: clampedValue > 0 ? sanitizeNumericString(clampedValue) : '',
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,8 +63,8 @@ export default function NewClientPage() {
           wedding_date: formData.wedding_date,
           city: formData.city,
           state: formData.state,
-          guest_count: parseInt(formData.guest_count, 10),
-          total_budget: parseFloat(formData.total_budget),
+          guest_count: Math.round(parseNumericInput(formData.guest_count)),
+          total_budget: parseNumericInput(formData.total_budget),
         })
         .select()
         .single();
@@ -184,25 +184,26 @@ export default function NewClientPage() {
             <Input
               id="guest_count"
               name="guest_count"
-              type="number"
+              type="text"
+              inputMode="numeric"
               label="Guest Count"
               value={formData.guest_count}
               onChange={handleChange}
+              onBlur={() => handleNumericBlur('guest_count')}
               required
-              min="1"
               placeholder="e.g., 150"
             />
 
             <Input
               id="total_budget"
               name="total_budget"
-              type="number"
+              type="text"
+              inputMode="decimal"
               label="Total Wedding Budget ($)"
               value={formData.total_budget}
               onChange={handleChange}
+              onBlur={() => handleNumericBlur('total_budget')}
               required
-              min="0"
-              step="0.01"
               placeholder="e.g., 50000"
             />
           </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 
@@ -28,7 +29,7 @@ export default function AddCategoryForm({ budgetId, onCategoryAdded }: AddCatego
       const { error: insertError } = await supabase.from('categories').insert({
         budget_id: budgetId,
         name: name.trim(),
-        target_amount: parseFloat(targetAmount) || 0,
+        target_amount: parseNumericInput(targetAmount),
       });
 
       if (insertError) throw insertError;
@@ -41,6 +42,12 @@ export default function AddCategoryForm({ budgetId, onCategoryAdded }: AddCatego
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTargetAmountBlur = () => {
+    const value = parseNumericInput(targetAmount);
+    const clampedValue = Math.max(0, value);
+    setTargetAmount(clampedValue > 0 ? sanitizeNumericString(clampedValue) : '');
   };
 
   return (
@@ -59,15 +66,12 @@ export default function AddCategoryForm({ budgetId, onCategoryAdded }: AddCatego
         <Input
           id="category-target"
           label="Target ($)"
-          type="number"
+          type="text"
+          inputMode="decimal"
           value={targetAmount}
-          onChange={(e) => {
-            const value = parseFloat(e.target.value) || 0;
-            setTargetAmount(Math.max(0, value).toString());
-          }}
+          onChange={(e) => setTargetAmount(e.target.value)}
+          onBlur={handleTargetAmountBlur}
           placeholder="0"
-          min="0"
-          step="0.01"
         />
       </div>
       <Button type="submit" disabled={loading || !name.trim()}>

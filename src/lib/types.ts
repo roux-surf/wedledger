@@ -57,12 +57,35 @@ export function getBudgetStatus(totalBudget: number, totalSpent: number): Budget
 }
 
 export function formatCurrency(amount: number): string {
+  // Round to avoid floating-point artifacts
+  const rounded = Math.round(amount * 100) / 100;
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount);
+  }).format(rounded);
+}
+
+export function formatPercent(value: number): string {
+  // Round to max 1 decimal place, remove trailing zero
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? `${rounded}%` : `${rounded.toFixed(1)}%`;
+}
+
+export function parseNumericInput(value: string): number {
+  // Remove any non-numeric characters except decimal point and minus
+  const cleaned = value.replace(/[^0-9.-]/g, '');
+  const parsed = parseFloat(cleaned);
+  if (isNaN(parsed)) return 0;
+  // Round to 2 decimal places to prevent floating-point artifacts
+  return Math.round(parsed * 100) / 100;
+}
+
+export function sanitizeNumericString(value: number): string {
+  // Convert number to string without scientific notation or floating-point artifacts
+  const rounded = Math.round(value * 100) / 100;
+  return rounded.toString();
 }
 
 export function formatDate(dateString: string): string {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CategoryWithSpend, formatCurrency } from '@/lib/types';
+import { CategoryWithSpend, formatCurrency, formatPercent } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import CategoryRow from './CategoryRow';
 import LineItemsModal from './LineItemsModal';
@@ -106,7 +106,7 @@ export default function CategoryTable({
                 </td>
                 <td className="px-4 py-3 text-sm">
                   <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-sm font-medium ${allocationStatus.bg} ${allocationStatus.color}`}>
-                    {totalAllocationPercent.toFixed(1)}%
+                    {formatPercent(totalAllocationPercent)}
                     <span className="text-xs font-normal">({allocationStatus.label})</span>
                   </span>
                 </td>

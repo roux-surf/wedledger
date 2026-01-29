@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { Client, Budget, CategoryWithSpend, LineItem, formatCurrency, formatDate, getBudgetStatus } from '@/lib/types';
-import Button from '@/components/ui/Button';
+import { Client, Budget, CategoryWithSpend, LineItem, formatCurrency, formatDate, getBudgetStatus, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import CategoryTable from '@/components/budget/CategoryTable';
 import BudgetSummary from '@/components/budget/BudgetSummary';
 
@@ -23,8 +22,9 @@ export default function ClientBudgetPage() {
   // Budget editing state
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [budgetValue, setBudgetValue] = useState('');
-  const [budgetUpdateLoading, setBudgetUpdateLoading] = useState(false);
+  const [, setBudgetUpdateLoading] = useState(false);
   const [budgetUpdateError, setBudgetUpdateError] = useState<string | null>(null);
+  const budgetInputRef = useRef<HTMLInputElement>(null);
 
   const supabase = createClient();
 
@@ -96,9 +96,28 @@ export default function ClientBudgetPage() {
 
   // Handle budget update
   const handleBudgetEdit = () => {
-    setBudgetValue(client?.total_budget?.toString() || '0');
+    setBudgetValue(sanitizeNumericString(client?.total_budget || 0));
     setBudgetUpdateError(null);
     setIsEditingBudget(true);
+    // Focus the input after state update
+    setTimeout(() => {
+      budgetInputRef.current?.focus();
+      budgetInputRef.current?.select();
+    }, 0);
+  };
+
+  const handleBudgetKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleBudgetSave();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleBudgetCancel();
+    }
+  };
+
+  const handleBudgetBlur = () => {
+    handleBudgetSave();
   };
 
   const handleBudgetCancel = () => {
@@ -113,7 +132,7 @@ export default function ClientBudgetPage() {
     setBudgetUpdateError(null);
 
     try {
-      const newBudget = parseFloat(budgetValue) || 0;
+      const newBudget = parseNumericInput(budgetValue);
       if (newBudget < 0) {
         setBudgetUpdateError('Budget cannot be negative');
         return;
@@ -227,54 +246,33 @@ export default function ClientBudgetPage() {
               {isEditingBudget && !isClientView ? (
                 <div className="mt-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-500 text-lg">$</span>
+                    <span className="text-slate-500 text-2xl font-bold">$</span>
                     <input
-                      type="number"
+                      ref={budgetInputRef}
+                      type="text"
+                      inputMode="decimal"
                       value={budgetValue}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value) || 0;
-                        setBudgetValue(Math.max(0, value).toString());
+                      onChange={(e) => setBudgetValue(e.target.value)}
+                      onKeyDown={handleBudgetKeyDown}
+                      onBlur={(e) => {
+                        const value = parseNumericInput(e.target.value);
+                        setBudgetValue(sanitizeNumericString(Math.max(0, value)));
+                        handleBudgetBlur();
                       }}
-                      className="w-32 px-2 py-1 border border-slate-300 rounded text-lg font-bold"
-                      min="0"
-                      step="0.01"
-                      autoFocus
+                      className="w-32 px-2 py-1 border border-slate-300 rounded text-2xl font-bold"
                     />
                   </div>
                   {budgetUpdateError && (
                     <p className="text-red-600 text-xs mt-1">{budgetUpdateError}</p>
                   )}
-                  <div className="flex items-center gap-2 mt-2">
-                    <button
-                      onClick={handleBudgetSave}
-                      disabled={budgetUpdateLoading}
-                      className="px-3 py-1 text-sm font-medium bg-slate-900 text-white rounded hover:bg-slate-800 disabled:opacity-50"
-                    >
-                      {budgetUpdateLoading ? 'Saving...' : 'Save'}
-                    </button>
-                    <button
-                      onClick={handleBudgetCancel}
-                      className="px-3 py-1 text-sm font-medium bg-slate-100 text-slate-700 rounded hover:bg-slate-200"
-                    >
-                      Cancel
-                    </button>
-                  </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 mt-1">
-                  <p className="text-2xl font-bold text-slate-900">{formatCurrency(Number(client.total_budget))}</p>
-                  {!isClientView && (
-                    <button
-                      onClick={handleBudgetEdit}
-                      className="text-slate-400 hover:text-slate-600 p-1"
-                      title="Edit budget"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
+                <p
+                  onClick={() => !isClientView && handleBudgetEdit()}
+                  className={`text-2xl font-bold text-slate-900 mt-1 ${!isClientView ? 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded' : ''}`}
+                >
+                  {formatCurrency(Number(client.total_budget))}
+                </p>
               )}
             </div>
             <div>
