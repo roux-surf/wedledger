@@ -20,6 +20,12 @@ export default function ClientBudgetPage() {
   const [loading, setLoading] = useState(true);
   const [isClientView, setIsClientView] = useState(false);
 
+  // Budget editing state
+  const [isEditingBudget, setIsEditingBudget] = useState(false);
+  const [budgetValue, setBudgetValue] = useState('');
+  const [budgetUpdateLoading, setBudgetUpdateLoading] = useState(false);
+  const [budgetUpdateError, setBudgetUpdateError] = useState<string | null>(null);
+
   const supabase = createClient();
 
   const fetchData = useCallback(async () => {
@@ -87,6 +93,52 @@ export default function ClientBudgetPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Handle budget update
+  const handleBudgetEdit = () => {
+    setBudgetValue(client?.total_budget?.toString() || '0');
+    setBudgetUpdateError(null);
+    setIsEditingBudget(true);
+  };
+
+  const handleBudgetCancel = () => {
+    setIsEditingBudget(false);
+    setBudgetUpdateError(null);
+  };
+
+  const handleBudgetSave = async () => {
+    if (!client) return;
+
+    setBudgetUpdateLoading(true);
+    setBudgetUpdateError(null);
+
+    try {
+      const newBudget = parseFloat(budgetValue) || 0;
+      if (newBudget < 0) {
+        setBudgetUpdateError('Budget cannot be negative');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('clients')
+        .update({ total_budget: newBudget })
+        .eq('id', client.id);
+
+      if (error) {
+        console.error('Failed to update budget:', error);
+        setBudgetUpdateError(error.message || 'Failed to update budget');
+        return;
+      }
+
+      setIsEditingBudget(false);
+      fetchData();
+    } catch (err) {
+      console.error('Failed to update budget:', err);
+      setBudgetUpdateError('An unexpected error occurred');
+    } finally {
+      setBudgetUpdateLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -172,7 +224,55 @@ export default function ClientBudgetPage() {
           <div className="grid grid-cols-4 gap-6 mt-6 pt-6 border-t border-slate-100">
             <div>
               <p className="text-xs text-slate-500 uppercase tracking-wider">Total Budget</p>
-              <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(Number(client.total_budget))}</p>
+              {isEditingBudget && !isClientView ? (
+                <div className="mt-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 text-lg">$</span>
+                    <input
+                      type="number"
+                      value={budgetValue}
+                      onChange={(e) => setBudgetValue(e.target.value)}
+                      className="w-32 px-2 py-1 border border-slate-300 rounded text-lg font-bold"
+                      min="0"
+                      step="0.01"
+                      autoFocus
+                    />
+                  </div>
+                  {budgetUpdateError && (
+                    <p className="text-red-600 text-xs mt-1">{budgetUpdateError}</p>
+                  )}
+                  <div className="flex items-center gap-2 mt-2">
+                    <button
+                      onClick={handleBudgetSave}
+                      disabled={budgetUpdateLoading}
+                      className="px-3 py-1 text-sm font-medium bg-slate-900 text-white rounded hover:bg-slate-800 disabled:opacity-50"
+                    >
+                      {budgetUpdateLoading ? 'Saving...' : 'Save'}
+                    </button>
+                    <button
+                      onClick={handleBudgetCancel}
+                      className="px-3 py-1 text-sm font-medium bg-slate-100 text-slate-700 rounded hover:bg-slate-200"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-2xl font-bold text-slate-900">{formatCurrency(Number(client.total_budget))}</p>
+                  {!isClientView && (
+                    <button
+                      onClick={handleBudgetEdit}
+                      className="text-slate-400 hover:text-slate-600 p-1"
+                      title="Edit budget"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
             <div>
               <p className="text-xs text-slate-500 uppercase tracking-wider">Allocated to Categories</p>
