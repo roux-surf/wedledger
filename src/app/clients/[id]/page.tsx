@@ -340,23 +340,43 @@ export default function ClientBudgetPage() {
           <>
             {/* Client View: Prominent Budget Summary */}
             <div ref={clientInfoRef} className="bg-slate-900 text-white rounded-lg print:rounded-none p-5 md:p-8 mb-8 break-inside-avoid">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-8 text-center">
+              {/* Mobile: stacked hero layout */}
+              <div className="flex flex-col gap-5 md:hidden">
+                <div className="text-center">
+                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Total Budget</p>
+                  <p className="text-3xl font-bold">{formatCurrency(totalBudget)}</p>
+                </div>
+                <div className="border-t border-slate-700 pt-4 flex justify-between items-end">
+                  <div>
+                    <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Committed</p>
+                    <p className="text-xl font-bold">{formatCurrency(totalSpent)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Remaining</p>
+                    <p className={`text-2xl font-bold ${remaining >= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {remaining >= 0 ? '' : '-'}{formatCurrency(Math.abs(remaining))}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              {/* Desktop: 3-column grid */}
+              <div className="hidden md:grid grid-cols-3 gap-8 text-center">
                 <div>
                   <p className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-2">Total Budget</p>
-                  <p className="text-2xl md:text-4xl font-bold whitespace-nowrap">{formatCurrency(totalBudget)}</p>
+                  <p className="text-4xl font-bold whitespace-nowrap">{formatCurrency(totalBudget)}</p>
                 </div>
-                <div className="border-t md:border-t-0 md:border-x border-slate-700 pt-4 md:pt-0">
+                <div className="border-x border-slate-700">
                   <p className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-2">Total Committed</p>
-                  <p className="text-2xl md:text-4xl font-bold whitespace-nowrap">{formatCurrency(totalSpent)}</p>
+                  <p className="text-4xl font-bold whitespace-nowrap">{formatCurrency(totalSpent)}</p>
                 </div>
-                <div className="border-t md:border-t-0 border-slate-700 pt-4 md:pt-0">
+                <div>
                   <p className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-2">Remaining</p>
-                  <p className={`text-2xl md:text-4xl font-bold whitespace-nowrap ${remaining >= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  <p className={`text-4xl font-bold whitespace-nowrap ${remaining >= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
                     {remaining >= 0 ? '' : '-'}{formatCurrency(Math.abs(remaining))}
                   </p>
                 </div>
               </div>
-              <div className="mt-6 pt-6 border-t border-slate-700">
+              <div className="mt-5 md:mt-6 pt-5 md:pt-6 border-t border-slate-700">
                 <p className="text-slate-300 text-sm">{getClientStatusMessage()}</p>
                 <p className="text-slate-500 text-xs mt-2">
                   {client.city}, {client.state} &bull; {formatDate(client.wedding_date)} &bull; {client.guest_count} guests
@@ -379,54 +399,112 @@ export default function ClientBudgetPage() {
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6 mt-6 pt-6 border-t border-slate-100">
-              <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Total Budget</p>
-                {isEditingBudget ? (
-                  <div className="mt-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-500 text-2xl font-bold">$</span>
-                      <input
-                        ref={budgetInputRef}
-                        type="text"
-                        inputMode="decimal"
-                        value={budgetValue}
-                        onChange={(e) => setBudgetValue(e.target.value)}
-                        onKeyDown={handleBudgetKeyDown}
-                        onBlur={(e) => {
-                          const value = parseNumericInput(e.target.value);
-                          setBudgetValue(sanitizeNumericString(Math.max(0, value)));
-                          handleBudgetBlur();
-                        }}
-                        className="w-32 px-2 py-1 border border-slate-300 rounded text-2xl font-bold"
-                      />
-                    </div>
-                    {budgetUpdateError && (
-                      <p className="text-red-600 text-xs mt-1">{budgetUpdateError}</p>
+            <div className="mt-6 pt-6 border-t border-slate-100">
+              {/* Mobile: stacked key metrics first */}
+              <div className="flex flex-col gap-4 md:hidden">
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase tracking-wider">Total Budget</p>
+                    {isEditingBudget ? (
+                      <div className="mt-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500 text-2xl font-bold">$</span>
+                          <input
+                            ref={budgetInputRef}
+                            type="text"
+                            inputMode="decimal"
+                            value={budgetValue}
+                            onChange={(e) => setBudgetValue(e.target.value)}
+                            onKeyDown={handleBudgetKeyDown}
+                            onBlur={(e) => {
+                              const value = parseNumericInput(e.target.value);
+                              setBudgetValue(sanitizeNumericString(Math.max(0, value)));
+                              handleBudgetBlur();
+                            }}
+                            className="w-32 px-2 py-1 border border-slate-300 rounded text-2xl font-bold"
+                          />
+                        </div>
+                        {budgetUpdateError && (
+                          <p className="text-red-600 text-xs mt-1">{budgetUpdateError}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <p
+                        onClick={() => handleBudgetEdit()}
+                        className="text-3xl font-bold text-slate-900 mt-1 cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded"
+                      >
+                        {formatCurrency(Number(client.total_budget))}
+                      </p>
                     )}
                   </div>
-                ) : (
-                  <p
-                    onClick={() => handleBudgetEdit()}
-                    className="text-2xl font-bold text-slate-900 mt-1 cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded"
-                  >
-                    {formatCurrency(Number(client.total_budget))}
+                  <div className="text-right">
+                    <p className="text-xs text-slate-500 uppercase tracking-wider">Remaining</p>
+                    <p className={`text-2xl font-bold mt-1 ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {remaining >= 0 ? '+' : '-'}{formatCurrency(Math.abs(remaining))}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-50">
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase tracking-wider">Allocated</p>
+                    <p className="text-lg font-bold text-slate-900 mt-1">{formatCurrency(totalTarget)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase tracking-wider">Total Spent</p>
+                    <p className="text-lg font-bold text-slate-900 mt-1">{formatCurrency(totalSpent)}</p>
+                  </div>
+                </div>
+              </div>
+              {/* Desktop: 4-column grid */}
+              <div className="hidden md:grid grid-cols-4 gap-6">
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wider">Total Budget</p>
+                  {isEditingBudget ? (
+                    <div className="mt-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-500 text-2xl font-bold">$</span>
+                        <input
+                          ref={budgetInputRef}
+                          type="text"
+                          inputMode="decimal"
+                          value={budgetValue}
+                          onChange={(e) => setBudgetValue(e.target.value)}
+                          onKeyDown={handleBudgetKeyDown}
+                          onBlur={(e) => {
+                            const value = parseNumericInput(e.target.value);
+                            setBudgetValue(sanitizeNumericString(Math.max(0, value)));
+                            handleBudgetBlur();
+                          }}
+                          className="w-32 px-2 py-1 border border-slate-300 rounded text-2xl font-bold"
+                        />
+                      </div>
+                      {budgetUpdateError && (
+                        <p className="text-red-600 text-xs mt-1">{budgetUpdateError}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p
+                      onClick={() => handleBudgetEdit()}
+                      className="text-2xl font-bold text-slate-900 mt-1 cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded"
+                    >
+                      {formatCurrency(Number(client.total_budget))}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wider">Allocated to Categories</p>
+                  <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(totalTarget)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wider">Total Spent</p>
+                  <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(totalSpent)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wider">Remaining</p>
+                  <p className={`text-2xl font-bold mt-1 ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {remaining >= 0 ? '+' : '-'}{formatCurrency(Math.abs(remaining))}
                   </p>
-                )}
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Allocated to Categories</p>
-                <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(totalTarget)}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Total Spent</p>
-                <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(totalSpent)}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Remaining</p>
-                <p className={`text-2xl font-bold mt-1 ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {remaining >= 0 ? '+' : '-'}{formatCurrency(Math.abs(remaining))}
-                </p>
+                </div>
               </div>
             </div>
           </div>
