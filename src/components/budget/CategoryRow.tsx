@@ -195,87 +195,93 @@ export default function CategoryRow({
   if (renderMode === 'card') {
     return (
       <div className={`p-4 ${getRowBackground()}`}>
+        {/* Card header: name + allocation % */}
         <div className="flex items-center justify-between mb-3">
-          <span
-            className={`text-sm font-medium text-slate-900 ${!isClientView ? 'cursor-pointer' : ''}`}
-            onClick={isClientView ? undefined : () => handleStartEdit('target')}
-          >
-            {category.name}
-          </span>
-          <span className={`text-sm font-medium ${getDifferenceColor()}`}>
-            {isOver ? '-' : '+'}
-            {formatCurrency(Math.abs(difference))}
-          </span>
+          <span className="text-sm font-semibold text-slate-900">{category.name}</span>
+          <span className="text-xs text-slate-500">{formatPercent(currentPercent)} of budget</span>
         </div>
-        <div className="grid grid-cols-3 gap-2 text-center">
-          <div>
-            <p className="text-xs text-slate-500 uppercase">Target</p>
-            {isEditing && !isClientView ? (
-              <div className="flex items-center justify-center gap-1 mt-1">
-                <span className="text-slate-500 text-xs">$</span>
-                <input
-                  ref={targetInputRef}
-                  type="text"
-                  inputMode="decimal"
-                  value={targetAmount}
-                  onChange={(e) => setTargetAmount(e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(e, 'target')}
-                  onBlur={(e) => {
-                    const amount = Math.max(0, parseNumericInput(e.target.value));
-                    handleTargetAmountChange(e.target.value);
-                    handleBlur(e, amount);
-                  }}
-                  onFocus={(e) => e.target.select()}
-                  className="w-20 px-2 py-1 border border-slate-300 rounded text-sm"
-                />
+
+        {/* Editable fields for coordinator */}
+        {isEditing && !isClientView ? (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-slate-500 uppercase mb-1">Budgeted</label>
+                <div className="flex items-center gap-1">
+                  <span className="text-slate-500 text-xs">$</span>
+                  <input
+                    ref={targetInputRef}
+                    type="text"
+                    inputMode="decimal"
+                    value={targetAmount}
+                    onChange={(e) => setTargetAmount(e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, 'target')}
+                    onBlur={(e) => {
+                      const amount = Math.max(0, parseNumericInput(e.target.value));
+                      handleTargetAmountChange(e.target.value);
+                      handleBlur(e, amount);
+                    }}
+                    onFocus={(e) => e.target.select()}
+                    className="w-full px-2 py-1 border border-slate-300 rounded text-sm"
+                  />
+                </div>
               </div>
-            ) : (
-              <p
-                className={`text-sm font-semibold text-slate-900 mt-1 ${!isClientView ? 'cursor-pointer' : ''}`}
+              <div>
+                <label className="block text-xs text-slate-500 uppercase mb-1">Allocation</label>
+                <div className="flex items-center gap-1">
+                  <input
+                    ref={percentInputRef}
+                    type="text"
+                    inputMode="decimal"
+                    value={allocationPercent}
+                    onChange={(e) => setAllocationPercent(e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, 'percent')}
+                    onBlur={(e) => {
+                      const percent = Math.max(0, parseNumericInput(e.target.value));
+                      const amount = (percent / 100) * totalBudget;
+                      const roundedAmount = Math.round(amount * 100) / 100;
+                      handleAllocationPercentChange(e.target.value);
+                      handleBlur(e, roundedAmount);
+                    }}
+                    onFocus={(e) => e.target.select()}
+                    className="w-full px-2 py-1 border border-slate-300 rounded text-sm"
+                  />
+                  <span className="text-slate-500 text-xs">%</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-500">Committed</span>
+              <span className="font-medium text-slate-900">{formatCurrency(category.actual_spend)}</span>
+            </div>
+          </div>
+        ) : (
+          /* Read-only data rows */
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-500">Budgeted</span>
+              <span
+                className={`font-medium text-slate-900 ${!isClientView ? 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded' : ''}`}
                 onClick={isClientView ? undefined : () => handleStartEdit('target')}
               >
                 {formatCurrency(category.target_amount)}
-              </p>
-            )}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-500">Committed</span>
+              <span className="font-medium text-slate-900">{formatCurrency(category.actual_spend)}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-500">Remaining</span>
+              <span className={`font-medium ${getDifferenceColor()}`}>
+                {isOver ? '-' : ''}{formatCurrency(Math.abs(difference))}
+              </span>
+            </div>
           </div>
-          <div>
-            <p className="text-xs text-slate-500 uppercase">Allocation</p>
-            {isEditing && !isClientView ? (
-              <div className="flex items-center justify-center gap-1 mt-1">
-                <input
-                  ref={percentInputRef}
-                  type="text"
-                  inputMode="decimal"
-                  value={allocationPercent}
-                  onChange={(e) => setAllocationPercent(e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(e, 'percent')}
-                  onBlur={(e) => {
-                    const percent = Math.max(0, parseNumericInput(e.target.value));
-                    const amount = (percent / 100) * totalBudget;
-                    const roundedAmount = Math.round(amount * 100) / 100;
-                    handleAllocationPercentChange(e.target.value);
-                    handleBlur(e, roundedAmount);
-                  }}
-                  onFocus={(e) => e.target.select()}
-                  className="w-14 px-2 py-1 border border-slate-300 rounded text-sm"
-                />
-                <span className="text-slate-500 text-xs">%</span>
-              </div>
-            ) : (
-              <p
-                className={`text-sm font-semibold text-slate-600 mt-1 ${!isClientView ? 'cursor-pointer' : ''}`}
-                onClick={isClientView ? undefined : () => handleStartEdit('percent')}
-              >
-                {formatPercent(currentPercent)}
-              </p>
-            )}
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 uppercase">Actual</p>
-            <p className="text-sm font-semibold text-slate-900 mt-1">{formatCurrency(category.actual_spend)}</p>
-          </div>
-        </div>
-        {!isClientView && (
+        )}
+
+        {/* Coordinator actions */}
+        {!isClientView && !isEditing && (
           <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
             <Button size="sm" variant="secondary" onClick={onViewLineItems}>
               Items
