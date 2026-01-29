@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CategoryWithSpend } from '@/lib/types';
+import { CategoryWithSpend, formatCurrency } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import CategoryRow from './CategoryRow';
 import LineItemsModal from './LineItemsModal';
@@ -10,6 +10,7 @@ import AddCategoryForm from './AddCategoryForm';
 interface CategoryTableProps {
   categories: CategoryWithSpend[];
   budgetId: string;
+  totalBudget: number;
   onUpdate: () => void;
   isClientView: boolean;
 }
@@ -17,6 +18,7 @@ interface CategoryTableProps {
 export default function CategoryTable({
   categories,
   budgetId,
+  totalBudget,
   onUpdate,
   isClientView,
 }: CategoryTableProps) {
@@ -37,6 +39,23 @@ export default function CategoryTable({
     }
   };
 
+  // Calculate total allocation percentage
+  const totalAllocated = categories.reduce((sum, cat) => sum + Number(cat.target_amount), 0);
+  const totalAllocationPercent = totalBudget > 0 ? (totalAllocated / totalBudget) * 100 : 0;
+
+  // Determine allocation status
+  const getAllocationStatus = () => {
+    if (totalAllocationPercent < 99) {
+      return { label: 'Under-allocated', color: 'text-yellow-600', bg: 'bg-yellow-50' };
+    } else if (totalAllocationPercent <= 101) {
+      return { label: 'Fully allocated', color: 'text-green-600', bg: 'bg-green-50' };
+    } else {
+      return { label: 'Over-allocated', color: 'text-red-600', bg: 'bg-red-50' };
+    }
+  };
+
+  const allocationStatus = getAllocationStatus();
+
   return (
     <>
       <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
@@ -48,6 +67,9 @@ export default function CategoryTable({
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Target
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                Allocation
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Actual Spend
@@ -67,6 +89,7 @@ export default function CategoryTable({
               <CategoryRow
                 key={category.id}
                 category={category}
+                totalBudget={totalBudget}
                 onUpdate={onUpdate}
                 onViewLineItems={() => setSelectedCategory(category)}
                 onDelete={() => handleDeleteCategory(category.id)}
@@ -74,6 +97,27 @@ export default function CategoryTable({
               />
             ))}
           </tbody>
+          {categories.length > 0 && (
+            <tfoot className="bg-slate-50 border-t border-slate-200">
+              <tr>
+                <td className="px-4 py-3 text-sm font-medium text-slate-900">Total</td>
+                <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                  {formatCurrency(totalAllocated)}
+                </td>
+                <td className="px-4 py-3 text-sm">
+                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-sm font-medium ${allocationStatus.bg} ${allocationStatus.color}`}>
+                    {totalAllocationPercent.toFixed(1)}%
+                    <span className="text-xs font-normal">({allocationStatus.label})</span>
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                  {formatCurrency(categories.reduce((sum, cat) => sum + cat.actual_spend, 0))}
+                </td>
+                <td className="px-4 py-3"></td>
+                {!isClientView && <td className="px-4 py-3"></td>}
+              </tr>
+            </tfoot>
+          )}
         </table>
 
         {categories.length === 0 && (

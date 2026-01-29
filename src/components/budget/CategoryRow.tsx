@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CategoryWithSpend, formatCurrency } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 
 interface CategoryRowProps {
   category: CategoryWithSpend;
+  totalBudget: number;
   onUpdate: () => void;
   onViewLineItems: () => void;
   onDelete: () => void;
@@ -15,6 +16,7 @@ interface CategoryRowProps {
 
 export default function CategoryRow({
   category,
+  totalBudget,
   onUpdate,
   onViewLineItems,
   onDelete,
@@ -22,8 +24,31 @@ export default function CategoryRow({
 }: CategoryRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [targetAmount, setTargetAmount] = useState(category.target_amount.toString());
+  const [allocationPercent, setAllocationPercent] = useState('');
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
+
+  // Calculate allocation percentage from target amount
+  const calculatePercent = (amount: number): string => {
+    if (totalBudget <= 0) return '0';
+    return ((amount / totalBudget) * 100).toFixed(1);
+  };
+
+  // Calculate target amount from allocation percentage
+  const calculateAmount = (percent: number): string => {
+    return ((percent / 100) * totalBudget).toFixed(2);
+  };
+
+  // Initialize allocation percent when entering edit mode or when category changes
+  useEffect(() => {
+    setTargetAmount(category.target_amount.toString());
+    setAllocationPercent(calculatePercent(category.target_amount));
+  }, [category.target_amount, totalBudget]);
+
+  // Current allocation percentage for display
+  const currentPercent = totalBudget > 0
+    ? ((category.target_amount / totalBudget) * 100)
+    : 0;
 
   const difference = category.target_amount - category.actual_spend;
   const isOver = difference < 0;
@@ -41,12 +66,25 @@ export default function CategoryRow({
     return '';
   };
 
+  const handleTargetAmountChange = (value: string) => {
+    setTargetAmount(value);
+    const amount = parseFloat(value) || 0;
+    setAllocationPercent(calculatePercent(amount));
+  };
+
+  const handleAllocationPercentChange = (value: string) => {
+    setAllocationPercent(value);
+    const percent = parseFloat(value) || 0;
+    setTargetAmount(calculateAmount(percent));
+  };
+
   const handleSave = async () => {
     setLoading(true);
     try {
+      const newTargetAmount = parseFloat(targetAmount) || 0;
       const { error } = await supabase
         .from('categories')
-        .update({ target_amount: parseFloat(targetAmount) || 0 })
+        .update({ target_amount: newTargetAmount })
         .eq('id', category.id);
 
       if (error) throw error;
@@ -61,7 +99,14 @@ export default function CategoryRow({
 
   const handleCancel = () => {
     setTargetAmount(category.target_amount.toString());
+    setAllocationPercent(calculatePercent(category.target_amount));
     setIsEditing(false);
+  };
+
+  const handleStartEdit = () => {
+    setTargetAmount(category.target_amount.toString());
+    setAllocationPercent(calculatePercent(category.target_amount));
+    setIsEditing(true);
   };
 
   return (
@@ -74,7 +119,7 @@ export default function CategoryRow({
             <input
               type="number"
               value={targetAmount}
-              onChange={(e) => setTargetAmount(e.target.value)}
+              onChange={(e) => handleTargetAmountChange(e.target.value)}
               className="w-24 px-2 py-1 border border-slate-300 rounded text-sm"
               min="0"
               step="0.01"
@@ -82,6 +127,24 @@ export default function CategoryRow({
           </div>
         ) : (
           formatCurrency(category.target_amount)
+        )}
+      </td>
+      <td className="px-4 py-3 text-sm text-slate-900">
+        {isEditing && !isClientView ? (
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              value={allocationPercent}
+              onChange={(e) => handleAllocationPercentChange(e.target.value)}
+              className="w-16 px-2 py-1 border border-slate-300 rounded text-sm"
+              min="0"
+              max="100"
+              step="0.1"
+            />
+            <span className="text-slate-500">%</span>
+          </div>
+        ) : (
+          <span className="text-slate-600">{currentPercent.toFixed(1)}%</span>
         )}
       </td>
       <td className="px-4 py-3 text-sm text-slate-900">{formatCurrency(category.actual_spend)}</td>
@@ -103,7 +166,7 @@ export default function CategoryRow({
               </>
             ) : (
               <>
-                <Button size="sm" variant="secondary" onClick={() => setIsEditing(true)}>
+                <Button size="sm" variant="secondary" onClick={handleStartEdit}>
                   Edit
                 </Button>
                 <Button size="sm" variant="secondary" onClick={onViewLineItems}>

@@ -297,6 +297,7 @@ export default function ClientBudgetPage() {
           <CategoryTable
             categories={categories}
             budgetId={budget.id}
+            totalBudget={Number(client.total_budget)}
             onUpdate={fetchData}
             isClientView={isClientView}
           />
