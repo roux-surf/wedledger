@@ -67,15 +67,17 @@ export default function CategoryRow({
   };
 
   const handleTargetAmountChange = (value: string) => {
-    setTargetAmount(value);
     const amount = parseFloat(value) || 0;
-    setAllocationPercent(calculatePercent(amount));
+    const clampedAmount = Math.max(0, amount);
+    setTargetAmount(clampedAmount.toString());
+    setAllocationPercent(calculatePercent(clampedAmount));
   };
 
   const handleAllocationPercentChange = (value: string) => {
-    setAllocationPercent(value);
     const percent = parseFloat(value) || 0;
-    setTargetAmount(calculateAmount(percent));
+    const clampedPercent = Math.max(0, percent);
+    setAllocationPercent(clampedPercent.toString());
+    setTargetAmount(calculateAmount(clampedPercent));
   };
 
   const handleSave = async () => {

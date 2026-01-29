@@ -231,7 +231,10 @@ export default function ClientBudgetPage() {
                     <input
                       type="number"
                       value={budgetValue}
-                      onChange={(e) => setBudgetValue(e.target.value)}
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value) || 0;
+                        setBudgetValue(Math.max(0, value).toString());
+                      }}
                       className="w-32 px-2 py-1 border border-slate-300 rounded text-lg font-bold"
                       min="0"
                       step="0.01"

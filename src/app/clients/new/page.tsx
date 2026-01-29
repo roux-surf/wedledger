@@ -23,10 +23,21 @@ export default function NewClientPage() {
   const supabase = createClient();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    const { name, value } = e.target;
+    const numericFields = ['guest_count', 'total_budget'];
+
+    if (numericFields.includes(name)) {
+      const numValue = parseFloat(value) || 0;
+      setFormData((prev) => ({
+        ...prev,
+        [name]: Math.max(0, numValue).toString(),
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

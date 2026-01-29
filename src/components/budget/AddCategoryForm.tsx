@@ -61,7 +61,10 @@ export default function AddCategoryForm({ budgetId, onCategoryAdded }: AddCatego
           label="Target ($)"
           type="number"
           value={targetAmount}
-          onChange={(e) => setTargetAmount(e.target.value)}
+          onChange={(e) => {
+            const value = parseFloat(e.target.value) || 0;
+            setTargetAmount(Math.max(0, value).toString());
+          }}
           placeholder="0"
           min="0"
           step="0.01"

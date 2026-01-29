@@ -158,7 +158,10 @@ export default function LineItemsModal({
                   <input
                     type="number"
                     value={newItem.estimated_cost}
-                    onChange={(e) => setNewItem((prev) => ({ ...prev, estimated_cost: e.target.value }))}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value) || 0;
+                      setNewItem((prev) => ({ ...prev, estimated_cost: Math.max(0, value).toString() }));
+                    }}
                     className="w-full px-3 py-2 border border-slate-300 rounded text-sm"
                     placeholder="0"
                     min="0"
@@ -170,7 +173,10 @@ export default function LineItemsModal({
                   <input
                     type="number"
                     value={newItem.actual_cost}
-                    onChange={(e) => setNewItem((prev) => ({ ...prev, actual_cost: e.target.value }))}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value) || 0;
+                      setNewItem((prev) => ({ ...prev, actual_cost: Math.max(0, value).toString() }));
+                    }}
                     className="w-full px-3 py-2 border border-slate-300 rounded text-sm"
                     placeholder="0"
                     min="0"
@@ -182,7 +188,10 @@ export default function LineItemsModal({
                   <input
                     type="number"
                     value={newItem.paid_to_date}
-                    onChange={(e) => setNewItem((prev) => ({ ...prev, paid_to_date: e.target.value }))}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value) || 0;
+                      setNewItem((prev) => ({ ...prev, paid_to_date: Math.max(0, value).toString() }));
+                    }}
                     className="w-full px-3 py-2 border border-slate-300 rounded text-sm"
                     placeholder="0"
                     min="0"

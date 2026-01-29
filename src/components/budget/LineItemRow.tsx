@@ -25,10 +25,21 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView }: 
   const supabase = createClient();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    const { name, value } = e.target;
+    const numericFields = ['estimated_cost', 'actual_cost', 'paid_to_date'];
+
+    if (numericFields.includes(name)) {
+      const numValue = parseFloat(value) || 0;
+      setFormData((prev) => ({
+        ...prev,
+        [name]: Math.max(0, numValue).toString(),
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSave = async () => {
