@@ -238,6 +238,27 @@ export default function ClientBudgetPage() {
     red: 'Over Budget',
   };
 
+  // Client-friendly status messaging
+  const getClientStatusMessage = () => {
+    const overCategories = categories.filter(
+      (cat) => cat.actual_spend > Number(cat.target_amount) && Number(cat.target_amount) > 0
+    );
+
+    if (budgetStatus === 'green') {
+      return 'You are currently on track with your budget.';
+    } else if (budgetStatus === 'yellow') {
+      if (overCategories.length > 0) {
+        return `A few categories are slightly over the initial plan. Overall, your budget is in good shape.`;
+      }
+      return 'Your spending is approaching the planned budget. Everything is looking good.';
+    } else {
+      if (overCategories.length > 0) {
+        return `Some categories have exceeded the initial plan. Your coordinator can walk you through the details.`;
+      }
+      return 'Your spending has gone a bit beyond the original plan. Your coordinator can help review options.';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="bg-white border-b border-slate-200">
@@ -291,8 +312,8 @@ export default function ClientBudgetPage() {
               </div>
               <div className="flex items-center gap-1.5">
                 <span className={isClientView ? 'text-slate-400' : 'text-slate-500'}>Remaining:</span>
-                <span className={`font-medium ${remaining >= 0 ? (isClientView ? 'text-emerald-400' : 'text-green-600') : (isClientView ? 'text-red-400' : 'text-red-600')}`}>
-                  {formatCurrency(Math.abs(remaining))}
+                <span className={`font-medium ${remaining >= 0 ? (isClientView ? 'text-emerald-400' : 'text-green-600') : (isClientView ? 'text-amber-400' : 'text-red-600')}`}>
+                  {remaining < 0 && isClientView ? '-' : ''}{formatCurrency(Math.abs(remaining))}
                 </span>
               </div>
               {!isClientView && (
@@ -323,18 +344,16 @@ export default function ClientBudgetPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-2">Remaining</p>
-                  <p className={`text-4xl font-bold ${remaining >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {formatCurrency(Math.abs(remaining))}
+                  <p className={`text-4xl font-bold ${remaining >= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    {remaining >= 0 ? '' : '-'}{formatCurrency(Math.abs(remaining))}
                   </p>
                 </div>
               </div>
-              <div className="mt-6 pt-6 border-t border-slate-700 flex items-center justify-between">
-                <p className="text-slate-400">
+              <div className="mt-6 pt-6 border-t border-slate-700">
+                <p className="text-slate-300 text-sm">{getClientStatusMessage()}</p>
+                <p className="text-slate-500 text-xs mt-2">
                   {client.city}, {client.state} &bull; {formatDate(client.wedding_date)} &bull; {client.guest_count} guests
                 </p>
-                <span className={`px-3 py-1 text-sm font-medium rounded-full ${statusColors[budgetStatus]}`}>
-                  {statusLabels[budgetStatus]}
-                </span>
               </div>
             </div>
           </>
