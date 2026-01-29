@@ -66,16 +66,16 @@ export default function CategoryTable({
               <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Category
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Target
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Allocation
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Actual Spend
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Difference
               </th>
               {!isClientView && (
@@ -85,7 +85,7 @@ export default function CategoryTable({
               )}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className={`divide-y ${isClientView ? 'divide-slate-200' : 'divide-slate-100'}`}>
             {categories.map((category, index) => (
               <CategoryRow
                 key={category.id}
@@ -116,20 +116,20 @@ export default function CategoryTable({
           {categories.length > 0 && (
             <tfoot className="bg-slate-50 border-t border-slate-200">
               <tr>
-                <td className="px-4 py-3 text-sm font-medium text-slate-900">Total</td>
-                <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900`}>Total</td>
+                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right`}>
                   {formatCurrency(totalAllocated)}
                 </td>
-                <td className="px-4 py-3 text-sm">
+                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-right`}>
                   <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-sm font-medium ${allocationStatus.bg} ${allocationStatus.color}`}>
                     {formatPercent(totalAllocationPercent)}
                     <span className="text-xs font-normal">({allocationStatus.label})</span>
                   </span>
                 </td>
-                <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right`}>
                   {formatCurrency(categories.reduce((sum, cat) => sum + cat.actual_spend, 0))}
                 </td>
-                <td className="px-4 py-3"></td>
+                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'}`}></td>
                 {!isClientView && <td className="px-4 py-3"></td>}
               </tr>
             </tfoot>

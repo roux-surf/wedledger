@@ -305,9 +305,9 @@ export default function ClientBudgetPage() {
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className={`max-w-6xl mx-auto px-4 ${isClientView ? 'py-10' : 'py-8'}`}>
         {/* Client Info */}
-        <div ref={clientInfoRef} className="bg-white border border-slate-200 rounded-lg p-6 mb-6">
+        <div ref={clientInfoRef} className={`bg-white border border-slate-200 rounded-lg p-6 ${isClientView ? 'mb-8' : 'mb-6'}`}>
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-2xl font-bold text-slate-900">{client.name}</h2>
@@ -373,8 +373,8 @@ export default function ClientBudgetPage() {
         </div>
 
         {/* Categories Table */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">Budget Categories</h3>
+        <div className={isClientView ? 'mb-8' : 'mb-6'}>
+          <h3 className={`font-semibold text-slate-900 ${isClientView ? 'text-xl mb-6' : 'text-lg mb-4'}`}>Budget Categories</h3>
           <CategoryTable
             categories={categories}
             budgetId={budget.id}
