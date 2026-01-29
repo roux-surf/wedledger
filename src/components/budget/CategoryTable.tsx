@@ -24,6 +24,7 @@ export default function CategoryTable({
 }: CategoryTableProps) {
   const [selectedCategory, setSelectedCategory] = useState<CategoryWithSpend | null>(null);
   const [editingRowIndex, setEditingRowIndex] = useState<number | null>(null);
+  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
   const supabase = createClient();
 
   const handleDeleteCategory = async (categoryId: string) => {
@@ -164,6 +165,10 @@ export default function CategoryTable({
                 }
               }}
               renderMode="card"
+              isExpanded={expandedCategoryId === category.id}
+              onToggleExpand={() =>
+                setExpandedCategoryId(expandedCategoryId === category.id ? null : category.id)
+              }
             />
           ))}
           {categories.length > 0 && (

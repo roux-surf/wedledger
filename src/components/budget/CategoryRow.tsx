@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { CategoryWithSpend, formatCurrency, formatPercent, parseNumericInput, sanitizeNumericString } from '@/lib/types';
+import { CategoryWithSpend, LineItem, formatCurrency, formatPercent, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
@@ -17,6 +17,8 @@ interface CategoryRowProps {
   shouldStartEditing?: boolean;
   onEditingChange?: (editing: boolean) => void;
   renderMode?: 'table' | 'card';
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
 export default function CategoryRow({
@@ -30,6 +32,8 @@ export default function CategoryRow({
   shouldStartEditing,
   onEditingChange,
   renderMode = 'table',
+  isExpanded,
+  onToggleExpand,
 }: CategoryRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [targetAmount, setTargetAmount] = useState(category.target_amount.toString());
@@ -193,102 +197,138 @@ export default function CategoryRow({
   };
 
   if (renderMode === 'card') {
+    const lineItems = category.line_items || [];
+    const hasExpandBehavior = isClientView && onToggleExpand;
+    const hasLineItems = lineItems.length > 0;
+
     return (
-      <div className={`p-4 ${getRowBackground()}`}>
-        {/* Card header: name + allocation % */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-semibold text-slate-900">{category.name}</span>
-          <span className="text-xs text-slate-500">{formatPercent(currentPercent)} of budget</span>
+      <div className={`${getRowBackground()}`}>
+        {/* Card header: tappable in client view for expand/collapse */}
+        <div
+          className={`p-4 ${hasExpandBehavior ? 'cursor-pointer hover:bg-slate-50/50 active:bg-slate-100/50 transition-colors' : ''}`}
+          onClick={hasExpandBehavior ? onToggleExpand : undefined}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              {hasExpandBehavior && (
+                <svg
+                  className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-90 text-slate-600' : hasLineItems ? 'text-slate-400' : 'text-slate-300'}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              )}
+              <span className="text-sm font-semibold text-slate-900">{category.name}</span>
+            </div>
+            <span className="text-xs text-slate-500">{formatPercent(currentPercent)} of budget</span>
+          </div>
+
+          {/* Editable fields for coordinator */}
+          {isEditing && !isClientView ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-slate-500 uppercase mb-1">Budgeted</label>
+                  <div className="flex items-center gap-1">
+                    <span className="text-slate-500 text-xs">$</span>
+                    <input
+                      ref={targetInputRef}
+                      type="text"
+                      inputMode="decimal"
+                      value={targetAmount}
+                      onChange={(e) => setTargetAmount(e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(e, 'target')}
+                      onBlur={(e) => {
+                        const amount = Math.max(0, parseNumericInput(e.target.value));
+                        handleTargetAmountChange(e.target.value);
+                        handleBlur(e, amount);
+                      }}
+                      onFocus={(e) => e.target.select()}
+                      className="w-full px-2 py-1 border border-slate-300 rounded text-sm"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 uppercase mb-1">Allocation</label>
+                  <div className="flex items-center gap-1">
+                    <input
+                      ref={percentInputRef}
+                      type="text"
+                      inputMode="decimal"
+                      value={allocationPercent}
+                      onChange={(e) => setAllocationPercent(e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(e, 'percent')}
+                      onBlur={(e) => {
+                        const percent = Math.max(0, parseNumericInput(e.target.value));
+                        const amount = (percent / 100) * totalBudget;
+                        const roundedAmount = Math.round(amount * 100) / 100;
+                        handleAllocationPercentChange(e.target.value);
+                        handleBlur(e, roundedAmount);
+                      }}
+                      onFocus={(e) => e.target.select()}
+                      className="w-full px-2 py-1 border border-slate-300 rounded text-sm"
+                    />
+                    <span className="text-slate-500 text-xs">%</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-500">Committed</span>
+                <span className="font-medium text-slate-900">{formatCurrency(category.actual_spend)}</span>
+              </div>
+            </div>
+          ) : (
+            /* Read-only data rows */
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-500">Budgeted</span>
+                <span
+                  className={`font-medium text-slate-900 ${!isClientView ? 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded' : ''}`}
+                  onClick={isClientView ? undefined : (e) => { e.stopPropagation(); handleStartEdit('target'); }}
+                >
+                  {formatCurrency(category.target_amount)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-500">Committed</span>
+                <span className="font-medium text-slate-900">{formatCurrency(category.actual_spend)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-500">Remaining</span>
+                <span className={`font-medium ${getDifferenceColor()}`}>
+                  {isOver ? '-' : ''}{formatCurrency(Math.abs(difference))}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Coordinator actions */}
+          {!isClientView && !isEditing && (
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
+              <Button size="sm" variant="secondary" onClick={onViewLineItems}>
+                Items
+              </Button>
+              <Button size="sm" variant="danger" onClick={onDelete}>
+                Delete
+              </Button>
+            </div>
+          )}
         </div>
 
-        {/* Editable fields for coordinator */}
-        {isEditing && !isClientView ? (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-slate-500 uppercase mb-1">Budgeted</label>
-                <div className="flex items-center gap-1">
-                  <span className="text-slate-500 text-xs">$</span>
-                  <input
-                    ref={targetInputRef}
-                    type="text"
-                    inputMode="decimal"
-                    value={targetAmount}
-                    onChange={(e) => setTargetAmount(e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(e, 'target')}
-                    onBlur={(e) => {
-                      const amount = Math.max(0, parseNumericInput(e.target.value));
-                      handleTargetAmountChange(e.target.value);
-                      handleBlur(e, amount);
-                    }}
-                    onFocus={(e) => e.target.select()}
-                    className="w-full px-2 py-1 border border-slate-300 rounded text-sm"
-                  />
+        {/* Expanded line items (client view accordion) */}
+        {isExpanded && isClientView && lineItems.length > 0 && (
+          <div className="px-4 pb-4">
+            <div className="bg-slate-50 rounded-lg divide-y divide-slate-200">
+              {lineItems.map((item: LineItem) => (
+                <div key={item.id} className="px-3 py-2.5 flex items-center justify-between">
+                  <span className="text-sm text-slate-700">{item.vendor_name}</span>
+                  <span className="text-sm font-medium text-slate-900">{formatCurrency(item.actual_cost)}</span>
                 </div>
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 uppercase mb-1">Allocation</label>
-                <div className="flex items-center gap-1">
-                  <input
-                    ref={percentInputRef}
-                    type="text"
-                    inputMode="decimal"
-                    value={allocationPercent}
-                    onChange={(e) => setAllocationPercent(e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(e, 'percent')}
-                    onBlur={(e) => {
-                      const percent = Math.max(0, parseNumericInput(e.target.value));
-                      const amount = (percent / 100) * totalBudget;
-                      const roundedAmount = Math.round(amount * 100) / 100;
-                      handleAllocationPercentChange(e.target.value);
-                      handleBlur(e, roundedAmount);
-                    }}
-                    onFocus={(e) => e.target.select()}
-                    className="w-full px-2 py-1 border border-slate-300 rounded text-sm"
-                  />
-                  <span className="text-slate-500 text-xs">%</span>
-                </div>
-              </div>
+              ))}
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">Committed</span>
-              <span className="font-medium text-slate-900">{formatCurrency(category.actual_spend)}</span>
-            </div>
-          </div>
-        ) : (
-          /* Read-only data rows */
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">Budgeted</span>
-              <span
-                className={`font-medium text-slate-900 ${!isClientView ? 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded' : ''}`}
-                onClick={isClientView ? undefined : () => handleStartEdit('target')}
-              >
-                {formatCurrency(category.target_amount)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">Committed</span>
-              <span className="font-medium text-slate-900">{formatCurrency(category.actual_spend)}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">Remaining</span>
-              <span className={`font-medium ${getDifferenceColor()}`}>
-                {isOver ? '-' : ''}{formatCurrency(Math.abs(difference))}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Coordinator actions */}
-        {!isClientView && !isEditing && (
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
-            <Button size="sm" variant="secondary" onClick={onViewLineItems}>
-              Items
-            </Button>
-            <Button size="sm" variant="danger" onClick={onDelete}>
-              Delete
-            </Button>
           </div>
         )}
       </div>
