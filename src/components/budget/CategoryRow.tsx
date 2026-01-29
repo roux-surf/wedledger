@@ -16,6 +16,7 @@ interface CategoryRowProps {
   onTabToNextRow?: () => void;
   shouldStartEditing?: boolean;
   onEditingChange?: (editing: boolean) => void;
+  renderMode?: 'table' | 'card';
 }
 
 export default function CategoryRow({
@@ -28,6 +29,7 @@ export default function CategoryRow({
   onTabToNextRow,
   shouldStartEditing,
   onEditingChange,
+  renderMode = 'table',
 }: CategoryRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [targetAmount, setTargetAmount] = useState(category.target_amount.toString());
@@ -189,6 +191,103 @@ export default function CategoryRow({
     }
     handleSave(amountToSave);
   };
+
+  if (renderMode === 'card') {
+    return (
+      <div className={`p-4 ${getRowBackground()}`}>
+        <div className="flex items-center justify-between mb-3">
+          <span
+            className={`text-sm font-medium text-slate-900 ${!isClientView ? 'cursor-pointer' : ''}`}
+            onClick={isClientView ? undefined : () => handleStartEdit('target')}
+          >
+            {category.name}
+          </span>
+          <span className={`text-sm font-medium ${getDifferenceColor()}`}>
+            {isOver ? '-' : '+'}
+            {formatCurrency(Math.abs(difference))}
+          </span>
+        </div>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div>
+            <p className="text-xs text-slate-500 uppercase">Target</p>
+            {isEditing && !isClientView ? (
+              <div className="flex items-center justify-center gap-1 mt-1">
+                <span className="text-slate-500 text-xs">$</span>
+                <input
+                  ref={targetInputRef}
+                  type="text"
+                  inputMode="decimal"
+                  value={targetAmount}
+                  onChange={(e) => setTargetAmount(e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(e, 'target')}
+                  onBlur={(e) => {
+                    const amount = Math.max(0, parseNumericInput(e.target.value));
+                    handleTargetAmountChange(e.target.value);
+                    handleBlur(e, amount);
+                  }}
+                  onFocus={(e) => e.target.select()}
+                  className="w-20 px-2 py-1 border border-slate-300 rounded text-sm"
+                />
+              </div>
+            ) : (
+              <p
+                className={`text-sm font-semibold text-slate-900 mt-1 ${!isClientView ? 'cursor-pointer' : ''}`}
+                onClick={isClientView ? undefined : () => handleStartEdit('target')}
+              >
+                {formatCurrency(category.target_amount)}
+              </p>
+            )}
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 uppercase">Allocation</p>
+            {isEditing && !isClientView ? (
+              <div className="flex items-center justify-center gap-1 mt-1">
+                <input
+                  ref={percentInputRef}
+                  type="text"
+                  inputMode="decimal"
+                  value={allocationPercent}
+                  onChange={(e) => setAllocationPercent(e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(e, 'percent')}
+                  onBlur={(e) => {
+                    const percent = Math.max(0, parseNumericInput(e.target.value));
+                    const amount = (percent / 100) * totalBudget;
+                    const roundedAmount = Math.round(amount * 100) / 100;
+                    handleAllocationPercentChange(e.target.value);
+                    handleBlur(e, roundedAmount);
+                  }}
+                  onFocus={(e) => e.target.select()}
+                  className="w-14 px-2 py-1 border border-slate-300 rounded text-sm"
+                />
+                <span className="text-slate-500 text-xs">%</span>
+              </div>
+            ) : (
+              <p
+                className={`text-sm font-semibold text-slate-600 mt-1 ${!isClientView ? 'cursor-pointer' : ''}`}
+                onClick={isClientView ? undefined : () => handleStartEdit('percent')}
+              >
+                {formatPercent(currentPercent)}
+              </p>
+            )}
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 uppercase">Actual</p>
+            <p className="text-sm font-semibold text-slate-900 mt-1">{formatCurrency(category.actual_spend)}</p>
+          </div>
+        </div>
+        {!isClientView && (
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
+            <Button size="sm" variant="secondary" onClick={onViewLineItems}>
+              Items
+            </Button>
+            <Button size="sm" variant="danger" onClick={onDelete}>
+              Delete
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <tr ref={rowRef} className={`break-inside-avoid ${getRowBackground()}`}>

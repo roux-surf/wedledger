@@ -262,7 +262,7 @@ export default function ClientBudgetPage() {
   return (
     <div className="min-h-screen bg-slate-50 print:bg-white print:min-h-0">
       <header className="bg-white border-b border-slate-200 print:hidden">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             <Link href="/dashboard" className="text-slate-600 hover:text-slate-900">
               &larr; Back
@@ -301,7 +301,8 @@ export default function ClientBudgetPage() {
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-6">
             <span className={`font-semibold truncate ${isClientView ? 'text-white' : 'text-slate-900'}`}>{client.name}</span>
-            <div className="flex items-center gap-6 text-sm">
+            {/* Desktop sticky metrics */}
+            <div className="hidden md:flex items-center gap-6 text-sm">
               <div className="flex items-center gap-1.5">
                 <span className={isClientView ? 'text-slate-400' : 'text-slate-500'}>Budget:</span>
                 <span className={`font-medium ${isClientView ? 'text-white' : 'text-slate-900'}`}>{formatCurrency(totalBudget)}</span>
@@ -324,6 +325,12 @@ export default function ClientBudgetPage() {
                 </div>
               )}
             </div>
+            {/* Mobile sticky metrics */}
+            <div className="flex md:hidden items-center gap-2 text-sm">
+              <span className={`font-medium ${isClientView ? 'text-white' : 'text-slate-900'}`}>{formatCurrency(totalSpent)}</span>
+              <span className={isClientView ? 'text-slate-400' : 'text-slate-500'}>/</span>
+              <span className={isClientView ? 'text-slate-400' : 'text-slate-500'}>{formatCurrency(totalBudget)}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -332,19 +339,19 @@ export default function ClientBudgetPage() {
         {isClientView ? (
           <>
             {/* Client View: Prominent Budget Summary */}
-            <div ref={clientInfoRef} className="bg-slate-900 text-white rounded-lg print:rounded-none p-8 mb-8 break-inside-avoid">
-              <div className="grid grid-cols-3 gap-8 text-center">
+            <div ref={clientInfoRef} className="bg-slate-900 text-white rounded-lg print:rounded-none p-5 md:p-8 mb-8 break-inside-avoid">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-8 text-center">
                 <div>
                   <p className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-2">Total Budget</p>
-                  <p className="text-4xl font-bold whitespace-nowrap">{formatCurrency(totalBudget)}</p>
+                  <p className="text-2xl md:text-4xl font-bold whitespace-nowrap">{formatCurrency(totalBudget)}</p>
                 </div>
-                <div className="border-x border-slate-700">
+                <div className="border-t md:border-t-0 md:border-x border-slate-700 pt-4 md:pt-0">
                   <p className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-2">Total Committed</p>
-                  <p className="text-4xl font-bold whitespace-nowrap">{formatCurrency(totalSpent)}</p>
+                  <p className="text-2xl md:text-4xl font-bold whitespace-nowrap">{formatCurrency(totalSpent)}</p>
                 </div>
-                <div>
+                <div className="border-t md:border-t-0 border-slate-700 pt-4 md:pt-0">
                   <p className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-2">Remaining</p>
-                  <p className={`text-4xl font-bold whitespace-nowrap ${remaining >= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  <p className={`text-2xl md:text-4xl font-bold whitespace-nowrap ${remaining >= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
                     {remaining >= 0 ? '' : '-'}{formatCurrency(Math.abs(remaining))}
                   </p>
                 </div>
@@ -360,7 +367,7 @@ export default function ClientBudgetPage() {
         ) : (
           /* Coordinator View: Detailed Info */
           <div ref={clientInfoRef} className="bg-white border border-slate-200 rounded-lg p-6 mb-6">
-            <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between flex-wrap gap-2">
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">{client.name}</h2>
                 <p className="text-slate-600 mt-1">
@@ -372,7 +379,7 @@ export default function ClientBudgetPage() {
               </span>
             </div>
 
-            <div className="grid grid-cols-4 gap-6 mt-6 pt-6 border-t border-slate-100">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6 mt-6 pt-6 border-t border-slate-100">
               <div>
                 <p className="text-xs text-slate-500 uppercase tracking-wider">Total Budget</p>
                 {isEditingBudget ? (

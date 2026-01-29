@@ -11,9 +11,10 @@ interface LineItemRowProps {
   onUpdate: () => void;
   onDelete: () => void;
   isClientView: boolean;
+  renderMode?: 'table' | 'card';
 }
 
-export default function LineItemRow({ item, onUpdate, onDelete, isClientView }: LineItemRowProps) {
+export default function LineItemRow({ item, onUpdate, onDelete, isClientView, renderMode = 'table' }: LineItemRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     vendor_name: item.vendor_name,
@@ -131,6 +132,132 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView }: 
   };
 
   const remaining = parseNumericInput(formData.actual_cost) - parseNumericInput(formData.paid_to_date);
+
+  if (renderMode === 'card') {
+    if (isEditing && !isClientView) {
+      return (
+        <div className="p-4 bg-slate-50">
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Vendor</label>
+              <input
+                ref={vendorInputRef}
+                type="text"
+                name="vendor_name"
+                value={formData.vendor_name}
+                onChange={handleChange}
+                onKeyDown={handleKeyDown}
+                onBlur={handleBlur}
+                onFocus={(e) => e.target.select()}
+                className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Estimated</label>
+                <input
+                  ref={estimatedInputRef}
+                  type="text"
+                  inputMode="decimal"
+                  name="estimated_cost"
+                  value={formData.estimated_cost}
+                  onChange={handleChange}
+                  onKeyDown={handleKeyDown}
+                  onBlur={(e) => {
+                    handleNumericBlur('estimated_cost', e.target.value);
+                    handleBlur(e);
+                  }}
+                  onFocus={(e) => e.target.select()}
+                  className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Actual</label>
+                <input
+                  ref={actualInputRef}
+                  type="text"
+                  inputMode="decimal"
+                  name="actual_cost"
+                  value={formData.actual_cost}
+                  onChange={handleChange}
+                  onKeyDown={handleKeyDown}
+                  onBlur={(e) => {
+                    handleNumericBlur('actual_cost', e.target.value);
+                    handleBlur(e);
+                  }}
+                  onFocus={(e) => e.target.select()}
+                  className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Paid</label>
+                <input
+                  ref={paidInputRef}
+                  type="text"
+                  inputMode="decimal"
+                  name="paid_to_date"
+                  value={formData.paid_to_date}
+                  onChange={handleChange}
+                  onKeyDown={handleKeyDown}
+                  onBlur={(e) => {
+                    handleNumericBlur('paid_to_date', e.target.value);
+                    handleBlur(e);
+                  }}
+                  onFocus={(e) => e.target.select()}
+                  className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Notes</label>
+              <textarea
+                ref={notesInputRef}
+                name="notes"
+                value={formData.notes}
+                onChange={handleChange}
+                onKeyDown={handleKeyDown}
+                onBlur={handleBlur}
+                className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+                rows={2}
+              />
+            </div>
+            <Button size="sm" variant="danger" onClick={onDelete}>
+              Delete
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        className="p-4"
+        onClick={isClientView ? undefined : () => handleStartEdit()}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <span className={`text-sm font-medium text-slate-900 ${!isClientView ? 'cursor-pointer' : ''}`}>
+            {item.vendor_name}
+          </span>
+          <span className="text-sm text-slate-600">{formatCurrency(remaining)} remaining</span>
+        </div>
+        <div className="flex items-center gap-4 text-xs text-slate-500">
+          <span>Est: {formatCurrency(item.estimated_cost)}</span>
+          <span>Actual: {formatCurrency(item.actual_cost)}</span>
+          <span>Paid: {formatCurrency(item.paid_to_date)}</span>
+        </div>
+        {!isClientView && item.notes && (
+          <p className="text-xs text-slate-400 mt-1 truncate">{item.notes}</p>
+        )}
+        {!isClientView && (
+          <div className="mt-2">
+            <Button size="sm" variant="danger" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
+              Delete
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (isEditing && !isClientView) {
     return (

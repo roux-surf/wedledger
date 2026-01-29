@@ -60,7 +60,8 @@ export default function CategoryTable({
   return (
     <>
       <div className="bg-white border border-slate-200 rounded-lg overflow-hidden print:rounded-none print:border-slate-300">
-        <table className="w-full print:text-sm">
+        {/* Desktop table */}
+        <table className="hidden md:table print:table w-full print:text-sm">
           <thead className="bg-slate-50">
             <tr className="border-b border-slate-200">
               <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
@@ -135,6 +136,57 @@ export default function CategoryTable({
             </tfoot>
           )}
         </table>
+
+        {/* Mobile card list */}
+        <div className="md:hidden print:hidden divide-y divide-slate-200">
+          {categories.map((category, index) => (
+            <CategoryRow
+              key={category.id}
+              category={category}
+              totalBudget={totalBudget}
+              onUpdate={onUpdate}
+              onViewLineItems={() => setSelectedCategory(category)}
+              onDelete={() => handleDeleteCategory(category.id)}
+              isClientView={isClientView}
+              shouldStartEditing={editingRowIndex === index}
+              onEditingChange={(editing) => {
+                if (editing) {
+                  setEditingRowIndex(index);
+                } else if (editingRowIndex === index) {
+                  setEditingRowIndex(null);
+                }
+              }}
+              onTabToNextRow={() => {
+                if (index < categories.length - 1) {
+                  setEditingRowIndex(index + 1);
+                } else {
+                  setEditingRowIndex(null);
+                }
+              }}
+              renderMode="card"
+            />
+          ))}
+          {categories.length > 0 && (
+            <div className="p-4 bg-slate-50">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-slate-900">Total</span>
+                <span className="text-sm font-medium text-slate-900">{formatCurrency(totalAllocated)}</span>
+              </div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-slate-500 uppercase">Allocation</span>
+                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium ${allocationStatus.bg} ${allocationStatus.color}`}>
+                  {formatPercent(totalAllocationPercent)} ({allocationStatus.label})
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-500 uppercase">Actual Spend</span>
+                <span className="text-sm font-medium text-slate-900">
+                  {formatCurrency(categories.reduce((sum, cat) => sum + cat.actual_spend, 0))}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
 
         {categories.length === 0 && (
           <div className="p-8 text-center text-slate-500">No categories yet.</div>

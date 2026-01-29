@@ -112,7 +112,7 @@ export default function LineItemsModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`${category.name} - Line Items`}>
       <div className="mb-4 p-4 bg-slate-50 rounded-lg">
-        <div className="grid grid-cols-3 gap-4 text-center">
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-3 md:gap-4 text-center">
           <div>
             <p className="text-xs text-slate-500 uppercase">Target</p>
             <p className="text-lg font-semibold text-slate-900">{formatCurrency(category.target_amount)}</p>
@@ -129,36 +129,52 @@ export default function LineItemsModal({
       </div>
 
       {lineItems.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-200">
-                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Vendor</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Estimated</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Actual</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Paid</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Remaining</th>
-                {!isClientView && (
-                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Notes</th>
-                )}
-                {!isClientView && (
-                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Actions</th>
-                )}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {lineItems.map((item: LineItem) => (
-                <LineItemRow
-                  key={item.id}
-                  item={item}
-                  onUpdate={onUpdate}
-                  onDelete={() => handleDeleteItem(item.id)}
-                  isClientView={isClientView}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {/* Desktop table */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Vendor</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Estimated</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Actual</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Paid</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Remaining</th>
+                  {!isClientView && (
+                    <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Notes</th>
+                  )}
+                  {!isClientView && (
+                    <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Actions</th>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {lineItems.map((item: LineItem) => (
+                  <LineItemRow
+                    key={item.id}
+                    item={item}
+                    onUpdate={onUpdate}
+                    onDelete={() => handleDeleteItem(item.id)}
+                    isClientView={isClientView}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* Mobile card list */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {lineItems.map((item: LineItem) => (
+              <LineItemRow
+                key={item.id}
+                item={item}
+                onUpdate={onUpdate}
+                onDelete={() => handleDeleteItem(item.id)}
+                isClientView={isClientView}
+                renderMode="card"
+              />
+            ))}
+          </div>
+        </>
       ) : (
         <p className="text-center text-slate-500 py-8">No line items yet.</p>
       )}
@@ -167,7 +183,7 @@ export default function LineItemsModal({
         <div className="mt-4 pt-4 border-t border-slate-200">
           {showAddForm ? (
             <form onSubmit={handleAddItem} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Vendor Name</label>
                   <input

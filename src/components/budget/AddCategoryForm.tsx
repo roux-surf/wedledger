@@ -61,7 +61,7 @@ export default function AddCategoryForm({ budgetId, onCategoryAdded }: AddCatego
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-end gap-3">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3 md:flex-row md:items-end">
       <div className="flex-1">
         <Input
           id="category-name"
@@ -74,7 +74,7 @@ export default function AddCategoryForm({ budgetId, onCategoryAdded }: AddCatego
           required
         />
       </div>
-      <div className="w-32">
+      <div className="w-full md:w-32">
         <Input
           id="category-target"
           label="Target ($)"
