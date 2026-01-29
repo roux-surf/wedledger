@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { LineItem, formatCurrency, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
@@ -85,7 +85,15 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView }: 
     setIsEditing(false);
   };
 
+  // Reset editing state when switching to client view
+  useEffect(() => {
+    if (isClientView && isEditing) {
+      setIsEditing(false);
+    }
+  }, [isClientView]);
+
   const handleStartEdit = () => {
+    if (isClientView) return;
     setFormData({
       vendor_name: item.vendor_name,
       estimated_cost: sanitizeNumericString(item.estimated_cost),
@@ -219,7 +227,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView }: 
     <tr>
       <td className="px-3 py-2 text-sm text-slate-900">
         <span
-          onClick={() => !isClientView && handleStartEdit()}
+          onClick={isClientView ? undefined : () => handleStartEdit()}
           className={clickableClass}
         >
           {item.vendor_name}
@@ -227,7 +235,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView }: 
       </td>
       <td className="px-3 py-2 text-sm text-slate-900">
         <span
-          onClick={() => !isClientView && handleStartEdit()}
+          onClick={isClientView ? undefined : () => handleStartEdit()}
           className={clickableClass}
         >
           {formatCurrency(item.estimated_cost)}
@@ -235,7 +243,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView }: 
       </td>
       <td className="px-3 py-2 text-sm text-slate-900">
         <span
-          onClick={() => !isClientView && handleStartEdit()}
+          onClick={isClientView ? undefined : () => handleStartEdit()}
           className={clickableClass}
         >
           {formatCurrency(item.actual_cost)}
@@ -243,7 +251,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView }: 
       </td>
       <td className="px-3 py-2 text-sm text-slate-900">
         <span
-          onClick={() => !isClientView && handleStartEdit()}
+          onClick={isClientView ? undefined : () => handleStartEdit()}
           className={clickableClass}
         >
           {formatCurrency(item.paid_to_date)}
@@ -253,7 +261,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView }: 
       {!isClientView && (
         <td className="px-3 py-2 text-sm text-slate-500 max-w-[150px] truncate">
           <span
-            onClick={() => !isClientView && handleStartEdit()}
+            onClick={isClientView ? undefined : () => handleStartEdit()}
             className={clickableClass}
           >
             {item.notes || '-'}

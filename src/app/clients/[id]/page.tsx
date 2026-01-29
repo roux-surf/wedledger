@@ -114,8 +114,17 @@ export default function ClientBudgetPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Reset budget editing state when switching to client view
+  useEffect(() => {
+    if (isClientView && isEditingBudget) {
+      setIsEditingBudget(false);
+      setBudgetUpdateError(null);
+    }
+  }, [isClientView]);
+
   // Handle budget update
   const handleBudgetEdit = () => {
+    if (isClientView) return;
     setBudgetValue(sanitizeNumericString(client?.total_budget || 0));
     setBudgetUpdateError(null);
     setIsEditingBudget(true);
@@ -339,8 +348,8 @@ export default function ClientBudgetPage() {
                 </div>
               ) : (
                 <p
-                  onClick={() => !isClientView && handleBudgetEdit()}
-                  className={`text-2xl font-bold text-slate-900 mt-1 ${!isClientView ? 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded' : ''}`}
+                  onClick={isClientView ? undefined : () => handleBudgetEdit()}
+                  className={`text-2xl font-bold text-slate-900 mt-1 ${isClientView ? '' : 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded'}`}
                 >
                   {formatCurrency(Number(client.total_budget))}
                 </p>

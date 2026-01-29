@@ -67,6 +67,14 @@ export default function CategoryRow({
     }
   }, [shouldStartEditing]);
 
+  // Reset editing state when switching to client view
+  useEffect(() => {
+    if (isClientView && isEditing) {
+      setIsEditing(false);
+      onEditingChange?.(false);
+    }
+  }, [isClientView]);
+
   // Current allocation percentage for display
   const currentPercent = totalBudget > 0
     ? ((category.target_amount / totalBudget) * 100)
@@ -131,6 +139,7 @@ export default function CategoryRow({
   };
 
   const handleStartEdit = (focusTarget: 'target' | 'percent' = 'target') => {
+    if (isClientView) return;
     setTargetAmount(sanitizeNumericString(category.target_amount));
     setAllocationPercent(calculatePercent(category.target_amount));
     setIsEditing(true);
@@ -206,8 +215,8 @@ export default function CategoryRow({
           </div>
         ) : (
           <span
-            onClick={() => !isClientView && handleStartEdit('target')}
-            className={!isClientView ? 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded' : ''}
+            onClick={isClientView ? undefined : () => handleStartEdit('target')}
+            className={isClientView ? '' : 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded'}
           >
             {formatCurrency(category.target_amount)}
           </span>
@@ -237,8 +246,8 @@ export default function CategoryRow({
           </div>
         ) : (
           <span
-            onClick={() => !isClientView && handleStartEdit('percent')}
-            className={!isClientView ? 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded text-slate-600' : 'text-slate-600'}
+            onClick={isClientView ? undefined : () => handleStartEdit('percent')}
+            className={isClientView ? 'text-slate-600' : 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded text-slate-600'}
           >
             {formatPercent(currentPercent)}
           </span>
