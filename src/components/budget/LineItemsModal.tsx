@@ -5,6 +5,7 @@ import { CategoryWithSpend, LineItem, formatCurrency, parseNumericInput, sanitiz
 import { createClient } from '@/lib/supabase/client';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
 import LineItemRow from './LineItemRow';
 
 interface LineItemsModalProps {
@@ -32,6 +33,7 @@ export default function LineItemsModal({
   });
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
+  const { showSaved } = useToast();
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +60,7 @@ export default function LineItemsModal({
         notes: '',
       });
       setShowAddForm(false);
+      showSaved();
       onUpdate();
     } catch (err) {
       console.error('Failed to add line item:', err);
@@ -73,6 +76,20 @@ export default function LineItemsModal({
       ...prev,
       [fieldName]: clampedValue > 0 ? sanitizeNumericString(clampedValue) : '',
     }));
+  };
+
+  const handleAddFormKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setShowAddForm(false);
+      setNewItem({
+        vendor_name: '',
+        estimated_cost: '',
+        actual_cost: '',
+        paid_to_date: '',
+        notes: '',
+      });
+    }
   };
 
   const handleDeleteItem = async (itemId: string) => {
@@ -157,6 +174,8 @@ export default function LineItemsModal({
                     type="text"
                     value={newItem.vendor_name}
                     onChange={(e) => setNewItem((prev) => ({ ...prev, vendor_name: e.target.value }))}
+                    onKeyDown={handleAddFormKeyDown}
+                    onFocus={(e) => e.target.select()}
                     className="w-full px-3 py-2 border border-slate-300 rounded text-sm"
                     placeholder="e.g., ABC Catering"
                     required
@@ -170,6 +189,8 @@ export default function LineItemsModal({
                     value={newItem.estimated_cost}
                     onChange={(e) => setNewItem((prev) => ({ ...prev, estimated_cost: e.target.value }))}
                     onBlur={(e) => handleNumericBlur('estimated_cost', e.target.value)}
+                    onKeyDown={handleAddFormKeyDown}
+                    onFocus={(e) => e.target.select()}
                     className="w-full px-3 py-2 border border-slate-300 rounded text-sm"
                     placeholder="0"
                   />
@@ -182,6 +203,8 @@ export default function LineItemsModal({
                     value={newItem.actual_cost}
                     onChange={(e) => setNewItem((prev) => ({ ...prev, actual_cost: e.target.value }))}
                     onBlur={(e) => handleNumericBlur('actual_cost', e.target.value)}
+                    onKeyDown={handleAddFormKeyDown}
+                    onFocus={(e) => e.target.select()}
                     className="w-full px-3 py-2 border border-slate-300 rounded text-sm"
                     placeholder="0"
                   />
@@ -194,6 +217,8 @@ export default function LineItemsModal({
                     value={newItem.paid_to_date}
                     onChange={(e) => setNewItem((prev) => ({ ...prev, paid_to_date: e.target.value }))}
                     onBlur={(e) => handleNumericBlur('paid_to_date', e.target.value)}
+                    onKeyDown={handleAddFormKeyDown}
+                    onFocus={(e) => e.target.select()}
                     className="w-full px-3 py-2 border border-slate-300 rounded text-sm"
                     placeholder="0"
                   />
@@ -204,6 +229,7 @@ export default function LineItemsModal({
                 <textarea
                   value={newItem.notes}
                   onChange={(e) => setNewItem((prev) => ({ ...prev, notes: e.target.value }))}
+                  onKeyDown={handleAddFormKeyDown}
                   className="w-full px-3 py-2 border border-slate-300 rounded text-sm"
                   rows={2}
                   placeholder="Internal notes..."

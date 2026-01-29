@@ -23,6 +23,7 @@ export default function CategoryTable({
   isClientView,
 }: CategoryTableProps) {
   const [selectedCategory, setSelectedCategory] = useState<CategoryWithSpend | null>(null);
+  const [editingRowIndex, setEditingRowIndex] = useState<number | null>(null);
   const supabase = createClient();
 
   const handleDeleteCategory = async (categoryId: string) => {
@@ -85,7 +86,7 @@ export default function CategoryTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {categories.map((category) => (
+            {categories.map((category, index) => (
               <CategoryRow
                 key={category.id}
                 category={category}
@@ -94,6 +95,21 @@ export default function CategoryTable({
                 onViewLineItems={() => setSelectedCategory(category)}
                 onDelete={() => handleDeleteCategory(category.id)}
                 isClientView={isClientView}
+                shouldStartEditing={editingRowIndex === index}
+                onEditingChange={(editing) => {
+                  if (editing) {
+                    setEditingRowIndex(index);
+                  } else if (editingRowIndex === index) {
+                    setEditingRowIndex(null);
+                  }
+                }}
+                onTabToNextRow={() => {
+                  if (index < categories.length - 1) {
+                    setEditingRowIndex(index + 1);
+                  } else {
+                    setEditingRowIndex(null);
+                  }
+                }}
               />
             ))}
           </tbody>

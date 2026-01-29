@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { CategoryWithSpend, formatCurrency, formatPercent, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
 
 interface CategoryRowProps {
   category: CategoryWithSpend;
@@ -12,6 +13,9 @@ interface CategoryRowProps {
   onViewLineItems: () => void;
   onDelete: () => void;
   isClientView: boolean;
+  onTabToNextRow?: () => void;
+  shouldStartEditing?: boolean;
+  onEditingChange?: (editing: boolean) => void;
 }
 
 export default function CategoryRow({
@@ -21,12 +25,16 @@ export default function CategoryRow({
   onViewLineItems,
   onDelete,
   isClientView,
+  onTabToNextRow,
+  shouldStartEditing,
+  onEditingChange,
 }: CategoryRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [targetAmount, setTargetAmount] = useState(category.target_amount.toString());
   const [allocationPercent, setAllocationPercent] = useState('');
   const [, setLoading] = useState(false);
   const supabase = createClient();
+  const { showSaved } = useToast();
 
   const targetInputRef = useRef<HTMLInputElement>(null);
   const percentInputRef = useRef<HTMLInputElement>(null);
@@ -50,6 +58,14 @@ export default function CategoryRow({
     setTargetAmount(sanitizeNumericString(category.target_amount));
     setAllocationPercent(calculatePercent(category.target_amount));
   }, [category.target_amount, totalBudget]);
+
+  // Handle external trigger to start editing
+  useEffect(() => {
+    if (shouldStartEditing && !isClientView) {
+      handleStartEdit('target');
+      onEditingChange?.(true);
+    }
+  }, [shouldStartEditing]);
 
   // Current allocation percentage for display
   const currentPercent = totalBudget > 0
@@ -97,6 +113,8 @@ export default function CategoryRow({
 
       if (error) throw error;
       setIsEditing(false);
+      onEditingChange?.(false);
+      showSaved();
       onUpdate();
     } catch (err) {
       console.error('Failed to update category:', err);
@@ -109,12 +127,14 @@ export default function CategoryRow({
     setTargetAmount(sanitizeNumericString(category.target_amount));
     setAllocationPercent(calculatePercent(category.target_amount));
     setIsEditing(false);
+    onEditingChange?.(false);
   };
 
   const handleStartEdit = (focusTarget: 'target' | 'percent' = 'target') => {
     setTargetAmount(sanitizeNumericString(category.target_amount));
     setAllocationPercent(calculatePercent(category.target_amount));
     setIsEditing(true);
+    onEditingChange?.(true);
     setTimeout(() => {
       if (focusTarget === 'target') {
         targetInputRef.current?.focus();
@@ -140,14 +160,23 @@ export default function CategoryRow({
     } else if (e.key === 'Escape') {
       e.preventDefault();
       handleCancel();
+    } else if (e.key === 'Tab' && !e.shiftKey && source === 'percent') {
+      // Tab forward from percent field - save and move to next row
+      e.preventDefault();
+      const percent = parseNumericInput(allocationPercent);
+      const amount = (Math.max(0, percent) / 100) * totalBudget;
+      handleSave(Math.round(amount * 100) / 100);
+      onTabToNextRow?.();
     }
   };
 
   const handleBlur = (e: React.FocusEvent, amountToSave: number) => {
-    // Check if focus moved to another input in the same row
+    // Check if focus moved to another editable input in the same row
     const focusedElement = e.relatedTarget as HTMLElement;
-    if (rowRef.current?.contains(focusedElement)) {
-      return; // Don't save yet, focus is still within the row
+    const isTargetInput = focusedElement === targetInputRef.current;
+    const isPercentInput = focusedElement === percentInputRef.current;
+    if (isTargetInput || isPercentInput) {
+      return; // Don't save yet, focus moved to another editable field
     }
     handleSave(amountToSave);
   };

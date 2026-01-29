@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { useToast } from '@/components/ui/Toast';
 
 interface AddCategoryFormProps {
   budgetId: string;
@@ -17,6 +18,7 @@ export default function AddCategoryForm({ budgetId, onCategoryAdded }: AddCatego
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
+  const { showSaved } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +38,7 @@ export default function AddCategoryForm({ budgetId, onCategoryAdded }: AddCatego
 
       setName('');
       setTargetAmount('');
+      showSaved();
       onCategoryAdded();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add category');
@@ -50,6 +53,13 @@ export default function AddCategoryForm({ budgetId, onCategoryAdded }: AddCatego
     setTargetAmount(clampedValue > 0 ? sanitizeNumericString(clampedValue) : '');
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.currentTarget.blur();
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="flex items-end gap-3">
       <div className="flex-1">
@@ -58,6 +68,8 @@ export default function AddCategoryForm({ budgetId, onCategoryAdded }: AddCatego
           label="Category Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onFocus={(e) => e.target.select()}
           placeholder="e.g., Transportation"
           required
         />
@@ -71,6 +83,8 @@ export default function AddCategoryForm({ budgetId, onCategoryAdded }: AddCatego
           value={targetAmount}
           onChange={(e) => setTargetAmount(e.target.value)}
           onBlur={handleTargetAmountBlur}
+          onKeyDown={handleKeyDown}
+          onFocus={(e) => e.target.select()}
           placeholder="0"
         />
       </div>

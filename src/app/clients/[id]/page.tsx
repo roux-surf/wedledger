@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Client, Budget, CategoryWithSpend, LineItem, formatCurrency, formatDate, formatPercent, getBudgetStatus, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import CategoryTable from '@/components/budget/CategoryTable';
 import BudgetSummary from '@/components/budget/BudgetSummary';
+import { useToast } from '@/components/ui/Toast';
 
 export default function ClientBudgetPage() {
   const params = useParams();
@@ -31,6 +32,7 @@ export default function ClientBudgetPage() {
   const clientInfoRef = useRef<HTMLDivElement>(null);
 
   const supabase = createClient();
+  const { showSaved } = useToast();
 
   const fetchData = useCallback(async () => {
     try {
@@ -168,6 +170,7 @@ export default function ClientBudgetPage() {
       }
 
       setIsEditingBudget(false);
+      showSaved();
       fetchData();
     } catch (err) {
       console.error('Failed to update budget:', err);

@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { LineItem, formatCurrency, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
 
 interface LineItemRowProps {
   item: LineItem;
@@ -23,7 +24,13 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView }: 
   });
   const [, setLoading] = useState(false);
   const supabase = createClient();
+  const { showSaved } = useToast();
   const formRef = useRef<HTMLTableRowElement>(null);
+  const vendorInputRef = useRef<HTMLInputElement>(null);
+  const estimatedInputRef = useRef<HTMLInputElement>(null);
+  const actualInputRef = useRef<HTMLInputElement>(null);
+  const paidInputRef = useRef<HTMLInputElement>(null);
+  const notesInputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -58,6 +65,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView }: 
 
       if (error) throw error;
       setIsEditing(false);
+      showSaved();
       onUpdate();
     } catch (err) {
       console.error('Failed to update line item:', err);
@@ -99,10 +107,17 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView }: 
   };
 
   const handleBlur = (e: React.FocusEvent) => {
-    // Check if focus moved to another input in the same row
+    // Check if focus moved to another editable input in the same row
     const focusedElement = e.relatedTarget as HTMLElement;
-    if (formRef.current?.contains(focusedElement)) {
-      return; // Don't save yet, focus is still within the row
+    const editableInputs = [
+      vendorInputRef.current,
+      estimatedInputRef.current,
+      actualInputRef.current,
+      paidInputRef.current,
+      notesInputRef.current,
+    ];
+    if (editableInputs.includes(focusedElement as HTMLInputElement | HTMLTextAreaElement)) {
+      return; // Don't save yet, focus moved to another editable field
     }
     handleSave();
   };
@@ -114,17 +129,20 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView }: 
       <tr ref={formRef} className="bg-slate-50">
         <td className="px-3 py-2">
           <input
+            ref={vendorInputRef}
             type="text"
             name="vendor_name"
             value={formData.vendor_name}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             onBlur={handleBlur}
+            onFocus={(e) => e.target.select()}
             className="w-full px-2 py-1 border border-slate-300 rounded text-sm"
           />
         </td>
         <td className="px-3 py-2">
           <input
+            ref={estimatedInputRef}
             type="text"
             inputMode="decimal"
             name="estimated_cost"
@@ -141,6 +159,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView }: 
         </td>
         <td className="px-3 py-2">
           <input
+            ref={actualInputRef}
             type="text"
             inputMode="decimal"
             name="actual_cost"
@@ -157,6 +176,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView }: 
         </td>
         <td className="px-3 py-2">
           <input
+            ref={paidInputRef}
             type="text"
             inputMode="decimal"
             name="paid_to_date"
@@ -174,6 +194,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView }: 
         <td className="px-3 py-2 text-sm text-slate-900">{formatCurrency(remaining)}</td>
         <td className="px-3 py-2">
           <textarea
+            ref={notesInputRef}
             name="notes"
             value={formData.notes}
             onChange={handleChange}
