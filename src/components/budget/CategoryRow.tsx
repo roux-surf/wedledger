@@ -5,6 +5,7 @@ import { CategoryWithSpend, LineItem, formatCurrency, formatPercent, parseNumeri
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
+import LineItemRow from './LineItemRow';
 
 interface CategoryRowProps {
   category: CategoryWithSpend;
@@ -335,86 +336,167 @@ export default function CategoryRow({
     );
   }
 
+  const lineItems = category.line_items || [];
+  const hasLineItems = lineItems.length > 0;
+
+  const handleDeleteLineItem = async (itemId: string) => {
+    if (!confirm('Are you sure you want to delete this line item?')) return;
+    try {
+      const { error } = await supabase.from('line_items').delete().eq('id', itemId);
+      if (error) throw error;
+      onUpdate();
+    } catch (err) {
+      console.error('Failed to delete line item:', err);
+    }
+  };
+
   return (
-    <tr ref={rowRef} className={`break-inside-avoid ${getRowBackground()}`}>
-      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900`}>{category.name}</td>
-      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right whitespace-nowrap`}>
-        {isEditing && !isClientView ? (
-          <div className="flex items-center gap-2 justify-end">
-            <span className="text-slate-500">$</span>
-            <input
-              ref={targetInputRef}
-              type="text"
-              inputMode="decimal"
-              value={targetAmount}
-              onChange={(e) => setTargetAmount(e.target.value)}
-              onKeyDown={(e) => handleKeyDown(e, 'target')}
-              onBlur={(e) => {
-                const amount = Math.max(0, parseNumericInput(e.target.value));
-                handleTargetAmountChange(e.target.value);
-                handleBlur(e, amount);
-              }}
-              onFocus={(e) => e.target.select()}
-              className="w-24 px-2 py-1 border border-slate-300 rounded text-sm"
-            />
-          </div>
-        ) : (
-          <span
-            onClick={isClientView ? undefined : () => handleStartEdit('target')}
-            className={isClientView ? '' : 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded'}
-          >
-            {formatCurrency(category.target_amount)}
-          </span>
-        )}
-      </td>
-      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right whitespace-nowrap`}>
-        {isEditing && !isClientView ? (
-          <div className="flex items-center gap-1 justify-end">
-            <input
-              ref={percentInputRef}
-              type="text"
-              inputMode="decimal"
-              value={allocationPercent}
-              onChange={(e) => setAllocationPercent(e.target.value)}
-              onKeyDown={(e) => handleKeyDown(e, 'percent')}
-              onBlur={(e) => {
-                const percent = Math.max(0, parseNumericInput(e.target.value));
-                const amount = (percent / 100) * totalBudget;
-                const roundedAmount = Math.round(amount * 100) / 100;
-                handleAllocationPercentChange(e.target.value);
-                handleBlur(e, roundedAmount);
-              }}
-              onFocus={(e) => e.target.select()}
-              className="w-16 px-2 py-1 border border-slate-300 rounded text-sm"
-            />
-            <span className="text-slate-500">%</span>
-          </div>
-        ) : (
-          <span
-            onClick={isClientView ? undefined : () => handleStartEdit('percent')}
-            className={isClientView ? 'text-slate-600' : 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded text-slate-600'}
-          >
-            {formatPercent(currentPercent)}
-          </span>
-        )}
-      </td>
-      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right whitespace-nowrap`}>{formatCurrency(category.actual_spend)}</td>
-      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-right whitespace-nowrap ${getDifferenceColor()}`}>
-        {isOver ? '-' : '+'}
-        {formatCurrency(Math.abs(difference))}
-      </td>
-      {!isClientView && (
-        <td className="px-4 py-3 text-sm">
+    <>
+      <tr ref={rowRef} className={`break-inside-avoid ${getRowBackground()}`}>
+        <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900`}>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="secondary" onClick={onViewLineItems}>
-              Items
-            </Button>
-            <Button size="sm" variant="danger" onClick={onDelete}>
-              Delete
-            </Button>
+            <button
+              type="button"
+              onClick={onToggleExpand}
+              className="flex-shrink-0 p-0.5 rounded hover:bg-slate-100 transition-colors"
+              aria-label={isExpanded ? 'Collapse line items' : 'Expand line items'}
+            >
+              <svg
+                className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-90 text-slate-600' : hasLineItems ? 'text-slate-400' : 'text-slate-300'}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            <span
+              className="cursor-pointer"
+              onClick={onToggleExpand}
+            >
+              {category.name}
+            </span>
           </div>
         </td>
+        <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right whitespace-nowrap`}>
+          {isEditing && !isClientView ? (
+            <div className="flex items-center gap-2 justify-end">
+              <span className="text-slate-500">$</span>
+              <input
+                ref={targetInputRef}
+                type="text"
+                inputMode="decimal"
+                value={targetAmount}
+                onChange={(e) => setTargetAmount(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, 'target')}
+                onBlur={(e) => {
+                  const amount = Math.max(0, parseNumericInput(e.target.value));
+                  handleTargetAmountChange(e.target.value);
+                  handleBlur(e, amount);
+                }}
+                onFocus={(e) => e.target.select()}
+                className="w-24 px-2 py-1 border border-slate-300 rounded text-sm"
+              />
+            </div>
+          ) : (
+            <span
+              onClick={isClientView ? undefined : () => handleStartEdit('target')}
+              className={isClientView ? '' : 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded'}
+            >
+              {formatCurrency(category.target_amount)}
+            </span>
+          )}
+        </td>
+        <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right whitespace-nowrap`}>
+          {isEditing && !isClientView ? (
+            <div className="flex items-center gap-1 justify-end">
+              <input
+                ref={percentInputRef}
+                type="text"
+                inputMode="decimal"
+                value={allocationPercent}
+                onChange={(e) => setAllocationPercent(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, 'percent')}
+                onBlur={(e) => {
+                  const percent = Math.max(0, parseNumericInput(e.target.value));
+                  const amount = (percent / 100) * totalBudget;
+                  const roundedAmount = Math.round(amount * 100) / 100;
+                  handleAllocationPercentChange(e.target.value);
+                  handleBlur(e, roundedAmount);
+                }}
+                onFocus={(e) => e.target.select()}
+                className="w-16 px-2 py-1 border border-slate-300 rounded text-sm"
+              />
+              <span className="text-slate-500">%</span>
+            </div>
+          ) : (
+            <span
+              onClick={isClientView ? undefined : () => handleStartEdit('percent')}
+              className={isClientView ? 'text-slate-600' : 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded text-slate-600'}
+            >
+              {formatPercent(currentPercent)}
+            </span>
+          )}
+        </td>
+        <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right whitespace-nowrap`}>{formatCurrency(category.actual_spend)}</td>
+        <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-right whitespace-nowrap ${getDifferenceColor()}`}>
+          {isOver ? '-' : '+'}
+          {formatCurrency(Math.abs(difference))}
+        </td>
+        {!isClientView && (
+          <td className="px-4 py-3 text-sm">
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="secondary" onClick={onViewLineItems}>
+                Items
+              </Button>
+              <Button size="sm" variant="danger" onClick={onDelete}>
+                Delete
+              </Button>
+            </div>
+          </td>
+        )}
+      </tr>
+      {isExpanded && (
+        <tr className="bg-slate-50/50">
+          <td colSpan={isClientView ? 5 : 6} className="px-4 py-3">
+            {hasLineItems ? (
+              <div className="ml-6 overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200">
+                      <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Vendor</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Estimated</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Actual</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Paid</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Remaining</th>
+                      {!isClientView && (
+                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Notes</th>
+                      )}
+                      {!isClientView && (
+                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Actions</th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {lineItems.map((item: LineItem) => (
+                      <LineItemRow
+                        key={item.id}
+                        item={item}
+                        onUpdate={onUpdate}
+                        onDelete={() => handleDeleteLineItem(item.id)}
+                        isClientView={isClientView}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="ml-6 text-sm text-slate-500 italic">No line items</p>
+            )}
+          </td>
+        </tr>
       )}
-    </tr>
+    </>
   );
 }

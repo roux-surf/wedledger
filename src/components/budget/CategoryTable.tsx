@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CategoryWithSpend, formatCurrency, formatPercent } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import CategoryRow from './CategoryRow';
@@ -25,7 +25,13 @@ export default function CategoryTable({
   const [selectedCategory, setSelectedCategory] = useState<CategoryWithSpend | null>(null);
   const [editingRowIndex, setEditingRowIndex] = useState<number | null>(null);
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
+  const [expandedDesktopIds, setExpandedDesktopIds] = useState<Set<string>>(new Set());
   const supabase = createClient();
+
+  // Clear desktop expanded rows when switching between coordinator/client view
+  useEffect(() => {
+    setExpandedDesktopIds(new Set());
+  }, [isClientView]);
 
   const handleDeleteCategory = async (categoryId: string) => {
     if (!confirm('Are you sure you want to delete this category? All line items will also be deleted.')) {
@@ -111,6 +117,18 @@ export default function CategoryTable({
                   } else {
                     setEditingRowIndex(null);
                   }
+                }}
+                isExpanded={expandedDesktopIds.has(category.id)}
+                onToggleExpand={() => {
+                  setExpandedDesktopIds(prev => {
+                    const next = new Set(prev);
+                    if (next.has(category.id)) {
+                      next.delete(category.id);
+                    } else {
+                      next.add(category.id);
+                    }
+                    return next;
+                  });
                 }}
               />
             ))}
