@@ -118,7 +118,10 @@ export default function TimelineSection({
 
   const handleLoadTemplate = async (items: MilestoneTemplateItem[]) => {
     // Delete all existing milestones for this client
-    await supabase.from('milestones').delete().eq('client_id', clientId);
+    const { error: deleteError } = await supabase.from('milestones').delete().eq('client_id', clientId);
+    if (deleteError) {
+      console.error('[Timeline] Failed to delete existing milestones:', deleteError);
+    }
 
     // Insert new milestones from template
     const rows = items.map((item, index) => ({
@@ -134,7 +137,10 @@ export default function TimelineSection({
     }));
 
     if (rows.length > 0) {
-      await supabase.from('milestones').insert(rows);
+      const { error: insertError } = await supabase.from('milestones').insert(rows);
+      if (insertError) {
+        console.error('[Timeline] Failed to insert milestones:', insertError);
+      }
     }
 
     showSaved();

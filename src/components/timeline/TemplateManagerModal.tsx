@@ -14,7 +14,7 @@ interface TemplateManagerModalProps {
   onClose: () => void;
   currentMilestones: MilestoneWithBudget[];
   categoryIdToName: Map<string, string>;
-  onLoadTemplate: (items: MilestoneTemplateItem[]) => void;
+  onLoadTemplate: (items: MilestoneTemplateItem[]) => Promise<void>;
 }
 
 export default function TemplateManagerModal({
@@ -86,7 +86,8 @@ export default function TemplateManagerModal({
     setTemplateName('');
   };
 
-  const handleLoadBuiltIn = (levelId: string) => {
+  const handleLoadBuiltIn = async (levelId: string) => {
+    setLoading(true);
     const defaults = getMilestoneDefaults(levelId);
     const items: MilestoneTemplateItem[] = defaults.map((m, index) => ({
       title: m.title,
@@ -95,12 +96,15 @@ export default function TemplateManagerModal({
       category_name: m.categoryName,
       sort_order: index,
     }));
-    onLoadTemplate(items);
+    await onLoadTemplate(items);
+    setLoading(false);
     onClose();
   };
 
-  const handleLoadCustom = (template: MilestoneTemplate) => {
-    onLoadTemplate(template.milestones);
+  const handleLoadCustom = async (template: MilestoneTemplate) => {
+    setLoading(true);
+    await onLoadTemplate(template.milestones);
+    setLoading(false);
     onClose();
   };
 
