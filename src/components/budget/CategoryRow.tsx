@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { CategoryWithSpend, LineItem, formatCurrency, formatPercent, parseNumericInput, sanitizeNumericString } from '@/lib/types';
+import { CategoryWithSpend, LineItemWithPayments, formatCurrency, formatPercent, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
@@ -323,7 +323,7 @@ export default function CategoryRow({
         {isExpanded && isClientView && lineItems.length > 0 && (
           <div className="px-4 pb-4">
             <div className="bg-slate-50 rounded-lg divide-y divide-slate-200">
-              {lineItems.map((item: LineItem) => (
+              {lineItems.map((item: LineItemWithPayments) => (
                 <div key={item.id} className="px-3 py-2.5 flex items-center justify-between">
                   <span className="text-sm text-slate-700">{item.vendor_name}</span>
                   <span className="text-sm font-medium text-slate-900">{formatCurrency(item.actual_cost)}</span>
@@ -479,7 +479,7 @@ export default function CategoryRow({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {lineItems.map((item: LineItem) => (
+                    {lineItems.map((item: LineItemWithPayments) => (
                       <LineItemRow
                         key={item.id}
                         item={item}

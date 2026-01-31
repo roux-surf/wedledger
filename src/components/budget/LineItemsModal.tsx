@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CategoryWithSpend, LineItem, formatCurrency, parseNumericInput, sanitizeNumericString } from '@/lib/types';
+import { CategoryWithSpend, LineItemWithPayments, formatCurrency, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
@@ -28,7 +28,6 @@ export default function LineItemsModal({
     vendor_name: '',
     estimated_cost: '',
     actual_cost: '',
-    paid_to_date: '',
     notes: '',
   });
   const [loading, setLoading] = useState(false);
@@ -46,7 +45,7 @@ export default function LineItemsModal({
         vendor_name: newItem.vendor_name.trim(),
         estimated_cost: parseNumericInput(newItem.estimated_cost),
         actual_cost: parseNumericInput(newItem.actual_cost),
-        paid_to_date: parseNumericInput(newItem.paid_to_date),
+        paid_to_date: 0,
         notes: newItem.notes || null,
       });
 
@@ -56,7 +55,6 @@ export default function LineItemsModal({
         vendor_name: '',
         estimated_cost: '',
         actual_cost: '',
-        paid_to_date: '',
         notes: '',
       });
       setShowAddForm(false);
@@ -86,7 +84,6 @@ export default function LineItemsModal({
         vendor_name: '',
         estimated_cost: '',
         actual_cost: '',
-        paid_to_date: '',
         notes: '',
       });
     }
@@ -104,9 +101,12 @@ export default function LineItemsModal({
     }
   };
 
-  const lineItems = category.line_items || [];
+  const lineItems = (category.line_items || []) as LineItemWithPayments[];
   const totalActual = lineItems.reduce((sum, item) => sum + (Number(item.actual_cost) || 0), 0);
-  const totalPaid = lineItems.reduce((sum, item) => sum + (Number(item.paid_to_date) || 0), 0);
+  const totalPaid = lineItems.reduce((sum, item) => {
+    const hasPayments = item.payments && item.payments.length > 0;
+    return sum + (hasPayments ? item.total_paid : (Number(item.paid_to_date) || 0));
+  }, 0);
   const totalRemaining = totalActual - totalPaid;
 
   return (
@@ -149,7 +149,7 @@ export default function LineItemsModal({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {lineItems.map((item: LineItem) => (
+                {lineItems.map((item) => (
                   <LineItemRow
                     key={item.id}
                     item={item}
@@ -163,7 +163,7 @@ export default function LineItemsModal({
           </div>
           {/* Mobile card list */}
           <div className="md:hidden divide-y divide-slate-100">
-            {lineItems.map((item: LineItem) => (
+            {lineItems.map((item) => (
               <LineItemRow
                 key={item.id}
                 item={item}
@@ -219,20 +219,6 @@ export default function LineItemsModal({
                     value={newItem.actual_cost}
                     onChange={(e) => setNewItem((prev) => ({ ...prev, actual_cost: e.target.value }))}
                     onBlur={(e) => handleNumericBlur('actual_cost', e.target.value)}
-                    onKeyDown={handleAddFormKeyDown}
-                    onFocus={(e) => e.target.select()}
-                    className="w-full px-3 py-2 border border-slate-300 rounded text-sm"
-                    placeholder="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Paid to Date</label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={newItem.paid_to_date}
-                    onChange={(e) => setNewItem((prev) => ({ ...prev, paid_to_date: e.target.value }))}
-                    onBlur={(e) => handleNumericBlur('paid_to_date', e.target.value)}
                     onKeyDown={handleAddFormKeyDown}
                     onFocus={(e) => e.target.select()}
                     className="w-full px-3 py-2 border border-slate-300 rounded text-sm"

@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import ClientCard from '@/components/dashboard/ClientCard';
-import { Client, ClientWithBudgetStatus, getBudgetStatus } from '@/lib/types';
+import UpcomingPayments from '@/components/dashboard/UpcomingPayments';
+import { Client, ClientWithBudgetStatus, PaymentAlert, getBudgetStatus, getPaymentUrgency } from '@/lib/types';
 import Button from '@/components/ui/Button';
 
 export const dynamic = 'force-dynamic';
@@ -68,6 +69,100 @@ async function getClientsWithBudgetStatus(userId: string): Promise<ClientWithBud
   return clientsWithStatus;
 }
 
+async function getUpcomingPayments(userId: string): Promise<PaymentAlert[]> {
+  const supabase = await createClient();
+
+  // Get all clients for this user
+  const { data: clients } = await supabase
+    .from('clients')
+    .select('id, name')
+    .eq('user_id', userId);
+
+  if (!clients || clients.length === 0) return [];
+
+  const clientMap = new Map(clients.map((c) => [c.id, c.name]));
+  const clientIds = clients.map((c) => c.id);
+
+  // Get budgets for these clients
+  const { data: budgets } = await supabase
+    .from('budgets')
+    .select('id, client_id')
+    .in('client_id', clientIds);
+
+  if (!budgets || budgets.length === 0) return [];
+
+  const budgetToClient = new Map(budgets.map((b) => [b.id, b.client_id]));
+  const budgetIds = budgets.map((b) => b.id);
+
+  // Get categories
+  const { data: categories } = await supabase
+    .from('categories')
+    .select('id, budget_id, name')
+    .in('budget_id', budgetIds);
+
+  if (!categories || categories.length === 0) return [];
+
+  const categoryMap = new Map(categories.map((c) => [c.id, { budget_id: c.budget_id, name: c.name }]));
+  const categoryIds = categories.map((c) => c.id);
+
+  // Get line items
+  const { data: lineItems } = await supabase
+    .from('line_items')
+    .select('id, category_id, vendor_name')
+    .in('category_id', categoryIds);
+
+  if (!lineItems || lineItems.length === 0) return [];
+
+  const lineItemMap = new Map(lineItems.map((li) => [li.id, { category_id: li.category_id, vendor_name: li.vendor_name }]));
+  const lineItemIds = lineItems.map((li) => li.id);
+
+  // Get pending payments with due dates within 30 days (including overdue)
+  const thirtyDaysFromNow = new Date();
+  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+  const cutoffDate = thirtyDaysFromNow.toISOString().split('T')[0];
+
+  const { data: payments } = await supabase
+    .from('payments')
+    .select('*')
+    .in('line_item_id', lineItemIds)
+    .eq('status', 'pending')
+    .not('due_date', 'is', null)
+    .lte('due_date', cutoffDate)
+    .order('due_date', { ascending: true });
+
+  if (!payments || payments.length === 0) return [];
+
+  // Build alerts
+  const alerts: PaymentAlert[] = [];
+  for (const payment of payments) {
+    const lineItem = lineItemMap.get(payment.line_item_id);
+    if (!lineItem) continue;
+
+    const category = categoryMap.get(lineItem.category_id);
+    if (!category) continue;
+
+    const clientId = budgetToClient.get(category.budget_id);
+    if (!clientId) continue;
+
+    const clientName = clientMap.get(clientId);
+    if (!clientName) continue;
+
+    alerts.push({
+      payment_id: payment.id,
+      vendor_name: lineItem.vendor_name,
+      client_id: clientId,
+      client_name: clientName,
+      category_name: category.name,
+      label: payment.label,
+      amount: Number(payment.amount),
+      due_date: payment.due_date,
+      urgency: getPaymentUrgency(payment.due_date),
+    });
+  }
+
+  return alerts;
+}
+
 async function signOut() {
   'use server';
   const supabase = await createClient();
@@ -85,7 +180,10 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  const clients = await getClientsWithBudgetStatus(user.id);
+  const [clients, paymentAlerts] = await Promise.all([
+    getClientsWithBudgetStatus(user.id),
+    getUpcomingPayments(user.id),
+  ]);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -112,6 +210,8 @@ export default async function DashboardPage() {
             <Button>New Client</Button>
           </Link>
         </div>
+
+        <UpcomingPayments alerts={paymentAlerts} />
 
         {clients.length === 0 ? (
           <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">

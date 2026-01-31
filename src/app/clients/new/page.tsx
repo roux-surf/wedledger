@@ -78,6 +78,7 @@ export default function NewClientPage() {
         .from('budgets')
         .insert({
           client_id: client.id,
+          template_id: selectedTemplate,
         })
         .select()
         .single();

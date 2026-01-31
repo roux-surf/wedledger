@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { Client, Budget, CategoryWithSpend, LineItem, formatCurrency, formatDate, formatPercent, getBudgetStatus, parseNumericInput, sanitizeNumericString } from '@/lib/types';
+import { Client, Budget, CategoryWithSpend, LineItem, LineItemWithPayments, Payment, formatCurrency, formatDate, formatPercent, getBudgetStatus, parseNumericInput, sanitizeNumericString } from '@/lib/types';
+import { getWeddingLevelById } from '@/lib/budgetTemplates';
 import CategoryTable from '@/components/budget/CategoryTable';
 import BudgetSummary from '@/components/budget/BudgetSummary';
 import { useToast } from '@/components/ui/Toast';
@@ -65,7 +66,7 @@ export default function ClientBudgetPage() {
 
       if (categoriesError) throw categoriesError;
 
-      // Fetch line items for each category
+      // Fetch line items for each category with payments
       const categoriesWithSpend: CategoryWithSpend[] = await Promise.all(
         categoriesData.map(async (category) => {
           const { data: lineItems } = await supabase
@@ -74,15 +75,54 @@ export default function ClientBudgetPage() {
             .eq('category_id', category.id)
             .order('created_at', { ascending: true });
 
-          const actualSpend = (lineItems || []).reduce(
-            (sum: number, item: LineItem) => sum + (Number(item.actual_cost) || 0),
+          const items = lineItems || [];
+          const lineItemIds = items.map((li: LineItem) => li.id);
+
+          // Batch-fetch payments for all line items in this category
+          let paymentsData: Payment[] = [];
+          if (lineItemIds.length > 0) {
+            const { data } = await supabase
+              .from('payments')
+              .select('*')
+              .in('line_item_id', lineItemIds)
+              .order('created_at', { ascending: true });
+            paymentsData = (data || []) as Payment[];
+          }
+
+          // Group payments by line_item_id
+          const paymentsByLineItem: Record<string, Payment[]> = {};
+          for (const payment of paymentsData) {
+            if (!paymentsByLineItem[payment.line_item_id]) {
+              paymentsByLineItem[payment.line_item_id] = [];
+            }
+            paymentsByLineItem[payment.line_item_id].push(payment);
+          }
+
+          // Attach payments to each line item
+          const lineItemsWithPayments: LineItemWithPayments[] = items.map((item: LineItem) => {
+            const itemPayments = paymentsByLineItem[item.id] || [];
+            const totalPaid = itemPayments
+              .filter((p) => p.status === 'paid')
+              .reduce((sum, p) => sum + Number(p.amount), 0);
+            const totalScheduled = itemPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+
+            return {
+              ...item,
+              payments: itemPayments,
+              total_paid: totalPaid,
+              total_scheduled: totalScheduled,
+            };
+          });
+
+          const actualSpend = lineItemsWithPayments.reduce(
+            (sum: number, item: LineItemWithPayments) => sum + (Number(item.actual_cost) || 0),
             0
           );
 
           return {
             ...category,
             actual_spend: actualSpend,
-            line_items: lineItems || [],
+            line_items: lineItemsWithPayments,
           };
         })
       );
@@ -507,6 +547,12 @@ export default function ClientBudgetPage() {
                 </div>
               </div>
             </div>
+            {budget.template_id && (() => {
+              const level = getWeddingLevelById(budget.template_id);
+              return level ? (
+                <p className="text-xs text-slate-400 mt-4">Started from: {level.displayName} template</p>
+              ) : null;
+            })()}
           </div>
         )}
 

@@ -24,6 +24,7 @@ CREATE TABLE clients (
 CREATE TABLE budgets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id UUID REFERENCES clients(id) ON DELETE CASCADE NOT NULL UNIQUE,
+  template_id TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -218,6 +219,81 @@ CREATE POLICY "Users can delete own line_items" ON line_items
       JOIN budgets ON budgets.id = categories.budget_id
       JOIN clients ON clients.id = budgets.client_id
       WHERE categories.id = line_items.category_id
+      AND clients.user_id = auth.uid()
+    )
+  );
+
+-- =============================================
+-- PAYMENTS TABLE
+-- Structured multi-payment tracking per vendor
+-- =============================================
+
+CREATE TABLE payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  line_item_id UUID REFERENCES line_items(id) ON DELETE CASCADE NOT NULL,
+  label TEXT NOT NULL,
+  amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  due_date DATE,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid')),
+  paid_date DATE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_payments_line_item_id ON payments(line_item_id);
+CREATE INDEX idx_payments_due_date ON payments(due_date);
+CREATE INDEX idx_payments_status ON payments(status);
+
+ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+
+-- =============================================
+-- PAYMENTS POLICIES
+-- Access via line_item -> category -> budget -> client ownership chain
+-- =============================================
+
+CREATE POLICY "Users can view own payments" ON payments
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM line_items
+      JOIN categories ON categories.id = line_items.category_id
+      JOIN budgets ON budgets.id = categories.budget_id
+      JOIN clients ON clients.id = budgets.client_id
+      WHERE line_items.id = payments.line_item_id
+      AND clients.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Users can insert own payments" ON payments
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM line_items
+      JOIN categories ON categories.id = line_items.category_id
+      JOIN budgets ON budgets.id = categories.budget_id
+      JOIN clients ON clients.id = budgets.client_id
+      WHERE line_items.id = payments.line_item_id
+      AND clients.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Users can update own payments" ON payments
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM line_items
+      JOIN categories ON categories.id = line_items.category_id
+      JOIN budgets ON budgets.id = categories.budget_id
+      JOIN clients ON clients.id = budgets.client_id
+      WHERE line_items.id = payments.line_item_id
+      AND clients.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Users can delete own payments" ON payments
+  FOR DELETE USING (
+    EXISTS (
+      SELECT 1 FROM line_items
+      JOIN categories ON categories.id = line_items.category_id
+      JOIN budgets ON budgets.id = categories.budget_id
+      JOIN clients ON clients.id = budgets.client_id
+      WHERE line_items.id = payments.line_item_id
       AND clients.user_id = auth.uid()
     )
   );

@@ -13,6 +13,7 @@ export interface Client {
 export interface Budget {
   id: string;
   client_id: string;
+  template_id?: string | null;
   created_at: string;
 }
 
@@ -36,9 +37,57 @@ export interface LineItem {
   created_at: string;
 }
 
+export type PaymentStatus = 'pending' | 'paid';
+
+export interface Payment {
+  id: string;
+  line_item_id: string;
+  label: string;
+  amount: number;
+  due_date: string | null;
+  status: PaymentStatus;
+  paid_date: string | null;
+  created_at: string;
+}
+
+export interface LineItemWithPayments extends LineItem {
+  payments: Payment[];
+  total_paid: number;
+  total_scheduled: number;
+}
+
+export interface PaymentAlert {
+  payment_id: string;
+  vendor_name: string;
+  client_id: string;
+  client_name: string;
+  category_name: string;
+  label: string;
+  amount: number;
+  due_date: string;
+  urgency: 'overdue' | 'this_week' | 'upcoming';
+}
+
+export function getPaymentUrgency(dueDate: string): 'overdue' | 'this_week' | 'upcoming' {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(dueDate + 'T00:00:00');
+  const diffMs = due.getTime() - today.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) return 'overdue';
+  if (diffDays <= 7) return 'this_week';
+  return 'upcoming';
+}
+
+export function formatShortDate(dateString: string): string {
+  const date = new Date(dateString + 'T00:00:00');
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 export interface CategoryWithSpend extends Category {
   actual_spend: number;
-  line_items?: LineItem[];
+  line_items?: LineItemWithPayments[];
 }
 
 export interface ClientWithBudgetStatus extends Client {
