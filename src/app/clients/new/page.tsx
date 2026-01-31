@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { DEFAULT_CATEGORIES, US_STATES } from '@/lib/constants';
 import { parseNumericInput, sanitizeNumericString } from '@/lib/types';
-import { WEDDING_LEVELS } from '@/lib/budgetTemplates';
+import { WEDDING_LEVELS, getWeddingLevelById } from '@/lib/budgetTemplates';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Link from 'next/link';
@@ -84,13 +84,19 @@ export default function NewClientPage() {
 
       if (budgetError) throw budgetError;
 
-      // Create default categories
-      const categories = DEFAULT_CATEGORIES.map((name, index) => ({
-        budget_id: budget.id,
-        name,
-        target_amount: 0,
-        sort_order: index,
-      }));
+      // Create default categories, pre-populating target amounts from template if selected
+      const totalBudget = parseNumericInput(formData.total_budget);
+      const level = selectedTemplate ? getWeddingLevelById(selectedTemplate) : null;
+
+      const categories = DEFAULT_CATEGORIES.map((name, index) => {
+        const pct = level?.categoryAllocations[name] ?? 0;
+        return {
+          budget_id: budget.id,
+          name,
+          target_amount: level ? Math.round((pct / 100) * totalBudget) : 0,
+          sort_order: index,
+        };
+      });
 
       const { error: categoriesError } = await supabase
         .from('categories')
