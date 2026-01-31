@@ -89,15 +89,51 @@ export default function NewClientPage() {
       const totalBudget = parseNumericInput(formData.total_budget);
       const level = selectedTemplate ? getWeddingLevelById(selectedTemplate) : null;
 
+      // Guardrail: fall back to Skip if template is invalid or budget is missing/zero
+      if (selectedTemplate && !level) {
+        console.error(`[Template] Unknown template id "${selectedTemplate}", falling back to Skip`);
+      }
+      if (level && totalBudget <= 0) {
+        console.warn(`[Template] Total budget is ${totalBudget}, skipping template allocation`);
+      }
+      const applyTemplate = !!(level && totalBudget > 0);
+
+      // Guardrail: validate template category names match available categories
+      if (applyTemplate && level) {
+        for (const cat of Object.keys(level.categoryAllocations)) {
+          if (!DEFAULT_CATEGORIES.includes(cat)) {
+            console.error(`[Template] "${level.displayName}" has unknown category "${cat}" — will be ignored`);
+          }
+        }
+        for (const cat of DEFAULT_CATEGORIES) {
+          if (!(cat in level.categoryAllocations)) {
+            console.warn(`[Template] "${level.displayName}" missing allocation for "${cat}" — defaulting to 0%`);
+          }
+        }
+      }
+
       const categories = DEFAULT_CATEGORIES.map((name, index) => {
-        const pct = level?.categoryAllocations[name] ?? 0;
+        const pct = applyTemplate && level ? (level.categoryAllocations[name] ?? 0) : 0;
         return {
           budget_id: budget.id,
           name,
-          target_amount: level ? Math.round((pct / 100) * totalBudget) : 0,
+          target_amount: applyTemplate ? Math.round((pct / 100) * totalBudget) : 0,
           sort_order: index,
         };
       });
+
+      // Guardrail: verify allocations sum approximately to total budget
+      if (applyTemplate && level) {
+        const allocatedSum = categories.reduce((sum, c) => sum + c.target_amount, 0);
+        const diff = Math.abs(allocatedSum - totalBudget);
+        const tolerance = DEFAULT_CATEGORIES.length; // $1 rounding per category
+        if (diff > tolerance) {
+          console.error(`[Template] Allocation sum $${allocatedSum} differs from budget $${totalBudget} by $${diff} (tolerance: $${tolerance})`);
+        }
+        console.log(`[Template] Applied "${level.displayName}" to $${totalBudget} budget → allocated $${allocatedSum} across ${categories.length} categories`);
+      } else {
+        console.log('[Template] No template applied — all category targets set to $0');
+      }
 
       const { error: categoriesError } = await supabase
         .from('categories')
