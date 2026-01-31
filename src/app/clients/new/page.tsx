@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { DEFAULT_CATEGORIES, US_STATES } from '@/lib/constants';
 import { parseNumericInput, sanitizeNumericString } from '@/lib/types';
+import { WEDDING_LEVELS } from '@/lib/budgetTemplates';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Link from 'next/link';
@@ -18,6 +19,7 @@ export default function NewClientPage() {
     guest_count: '',
     total_budget: '',
   });
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -206,6 +208,48 @@ export default function NewClientPage() {
               required
               placeholder="e.g., 50000"
             />
+          </div>
+
+          <div className="mt-6">
+            <p className="text-sm font-medium text-slate-700 mb-1">
+              Start from a budget template{' '}
+              <span className="text-slate-400 font-normal">(optional)</span>
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {WEDDING_LEVELS.map((level) => (
+                <button
+                  key={level.id}
+                  type="button"
+                  onClick={() =>
+                    setSelectedTemplate(selectedTemplate === level.id ? null : level.id)
+                  }
+                  className={`rounded-md border px-3 py-2 text-left text-sm transition-colors ${
+                    selectedTemplate === level.id
+                      ? 'border-slate-900 bg-slate-900 text-white'
+                      : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+                  }`}
+                >
+                  <span className="font-medium">{level.displayName}</span>
+                  <span className="block text-xs mt-0.5 opacity-75">
+                    {level.budgetRangeLabel}
+                  </span>
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setSelectedTemplate(null)}
+                className={`rounded-md border px-3 py-2 text-left text-sm transition-colors ${
+                  selectedTemplate === null
+                    ? 'border-slate-900 bg-slate-900 text-white'
+                    : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+                }`}
+              >
+                <span className="font-medium">Skip</span>
+                <span className="block text-xs mt-0.5 opacity-75">
+                  Start from scratch
+                </span>
+              </button>
+            </div>
           </div>
 
           <div className="mt-6 flex gap-3">
