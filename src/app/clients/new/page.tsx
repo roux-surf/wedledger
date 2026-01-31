@@ -293,6 +293,7 @@ export default function NewClientPage() {
                 </span>
               </button>
             </div>
+            <p className="text-xs text-slate-400 mt-2">This simply pre-fills your budget. You can adjust all allocations after creation.</p>
           </div>
 
           <div className="mt-6 flex gap-3">
