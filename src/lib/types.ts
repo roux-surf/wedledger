@@ -93,6 +93,8 @@ export interface CategoryWithSpend extends Category {
 export interface ClientWithBudgetStatus extends Client {
   total_spent: number;
   budget_status: 'green' | 'yellow' | 'red';
+  milestones_total: number;
+  milestones_completed: number;
 }
 
 export type BudgetStatus = 'green' | 'yellow' | 'red';
@@ -143,4 +145,70 @@ export function formatDate(dateString: string): string {
     month: 'long',
     day: 'numeric',
   });
+}
+
+// =============================================
+// MILESTONES
+// =============================================
+
+export type MilestoneStatus = 'not_started' | 'in_progress' | 'completed';
+
+export interface Milestone {
+  id: string;
+  client_id: string;
+  title: string;
+  description: string | null;
+  months_before: number;
+  target_date: string;
+  status: MilestoneStatus;
+  category_id: string | null;
+  sort_order: number;
+  is_custom: boolean;
+  completed_at: string | null;
+  created_at: string;
+}
+
+export interface MilestoneWithBudget extends Milestone {
+  category_name?: string;
+  category_target?: number;
+  category_spent?: number;
+}
+
+export interface MilestoneAlert {
+  milestone_id: string;
+  title: string;
+  client_id: string;
+  client_name: string;
+  target_date: string;
+  status: MilestoneStatus;
+  urgency: 'overdue' | 'this_week' | 'upcoming';
+}
+
+export function getMilestoneUrgency(targetDate: string): 'overdue' | 'this_week' | 'upcoming' {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(targetDate + 'T00:00:00');
+  const diffMs = target.getTime() - today.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) return 'overdue';
+  if (diffDays <= 7) return 'this_week';
+  return 'upcoming';
+}
+
+export interface MilestoneTemplateItem {
+  title: string;
+  description: string | null;
+  months_before: number;
+  category_name: string | null;
+  sort_order: number;
+}
+
+export interface MilestoneTemplate {
+  id: string;
+  user_id: string;
+  name: string;
+  base_level_id: string | null;
+  milestones: MilestoneTemplateItem[];
+  created_at: string;
 }

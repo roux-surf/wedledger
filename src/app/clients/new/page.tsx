@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { DEFAULT_CATEGORIES, US_STATES } from '@/lib/constants';
 import { parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import { WEDDING_LEVELS, getWeddingLevelById } from '@/lib/budgetTemplates';
+import { getDefaultMilestonesForLevel, calculateTargetDate } from '@/lib/milestoneTemplates';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Link from 'next/link';
@@ -135,11 +136,42 @@ export default function NewClientPage() {
         console.log('[Template] No template applied — all category targets set to $0');
       }
 
-      const { error: categoriesError } = await supabase
+      const { data: createdCategories, error: categoriesError } = await supabase
         .from('categories')
-        .insert(categories);
+        .insert(categories)
+        .select();
 
       if (categoriesError) throw categoriesError;
+
+      // Create default milestones from the selected template level
+      const milestoneLevel = selectedTemplate || 'diy';
+      const defaultMilestones = getDefaultMilestonesForLevel(milestoneLevel);
+
+      if (defaultMilestones.length > 0 && createdCategories) {
+        const categoryNameToId = new Map(
+          createdCategories.map((c: { name: string; id: string }) => [c.name, c.id])
+        );
+
+        const milestoneRows = defaultMilestones.map((m, index) => ({
+          client_id: client.id,
+          title: m.title,
+          description: m.description,
+          months_before: m.monthsBefore,
+          target_date: calculateTargetDate(formData.wedding_date, m.monthsBefore),
+          status: 'not_started',
+          category_id: m.categoryName ? categoryNameToId.get(m.categoryName) || null : null,
+          sort_order: index,
+          is_custom: false,
+        }));
+
+        const { error: milestonesError } = await supabase
+          .from('milestones')
+          .insert(milestoneRows);
+
+        if (milestonesError) {
+          console.error('[Milestones] Failed to create milestones:', milestonesError);
+        }
+      }
 
       router.push(`/clients/${client.id}`);
     } catch (err) {
@@ -293,7 +325,7 @@ export default function NewClientPage() {
                 </span>
               </button>
             </div>
-            <p className="text-xs text-slate-400 mt-2">This simply pre-fills your budget. You can adjust all allocations after creation.</p>
+            <p className="text-xs text-slate-400 mt-2">This pre-fills your budget allocations and planning timeline. You can adjust everything after creation.</p>
           </div>
 
           <div className="mt-6 flex gap-3">

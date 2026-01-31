@@ -4,10 +4,11 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { Client, Budget, CategoryWithSpend, LineItem, LineItemWithPayments, Payment, formatCurrency, formatDate, formatPercent, getBudgetStatus, parseNumericInput, sanitizeNumericString } from '@/lib/types';
+import { Client, Budget, CategoryWithSpend, LineItem, LineItemWithPayments, Payment, MilestoneWithBudget, formatCurrency, formatDate, formatPercent, getBudgetStatus, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import { getWeddingLevelById } from '@/lib/budgetTemplates';
 import CategoryTable from '@/components/budget/CategoryTable';
 import BudgetSummary from '@/components/budget/BudgetSummary';
+import TimelineSection from '@/components/timeline/TimelineSection';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/components/ui/Toast';
 
@@ -19,6 +20,7 @@ export default function ClientBudgetPage() {
   const [client, setClient] = useState<Client | null>(null);
   const [budget, setBudget] = useState<Budget | null>(null);
   const [categories, setCategories] = useState<CategoryWithSpend[]>([]);
+  const [milestones, setMilestones] = useState<MilestoneWithBudget[]>([]);
   const [loading, setLoading] = useState(true);
   const [isClientView, setIsClientView] = useState(false);
 
@@ -133,6 +135,27 @@ export default function ClientBudgetPage() {
       );
 
       setCategories(categoriesWithSpend);
+
+      // Fetch milestones and enrich with budget data
+      const { data: milestonesData } = await supabase
+        .from('milestones')
+        .select('*')
+        .eq('client_id', clientId)
+        .order('target_date', { ascending: true });
+
+      const enrichedMilestones: MilestoneWithBudget[] = (milestonesData || []).map((m) => {
+        const linked = m.category_id
+          ? categoriesWithSpend.find((c) => c.id === m.category_id)
+          : null;
+        return {
+          ...m,
+          category_name: linked?.name,
+          category_target: linked ? Number(linked.target_amount) : undefined,
+          category_spent: linked?.actual_spend,
+        };
+      });
+
+      setMilestones(enrichedMilestones);
     } catch (err) {
       console.error('Failed to fetch data:', err);
       router.push('/dashboard');
@@ -580,6 +603,16 @@ export default function ClientBudgetPage() {
             isClientView={isClientView}
           />
         </div>
+
+        {/* Planning Timeline */}
+        <TimelineSection
+          milestones={milestones}
+          categories={categories}
+          clientId={clientId}
+          weddingDate={client.wedding_date}
+          isClientView={isClientView}
+          onUpdate={fetchData}
+        />
 
         {/* AI Summary - Only in Coordinator View */}
         {!isClientView && (

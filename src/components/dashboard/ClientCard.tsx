@@ -79,11 +79,29 @@ export default function ClientCard({ client, onDelete }: ClientCardProps) {
               </p>
             </div>
           </div>
-          <div className="mt-3">
-            <p className="text-xs text-slate-500 uppercase tracking-wider">Spent</p>
-            <p className="text-sm font-medium text-slate-900 mt-1">
-              {formatCurrency(client.total_spent)} of {formatCurrency(client.total_budget)}
-            </p>
+          <div className="grid grid-cols-2 gap-4 mt-3">
+            <div>
+              <p className="text-xs text-slate-500 uppercase tracking-wider">Spent</p>
+              <p className="text-sm font-medium text-slate-900 mt-1">
+                {formatCurrency(client.total_spent)} of {formatCurrency(client.total_budget)}
+              </p>
+            </div>
+            {client.milestones_total > 0 && (
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wider">Timeline</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-sm font-medium text-slate-900">
+                    {client.milestones_completed}/{client.milestones_total}
+                  </p>
+                  <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-green-500 rounded-full"
+                      style={{ width: `${(client.milestones_completed / client.milestones_total) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

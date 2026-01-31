@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import ClientList from '@/components/dashboard/ClientList';
 import UpcomingPayments from '@/components/dashboard/UpcomingPayments';
-import { Client, ClientWithBudgetStatus, PaymentAlert, getBudgetStatus, getPaymentUrgency } from '@/lib/types';
+import UpcomingMilestones from '@/components/dashboard/UpcomingMilestones';
+import { Client, ClientWithBudgetStatus, PaymentAlert, MilestoneAlert, getBudgetStatus, getPaymentUrgency, getMilestoneUrgency } from '@/lib/types';
 import Button from '@/components/ui/Button';
 
 export const dynamic = 'force-dynamic';
@@ -58,10 +59,21 @@ async function getClientsWithBudgetStatus(userId: string): Promise<ClientWithBud
         }
       }
 
+      // Get milestone counts
+      const { data: allMilestones } = await supabase
+        .from('milestones')
+        .select('status')
+        .eq('client_id', client.id);
+
+      const milestonesTotal = allMilestones?.length || 0;
+      const milestonesCompleted = allMilestones?.filter((m) => m.status === 'completed').length || 0;
+
       return {
         ...client,
         total_spent: totalSpent,
         budget_status: getBudgetStatus(Number(client.total_budget), totalSpent),
+        milestones_total: milestonesTotal,
+        milestones_completed: milestonesCompleted,
       };
     })
   );
@@ -163,6 +175,44 @@ async function getUpcomingPayments(userId: string): Promise<PaymentAlert[]> {
   return alerts;
 }
 
+async function getUpcomingMilestones(userId: string): Promise<MilestoneAlert[]> {
+  const supabase = await createClient();
+
+  const { data: clients } = await supabase
+    .from('clients')
+    .select('id, name')
+    .eq('user_id', userId);
+
+  if (!clients || clients.length === 0) return [];
+
+  const clientMap = new Map(clients.map((c) => [c.id, c.name]));
+  const clientIds = clients.map((c) => c.id);
+
+  const thirtyDaysFromNow = new Date();
+  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+  const cutoffDate = thirtyDaysFromNow.toISOString().split('T')[0];
+
+  const { data: milestones } = await supabase
+    .from('milestones')
+    .select('*')
+    .in('client_id', clientIds)
+    .neq('status', 'completed')
+    .lte('target_date', cutoffDate)
+    .order('target_date', { ascending: true });
+
+  if (!milestones || milestones.length === 0) return [];
+
+  return milestones.map((m) => ({
+    milestone_id: m.id,
+    title: m.title,
+    client_id: m.client_id,
+    client_name: clientMap.get(m.client_id) || 'Unknown',
+    target_date: m.target_date,
+    status: m.status,
+    urgency: getMilestoneUrgency(m.target_date),
+  }));
+}
+
 async function signOut() {
   'use server';
   const supabase = await createClient();
@@ -180,9 +230,10 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  const [clients, paymentAlerts] = await Promise.all([
+  const [clients, paymentAlerts, milestoneAlerts] = await Promise.all([
     getClientsWithBudgetStatus(user.id),
     getUpcomingPayments(user.id),
+    getUpcomingMilestones(user.id),
   ]);
 
   return (
@@ -212,6 +263,7 @@ export default async function DashboardPage() {
         </div>
 
         <UpcomingPayments alerts={paymentAlerts} />
+        <UpcomingMilestones alerts={milestoneAlerts} />
 
         {clients.length === 0 ? (
           <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
