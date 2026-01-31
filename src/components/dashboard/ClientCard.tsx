@@ -5,9 +5,10 @@ import { ClientWithBudgetStatus, formatCurrency, formatDate } from '@/lib/types'
 
 interface ClientCardProps {
   client: ClientWithBudgetStatus;
+  onDelete?: (clientId: string, clientName: string) => void;
 }
 
-export default function ClientCard({ client }: ClientCardProps) {
+export default function ClientCard({ client, onDelete }: ClientCardProps) {
   const statusColors = {
     green: 'bg-green-100 text-green-800 border-green-200',
     yellow: 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -45,6 +46,21 @@ export default function ClientCard({ client }: ClientCardProps) {
             >
               {statusLabels[client.budget_status]}
             </span>
+            {onDelete && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onDelete(client.id, client.name);
+                }}
+                className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                title="Delete wedding"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 

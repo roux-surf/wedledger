@@ -8,6 +8,7 @@ import { Client, Budget, CategoryWithSpend, LineItem, LineItemWithPayments, Paym
 import { getWeddingLevelById } from '@/lib/budgetTemplates';
 import CategoryTable from '@/components/budget/CategoryTable';
 import BudgetSummary from '@/components/budget/BudgetSummary';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/components/ui/Toast';
 
 export default function ClientBudgetPage() {
@@ -27,6 +28,10 @@ export default function ClientBudgetPage() {
   const [, setBudgetUpdateLoading] = useState(false);
   const [budgetUpdateError, setBudgetUpdateError] = useState<string | null>(null);
   const budgetInputRef = useRef<HTMLInputElement>(null);
+
+  // Delete confirmation state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Sticky header state
   const [showStickyHeader, setShowStickyHeader] = useState(false);
@@ -328,6 +333,14 @@ export default function ClientBudgetPage() {
                 Client View
               </button>
             </div>
+            {!isClientView && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+              >
+                Delete Wedding
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -575,6 +588,27 @@ export default function ClientBudgetPage() {
           </div>
         )}
       </main>
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={async () => {
+          setDeleting(true);
+          try {
+            const { error } = await supabase.from('clients').delete().eq('id', clientId);
+            if (error) throw error;
+            router.push('/dashboard');
+          } catch (err) {
+            console.error('Failed to delete client:', err);
+            setDeleting(false);
+            setShowDeleteConfirm(false);
+          }
+        }}
+        title="Delete Wedding"
+        message={`Are you sure you want to delete ${client.name}? This will permanently delete all budget data, categories, line items, and payments. This cannot be undone.`}
+        confirmLabel="Delete Wedding"
+        loading={deleting}
+      />
     </div>
   );
 }

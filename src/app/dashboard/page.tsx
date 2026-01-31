@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import ClientCard from '@/components/dashboard/ClientCard';
+import ClientList from '@/components/dashboard/ClientList';
 import UpcomingPayments from '@/components/dashboard/UpcomingPayments';
 import { Client, ClientWithBudgetStatus, PaymentAlert, getBudgetStatus, getPaymentUrgency } from '@/lib/types';
 import Button from '@/components/ui/Button';
@@ -221,11 +221,7 @@ export default async function DashboardPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {clients.map((client) => (
-              <ClientCard key={client.id} client={client} />
-            ))}
-          </div>
+          <ClientList clients={clients} />
         )}
       </main>
     </div>
