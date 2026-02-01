@@ -107,10 +107,10 @@ export default function GanttTimeline({
         <div style={{ minWidth: `${minWidth}px` }} className="relative">
           {/* Month header row */}
           <div className="flex border-b border-slate-200 bg-slate-50 sticky top-0 z-10">
-            <div className="w-48 shrink-0 px-3 py-2 text-xs font-semibold text-slate-500 border-r border-slate-200">
+            <div className="w-40 shrink-0 px-3 py-1 text-xs font-semibold text-slate-500 border-r border-slate-200">
               Milestone
             </div>
-            <div className="flex-1 relative h-8">
+            <div className="flex-1 relative h-6">
               {monthMarkers.map((marker) => {
                 const pct = getGanttPosition(marker.date, start, end);
                 return (
@@ -139,17 +139,17 @@ export default function GanttTimeline({
                 className="flex border-b border-slate-100 hover:bg-slate-50/50 group"
               >
                 {/* Label column */}
-                <div className="w-48 shrink-0 px-3 py-2 border-r border-slate-100">
-                  <span className={`text-xs font-medium truncate block ${
+                <div className="w-40 shrink-0 px-3 py-1 border-r border-slate-100 flex items-center min-w-0">
+                  <span className={`text-xs font-medium truncate ${
                     m.status === 'completed' ? 'text-slate-400 line-through' : 'text-slate-700'
                   }`}>
                     {m.title}
                   </span>
-                  <span className="text-[10px] text-slate-400">{formatShortDate(m.target_date)}</span>
+                  <span className="text-[10px] text-slate-400 shrink-0 ml-1">·&nbsp;{formatShortDate(m.target_date)}</span>
                 </div>
 
                 {/* Bar area */}
-                <div className="flex-1 relative py-2 px-1">
+                <div className="flex-1 relative py-1 px-1">
                   {/* Month grid lines */}
                   {monthMarkers.map((marker) => {
                     const markerPct = getGanttPosition(marker.date, start, end);
@@ -184,8 +184,8 @@ export default function GanttTimeline({
 
           {/* Today marker overlay — spans the full height of the bar area */}
           <div
-            className="absolute top-8 bottom-0 w-px border-l-2 border-dashed border-red-400 z-20 pointer-events-none"
-            style={{ left: `calc(192px + (100% - 192px) * ${todayPct / 100})` }}
+            className="absolute top-6 bottom-0 w-px border-l-2 border-dashed border-red-400 z-20 pointer-events-none"
+            style={{ left: `calc(160px + (100% - 160px) * ${todayPct / 100})` }}
           >
             <span className="absolute -top-4 left-1 text-[9px] font-bold text-red-500 whitespace-nowrap">
               Today
@@ -194,8 +194,8 @@ export default function GanttTimeline({
 
           {/* Wedding date marker */}
           <div
-            className="absolute top-8 bottom-0 w-0.5 bg-slate-900 z-20 pointer-events-none"
-            style={{ left: `calc(192px + (100% - 192px) * ${weddingPct / 100})` }}
+            className="absolute top-6 bottom-0 w-0.5 bg-slate-900 z-20 pointer-events-none"
+            style={{ left: `calc(160px + (100% - 160px) * ${weddingPct / 100})` }}
           >
             <span className="absolute -top-4 left-1 text-[9px] font-bold text-slate-900 whitespace-nowrap">
               Wedding
