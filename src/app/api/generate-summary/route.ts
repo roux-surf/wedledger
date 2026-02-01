@@ -116,7 +116,7 @@ Budget Overview:
 Category Breakdown:
 ${categoryBreakdown}
 
-Write 1-2 short paragraphs summarizing the budget status. Use a professional, warm tone suitable for client communication. Focus on the facts - do not include recommendations, forecasts, or vendor suggestions. The summary should be suitable for copying into an email to the client.`;
+Write 1-2 short paragraphs summarizing the budget status. Use a conversational, friendly tone — approachable and reassuring, like a trusted advisor chatting with their client. Focus on the facts - do not include recommendations, forecasts, or vendor suggestions. Do NOT include any headings, titles, or markdown formatting — just plain text paragraphs. The summary should be suitable for displaying directly in a client dashboard.`;
 
     const message = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
