@@ -240,7 +240,7 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-slate-50">
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-slate-900">WedLedger</h1>
+          <h1 className="text-xl font-bold text-slate-900">WedTrack</h1>
           <form action={signOut}>
             <Button variant="secondary" size="sm" type="submit">
               Sign Out

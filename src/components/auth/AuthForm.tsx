@@ -62,7 +62,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
   return (
     <div className="w-full max-w-md">
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">WedLedger</h1>
+        <h1 className="text-2xl font-bold text-slate-900">WedTrack</h1>
         <p className="text-slate-600 mt-2">
           {mode === 'login' ? 'Sign in to your account' : 'Create your account'}
         </p>

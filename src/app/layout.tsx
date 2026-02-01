@@ -9,8 +9,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'WedLedger - Wedding Budget Management',
-  description: 'Budget management tool for wedding coordinators',
+  title: 'WedTrack - Wedding Management',
+  description: 'Wedding management tool for coordinators',
 };
 
 export default function RootLayout({
