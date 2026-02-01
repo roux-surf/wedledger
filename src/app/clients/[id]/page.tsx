@@ -11,6 +11,7 @@ import BudgetSummary from '@/components/budget/BudgetSummary';
 import TimelineSection from '@/components/timeline/TimelineSection';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/components/ui/Toast';
+import ClientDashboard from '@/components/client/ClientDashboard';
 
 export default function ClientBudgetPage() {
   const params = useParams();
@@ -413,53 +414,21 @@ export default function ClientBudgetPage() {
 
       <main className={`max-w-6xl mx-auto px-4 print:px-0 print:max-w-none ${isClientView ? 'py-10 print:py-6' : 'py-8 print:py-6'}`}>
         {isClientView ? (
-          <>
-            {/* Client View: Prominent Budget Summary */}
-            <div ref={clientInfoRef} className="bg-slate-900 text-white rounded-lg print:rounded-none p-5 md:p-8 mb-8 break-inside-avoid">
-              {/* Mobile: stacked hero layout */}
-              <div className="flex flex-col gap-5 md:hidden">
-                <div className="text-center">
-                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Total Budget</p>
-                  <p className="text-3xl font-bold">{formatCurrency(totalBudget)}</p>
-                </div>
-                <div className="border-t border-slate-700 pt-4 flex justify-between items-end">
-                  <div>
-                    <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Committed</p>
-                    <p className="text-xl font-bold">{formatCurrency(totalSpent)}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Remaining</p>
-                    <p className={`text-2xl font-bold ${remaining >= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                      {remaining >= 0 ? '' : '-'}{formatCurrency(Math.abs(remaining))}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              {/* Desktop: 3-column grid */}
-              <div className="hidden md:grid grid-cols-3 gap-8 text-center">
-                <div>
-                  <p className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-2">Total Budget</p>
-                  <p className="text-4xl font-bold whitespace-nowrap">{formatCurrency(totalBudget)}</p>
-                </div>
-                <div className="border-x border-slate-700">
-                  <p className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-2">Total Committed</p>
-                  <p className="text-4xl font-bold whitespace-nowrap">{formatCurrency(totalSpent)}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-2">Remaining</p>
-                  <p className={`text-4xl font-bold whitespace-nowrap ${remaining >= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                    {remaining >= 0 ? '' : '-'}{formatCurrency(Math.abs(remaining))}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-5 md:mt-6 pt-5 md:pt-6 border-t border-slate-700">
-                <p className="text-slate-300 text-sm">{getClientStatusMessage()}</p>
-                <p className="text-slate-500 text-xs mt-2">
-                  {client.city}, {client.state} &bull; {formatDate(client.wedding_date)} &bull; {client.guest_count} guests
-                </p>
-              </div>
-            </div>
-          </>
+          <ClientDashboard
+            categories={categories}
+            totalBudget={totalBudget}
+            totalSpent={totalSpent}
+            remaining={remaining}
+            clientName={client.name}
+            weddingDate={client.wedding_date}
+            city={client.city}
+            state={client.state}
+            guestCount={client.guest_count}
+            statusMessage={getClientStatusMessage()}
+            budgetId={budget.id}
+            onUpdate={fetchData}
+            clientInfoRef={clientInfoRef}
+          />
         ) : (
           /* Coordinator View: Detailed Info */
           <div ref={clientInfoRef} className="bg-white border border-slate-200 rounded-lg p-6 mb-6">
@@ -592,17 +561,19 @@ export default function ClientBudgetPage() {
           </div>
         )}
 
-        {/* Categories Table */}
-        <div className={isClientView ? 'mb-8' : 'mb-6'}>
-          <h3 className={`font-semibold text-slate-900 ${isClientView ? 'text-xl mb-6' : 'text-lg mb-4'}`}>Budget Categories</h3>
-          <CategoryTable
-            categories={categories}
-            budgetId={budget.id}
-            totalBudget={Number(client.total_budget)}
-            onUpdate={fetchData}
-            isClientView={isClientView}
-          />
-        </div>
+        {/* Categories Table - Coordinator View only (Client view handled by ClientDashboard) */}
+        {!isClientView && (
+          <div className="mb-6">
+            <h3 className="font-semibold text-slate-900 text-lg mb-4">Budget Categories</h3>
+            <CategoryTable
+              categories={categories}
+              budgetId={budget.id}
+              totalBudget={Number(client.total_budget)}
+              onUpdate={fetchData}
+              isClientView={false}
+            />
+          </div>
+        )}
 
         {/* Planning Timeline */}
         <TimelineSection
