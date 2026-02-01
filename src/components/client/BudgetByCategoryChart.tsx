@@ -26,25 +26,15 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
   );
 }
 
-function CustomLabel({ cx, cy, totalBudget }: { cx: number; cy: number; totalBudget: number }) {
-  return (
-    <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
-      <tspan x={cx} dy="-0.5em" fill="#94a3b8" fontSize={11}>
-        Total
-      </tspan>
-      <tspan x={cx} dy="1.4em" fill="#1e293b" fontSize={16} fontWeight="bold">
-        {formatCurrency(totalBudget)}
-      </tspan>
-    </text>
-  );
-}
-
 export default function BudgetByCategoryChart({ data, totalBudget }: BudgetByCategoryChartProps) {
   return (
     <div className="bg-white border border-slate-200 rounded-lg p-5">
-      <h4 className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-4">
-        Budget by Category
-      </h4>
+      <div className="flex items-baseline justify-between mb-4">
+        <h4 className="text-sm font-medium text-slate-500 uppercase tracking-wider">
+          Budget by Category
+        </h4>
+        <p className="text-lg font-bold text-slate-900">{formatCurrency(totalBudget)}</p>
+      </div>
 
       {data.length === 0 ? (
         <div className="flex items-center justify-center h-[220px] lg:h-[300px]">
@@ -69,7 +59,6 @@ export default function BudgetByCategoryChart({ data, totalBudget }: BudgetByCat
                     fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]}
                   />
                 ))}
-                <CustomLabel cx={0} cy={0} totalBudget={totalBudget} />
               </Pie>
               <Tooltip content={<CustomTooltip />} />
               <Legend
