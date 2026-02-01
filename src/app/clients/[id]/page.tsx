@@ -373,25 +373,25 @@ export default function ClientBudgetPage() {
       <div
         className={`fixed top-0 left-0 right-0 z-40 transition-transform duration-200 print:hidden ${
           showStickyHeader ? 'translate-y-0' : '-translate-y-full'
-        } ${isClientView ? 'bg-slate-900 text-white border-b border-slate-700' : 'bg-white border-b border-slate-200 shadow-sm'}`}
+        } bg-white border-b border-slate-200 shadow-sm`}
       >
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-6">
-            <span className={`font-semibold truncate ${isClientView ? 'text-white' : 'text-slate-900'}`}>{client.name}</span>
+            <span className="font-semibold truncate text-slate-900">{client.name}</span>
             {/* Desktop sticky metrics */}
             <div className="hidden md:flex items-center gap-6 text-sm">
               <div className="flex items-center gap-1.5">
-                <span className={isClientView ? 'text-slate-400' : 'text-slate-500'}>Budget:</span>
-                <span className={`font-medium ${isClientView ? 'text-white' : 'text-slate-900'}`}>{formatCurrency(totalBudget)}</span>
+                <span className="text-slate-500">Budget:</span>
+                <span className="font-medium text-slate-900">{formatCurrency(totalBudget)}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className={isClientView ? 'text-slate-400' : 'text-slate-500'}>{isClientView ? 'Committed:' : 'Spent:'}</span>
-                <span className={`font-medium ${isClientView ? 'text-white' : 'text-slate-900'}`}>{formatCurrency(totalSpent)}</span>
+                <span className="text-slate-500">{isClientView ? 'Committed:' : 'Spent:'}</span>
+                <span className="font-medium text-slate-900">{formatCurrency(totalSpent)}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className={isClientView ? 'text-slate-400' : 'text-slate-500'}>Remaining:</span>
-                <span className={`font-medium ${remaining >= 0 ? (isClientView ? 'text-emerald-400' : 'text-green-600') : (isClientView ? 'text-amber-400' : 'text-red-600')}`}>
-                  {remaining < 0 && isClientView ? '-' : ''}{formatCurrency(Math.abs(remaining))}
+                <span className="text-slate-500">Remaining:</span>
+                <span className={`font-medium ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {formatCurrency(Math.abs(remaining))}
                 </span>
               </div>
               {!isClientView && (
@@ -404,9 +404,9 @@ export default function ClientBudgetPage() {
             </div>
             {/* Mobile sticky metrics */}
             <div className="flex md:hidden items-center gap-2 text-sm">
-              <span className={`font-medium ${isClientView ? 'text-white' : 'text-slate-900'}`}>{formatCurrency(totalSpent)}</span>
-              <span className={isClientView ? 'text-slate-400' : 'text-slate-500'}>/</span>
-              <span className={isClientView ? 'text-slate-400' : 'text-slate-500'}>{formatCurrency(totalBudget)}</span>
+              <span className="font-medium text-slate-900">{formatCurrency(totalSpent)}</span>
+              <span className="text-slate-500">/</span>
+              <span className="text-slate-500">{formatCurrency(totalBudget)}</span>
             </div>
           </div>
         </div>
@@ -426,6 +426,7 @@ export default function ClientBudgetPage() {
             guestCount={client.guest_count}
             statusMessage={getClientStatusMessage()}
             budgetId={budget.id}
+            clientCreatedAt={client.created_at}
             onUpdate={fetchData}
             clientInfoRef={clientInfoRef}
           />

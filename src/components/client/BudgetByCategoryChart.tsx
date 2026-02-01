@@ -14,12 +14,12 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
   const item = payload[0].payload;
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 shadow-lg">
-      <p className="text-white text-sm font-medium">{item.name}</p>
-      <p className="text-slate-300 text-xs mt-1">
+    <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-md">
+      <p className="text-slate-900 text-sm font-medium">{item.name}</p>
+      <p className="text-slate-600 text-xs mt-1">
         Budget: {formatCurrency(item.value)}
       </p>
-      <p className="text-slate-300 text-xs">
+      <p className="text-slate-600 text-xs">
         Spent: {formatCurrency(item.spent)}
       </p>
     </div>
@@ -32,7 +32,7 @@ function CustomLabel({ cx, cy, totalBudget }: { cx: number; cy: number; totalBud
       <tspan x={cx} dy="-0.5em" fill="#94a3b8" fontSize={11}>
         Total
       </tspan>
-      <tspan x={cx} dy="1.4em" fill="#ffffff" fontSize={16} fontWeight="bold">
+      <tspan x={cx} dy="1.4em" fill="#1e293b" fontSize={16} fontWeight="bold">
         {formatCurrency(totalBudget)}
       </tspan>
     </text>
@@ -41,8 +41,8 @@ function CustomLabel({ cx, cy, totalBudget }: { cx: number; cy: number; totalBud
 
 export default function BudgetByCategoryChart({ data, totalBudget }: BudgetByCategoryChartProps) {
   return (
-    <div className="bg-slate-800 rounded-lg p-5">
-      <h4 className="text-sm font-medium text-slate-300 uppercase tracking-wider mb-4">
+    <div className="bg-white border border-slate-200 rounded-lg p-5">
+      <h4 className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-4">
         Budget by Category
       </h4>
 
@@ -78,7 +78,7 @@ export default function BudgetByCategoryChart({ data, totalBudget }: BudgetByCat
                 verticalAlign="middle"
                 wrapperStyle={{ fontSize: 11, lineHeight: '20px' }}
                 formatter={(value: string) => (
-                  <span className="text-slate-300">{value}</span>
+                  <span className="text-slate-600">{value}</span>
                 )}
               />
             </PieChart>

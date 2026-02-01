@@ -20,16 +20,16 @@ export default function PaidVsRemainingChart({ data }: PaidVsRemainingChartProps
   const scale = total > 100 ? 100 / total : 1;
 
   return (
-    <div className="bg-slate-800 rounded-lg p-5">
-      <h4 className="text-sm font-medium text-slate-300 uppercase tracking-wider mb-4">
+    <div className="bg-white border border-slate-200 rounded-lg p-5">
+      <h4 className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-4">
         Financial Position
       </h4>
 
       {/* Progress bar */}
-      <div className="w-full h-4 bg-slate-700 rounded-full overflow-hidden flex">
+      <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden flex">
         {paidPct > 0 && (
           <div
-            className="bg-emerald-400 h-full transition-all duration-500"
+            className="bg-emerald-500 h-full transition-all duration-500"
             style={{ width: `${paidPct * scale}%` }}
           />
         )}
@@ -41,16 +41,16 @@ export default function PaidVsRemainingChart({ data }: PaidVsRemainingChartProps
         )}
         {uncommittedPct > 0 && (
           <div
-            className="bg-slate-600 h-full transition-all duration-500"
+            className="bg-slate-200 h-full transition-all duration-500"
             style={{ width: `${uncommittedPct * scale}%` }}
           />
         )}
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 mt-3 text-xs text-slate-400">
+      <div className="flex items-center gap-4 mt-3 text-xs text-slate-500">
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
           Paid
         </div>
         <div className="flex items-center gap-1.5">
@@ -58,28 +58,28 @@ export default function PaidVsRemainingChart({ data }: PaidVsRemainingChartProps
           Pending
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-slate-600 inline-block" />
+          <span className="w-2.5 h-2.5 rounded-full bg-slate-200 inline-block" />
           Uncommitted
         </div>
       </div>
 
       {/* Metric cards */}
       <div className="grid grid-cols-3 gap-3 mt-5">
-        <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-          <p className="text-emerald-400 text-lg md:text-xl font-bold">{formatCurrency(totalPaid)}</p>
-          <p className="text-slate-400 text-xs mt-1">
+        <div className="bg-slate-50 rounded-lg p-3 text-center">
+          <p className="text-emerald-600 text-lg md:text-xl font-bold">{formatCurrency(totalPaid)}</p>
+          <p className="text-slate-500 text-xs mt-1">
             Paid ({totalBudget > 0 ? Math.round(paidPct) : 0}%)
           </p>
         </div>
-        <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-          <p className="text-blue-400 text-lg md:text-xl font-bold">{formatCurrency(totalPending)}</p>
-          <p className="text-slate-400 text-xs mt-1">
+        <div className="bg-slate-50 rounded-lg p-3 text-center">
+          <p className="text-blue-600 text-lg md:text-xl font-bold">{formatCurrency(totalPending)}</p>
+          <p className="text-slate-500 text-xs mt-1">
             Pending ({totalBudget > 0 ? Math.round(pendingPct) : 0}%)
           </p>
         </div>
-        <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-          <p className="text-slate-300 text-lg md:text-xl font-bold">{formatCurrency(uncommitted)}</p>
-          <p className="text-slate-400 text-xs mt-1">
+        <div className="bg-slate-50 rounded-lg p-3 text-center">
+          <p className="text-slate-700 text-lg md:text-xl font-bold">{formatCurrency(uncommitted)}</p>
+          <p className="text-slate-500 text-xs mt-1">
             Uncommitted ({totalBudget > 0 ? Math.round(uncommittedPct) : 0}%)
           </p>
         </div>

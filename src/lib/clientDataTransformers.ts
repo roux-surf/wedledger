@@ -3,7 +3,8 @@ import { CategoryWithSpend, LineItemWithPayments, Payment } from './types';
 // --- Chart data types ---
 
 export interface CashFlowDataPoint {
-  month: string;
+  month: string;  // full label for tooltip (e.g. "Jan 2025")
+  label: string;  // short label for axis (e.g. "Jan" or "Jan '25")
   paid: number;
   upcoming: number;
 }
@@ -53,13 +54,25 @@ function formatMonthKey(dateString: string): string {
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
 }
 
+/** Short label for chart axis: "Jan", "Feb", etc. Shows "'25" suffix on Jan or first entry. */
+function formatMonthLabel(year: number, month: number, isFirst: boolean): string {
+  const d = new Date(year, month - 1, 1);
+  const short = d.toLocaleDateString('en-US', { month: 'short' });
+  if (isFirst || month === 1) {
+    return `${short} '${String(year).slice(2)}`;
+  }
+  return short;
+}
+
 // --- Transformers ---
 
 /**
  * Groups all payments by month into paid + upcoming totals for a stacked bar chart.
+ * Spans from the client creation month through the latest payment month, filling gaps.
  */
-export function buildCashFlowData(categories: CategoryWithSpend[]): CashFlowDataPoint[] {
-  const monthMap = new Map<string, { paid: number; upcoming: number; sortKey: string }>();
+export function buildCashFlowData(categories: CategoryWithSpend[], clientCreatedAt: string): CashFlowDataPoint[] {
+  const monthMap = new Map<string, { paid: number; upcoming: number }>();
+  let maxSort: string | null = null;
 
   for (const cat of categories) {
     for (const li of cat.line_items || []) {
@@ -67,11 +80,13 @@ export function buildCashFlowData(categories: CategoryWithSpend[]): CashFlowData
         const dateKey = payment.paid_date || payment.due_date;
         if (!dateKey) continue;
 
+        const sortKey = dateKey.slice(0, 7); // YYYY-MM
+        if (!maxSort || sortKey > maxSort) maxSort = sortKey;
+
         const month = formatMonthKey(dateKey);
-        const sortKey = dateKey.slice(0, 7); // YYYY-MM for sorting
 
         if (!monthMap.has(month)) {
-          monthMap.set(month, { paid: 0, upcoming: 0, sortKey });
+          monthMap.set(month, { paid: 0, upcoming: 0 });
         }
 
         const entry = monthMap.get(month)!;
@@ -84,13 +99,42 @@ export function buildCashFlowData(categories: CategoryWithSpend[]): CashFlowData
     }
   }
 
-  return Array.from(monthMap.entries())
-    .sort(([, a], [, b]) => a.sortKey.localeCompare(b.sortKey))
-    .map(([month, data]) => ({
-      month,
-      paid: Math.round(data.paid * 100) / 100,
-      upcoming: Math.round(data.upcoming * 100) / 100,
-    }));
+  // Start from client creation month; if no payments exist, show at least the current month
+  const createdDate = new Date(clientCreatedAt);
+  const minSort = `${createdDate.getFullYear()}-${String(createdDate.getMonth() + 1).padStart(2, '0')}`;
+
+  if (!maxSort) {
+    // No payments at all — show from creation month through current month
+    const now = new Date();
+    maxSort = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  if (minSort > maxSort) maxSort = minSort;
+
+  const result: CashFlowDataPoint[] = [];
+  const [startYear, startMonth] = minSort.split('-').map(Number);
+  const [endYear, endMonth] = maxSort.split('-').map(Number);
+
+  let y = startYear;
+  let m = startMonth;
+  let isFirst = true;
+  while (y < endYear || (y === endYear && m <= endMonth)) {
+    const d = new Date(y, m - 1, 1);
+    const fullLabel = d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+    const shortLabel = formatMonthLabel(y, m, isFirst);
+    const existing = monthMap.get(fullLabel);
+    result.push({
+      month: fullLabel,
+      label: shortLabel,
+      paid: existing ? Math.round(existing.paid * 100) / 100 : 0,
+      upcoming: existing ? Math.round(existing.upcoming * 100) / 100 : 0,
+    });
+    isFirst = false;
+    m++;
+    if (m > 12) { m = 1; y++; }
+  }
+
+  return result;
 }
 
 /**
