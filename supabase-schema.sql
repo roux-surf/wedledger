@@ -1,4 +1,4 @@
--- WedTrack Database Schema
+-- WedLedger Database Schema
 -- Run this SQL in your Supabase SQL Editor to set up the database
 
 -- =============================================
