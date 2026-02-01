@@ -5,11 +5,15 @@ import Button from '@/components/ui/Button';
 
 interface BudgetSummaryProps {
   clientId: string;
+  onPushToClient: (summary: string) => Promise<void>;
+  currentPublishedSummary: string | null;
 }
 
-export default function BudgetSummary({ clientId }: BudgetSummaryProps) {
+export default function BudgetSummary({ clientId, onPushToClient, currentPublishedSummary }: BudgetSummaryProps) {
   const [summary, setSummary] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [pushing, setPushing] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const generateSummary = async () => {
@@ -40,6 +44,29 @@ export default function BudgetSummary({ clientId }: BudgetSummaryProps) {
     }
   };
 
+  const handlePushToClient = async () => {
+    if (!summary) return;
+    setPushing(true);
+    try {
+      await onPushToClient(summary);
+    } catch {
+      setError('Failed to push summary to client view');
+    } finally {
+      setPushing(false);
+    }
+  };
+
+  const handleRemoveFromClient = async () => {
+    setRemoving(true);
+    try {
+      await onPushToClient('');
+    } catch {
+      setError('Failed to remove summary from client view');
+    } finally {
+      setRemoving(false);
+    }
+  };
+
   return (
     <div className="bg-white border border-slate-200 rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
@@ -48,6 +75,19 @@ export default function BudgetSummary({ clientId }: BudgetSummaryProps) {
           {loading ? 'Generating...' : 'Generate Budget Summary'}
         </Button>
       </div>
+
+      {currentPublishedSummary && (
+        <div className="flex items-center gap-3 mb-4 px-3 py-2 bg-green-50 border border-green-200 rounded-md">
+          <span className="text-sm text-green-700">Currently published to client view</span>
+          <button
+            onClick={handleRemoveFromClient}
+            disabled={removing}
+            className="text-xs text-red-600 hover:text-red-700 underline ml-auto"
+          >
+            {removing ? 'Removing...' : 'Remove from Client View'}
+          </button>
+        </div>
+      )}
 
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-md">
@@ -58,14 +98,23 @@ export default function BudgetSummary({ clientId }: BudgetSummaryProps) {
       {summary && (
         <div className="p-4 bg-slate-50 border border-slate-200 rounded-md">
           <p className="text-sm text-slate-700 whitespace-pre-wrap">{summary}</p>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(summary);
-            }}
-            className="mt-3 text-xs text-slate-500 hover:text-slate-700 underline"
-          >
-            Copy to clipboard
-          </button>
+          <div className="mt-3 flex items-center gap-4">
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(summary);
+              }}
+              className="text-xs text-slate-500 hover:text-slate-700 underline"
+            >
+              Copy to clipboard
+            </button>
+            <button
+              onClick={handlePushToClient}
+              disabled={pushing}
+              className="text-xs font-medium text-blue-600 hover:text-blue-700 underline"
+            >
+              {pushing ? 'Pushing...' : 'Push to Client View'}
+            </button>
+          </div>
         </div>
       )}
 

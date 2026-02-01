@@ -429,6 +429,7 @@ export default function ClientBudgetPage() {
             clientCreatedAt={client.created_at}
             onUpdate={fetchData}
             clientInfoRef={clientInfoRef}
+            clientSummary={client.client_summary}
           />
         ) : (
           /* Coordinator View: Detailed Info */
@@ -589,7 +590,21 @@ export default function ClientBudgetPage() {
         {/* AI Summary - Only in Coordinator View */}
         {!isClientView && (
           <div className="mb-6">
-            <BudgetSummary clientId={clientId} />
+            <BudgetSummary
+              clientId={clientId}
+              currentPublishedSummary={client.client_summary}
+              onPushToClient={async (summary: string) => {
+                const { error } = await supabase
+                  .from('clients')
+                  .update({
+                    client_summary: summary || null,
+                    client_summary_updated_at: summary ? new Date().toISOString() : null,
+                  })
+                  .eq('id', clientId);
+                if (error) throw error;
+                fetchData();
+              }}
+            />
           </div>
         )}
       </main>

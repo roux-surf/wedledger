@@ -7,6 +7,8 @@ export interface Client {
   state: string;
   guest_count: number;
   total_budget: number;
+  client_summary: string | null;
+  client_summary_updated_at: string | null;
   created_at: string;
 }
 

@@ -16,6 +16,8 @@ CREATE TABLE clients (
   state TEXT NOT NULL,
   guest_count INTEGER NOT NULL,
   total_budget DECIMAL(12,2) NOT NULL,
+  client_summary TEXT,
+  client_summary_updated_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

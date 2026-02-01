@@ -29,6 +29,7 @@ interface ClientDashboardProps {
   clientCreatedAt: string;
   onUpdate: () => void;
   clientInfoRef: RefObject<HTMLDivElement | null>;
+  clientSummary?: string | null;
 }
 
 export default function ClientDashboard({
@@ -46,6 +47,7 @@ export default function ClientDashboard({
   clientCreatedAt,
   onUpdate,
   clientInfoRef,
+  clientSummary,
 }: ClientDashboardProps) {
   const cashFlowData = useMemo(() => buildCashFlowData(categories, clientCreatedAt), [categories, clientCreatedAt]);
   const categoryAllocationData = useMemo(() => buildCategoryAllocationData(categories), [categories]);
@@ -99,6 +101,14 @@ export default function ClientDashboard({
           </p>
         </div>
       </div>
+
+      {/* Budget Summary (published by coordinator) */}
+      {clientSummary && (
+        <div className="bg-white border border-slate-200 rounded-lg p-5 mb-8 break-inside-avoid">
+          <h4 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-3">Budget Summary</h4>
+          <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{clientSummary}</p>
+        </div>
+      )}
 
       {/* Charts Grid: 2x2 on desktop, single column on mobile */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
