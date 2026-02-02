@@ -145,9 +145,6 @@ export default function LineItemsModal({
                   <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Paid</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Remaining</th>
                   {!isClientView && (
-                    <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Notes</th>
-                  )}
-                  {!isClientView && (
                     <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Actions</th>
                   )}
                 </tr>
@@ -229,17 +226,6 @@ export default function LineItemsModal({
                     placeholder="0"
                   />
                 </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Notes (Internal)</label>
-                <textarea
-                  value={newItem.notes}
-                  onChange={(e) => setNewItem((prev) => ({ ...prev, notes: e.target.value }))}
-                  onKeyDown={handleAddFormKeyDown}
-                  className="w-full px-3 py-2 border border-slate-300 rounded text-sm"
-                  rows={2}
-                  placeholder="Internal notes..."
-                />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Booking Status</label>
