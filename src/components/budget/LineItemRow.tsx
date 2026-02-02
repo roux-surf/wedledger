@@ -187,7 +187,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
       phoneInputRef.current,
       emailInputRef.current,
     ];
-    if (editableInputs.includes(focusedElement as HTMLInputElement | HTMLTextAreaElement)) {
+    if ((editableInputs as (HTMLElement | null)[]).includes(focusedElement)) {
       return;
     }
     // Don't auto-save if focus moved to a select or button inside the form
