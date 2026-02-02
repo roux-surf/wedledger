@@ -230,7 +230,7 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
     return (
       <tr className="bg-slate-50">
         {showCheckbox && <td className="px-2 py-1.5"></td>}
-        <td className="px-3 py-1.5">
+        <td className="px-4 py-1.5">
           <input
             ref={labelRef}
             type="text"
@@ -242,7 +242,7 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
             className="w-full px-2 py-1 border border-slate-300 rounded text-sm"
           />
         </td>
-        <td className="px-3 py-1.5">
+        <td className="px-4 py-1.5">
           <input
             ref={amountRef}
             type="text"
@@ -256,10 +256,10 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
               handleBlur(e);
             }}
             onFocus={(e) => e.target.select()}
-            className="w-20 px-2 py-1 border border-slate-300 rounded text-sm"
+            className="w-24 px-2 py-1 border border-slate-300 rounded text-sm"
           />
         </td>
-        <td className="px-3 py-1.5">
+        <td className="px-4 py-1.5">
           <input
             ref={dueDateRef}
             type="date"
@@ -270,19 +270,21 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
             className="px-2 py-1 border border-slate-300 rounded text-sm"
           />
         </td>
-        <td className="px-3 py-1.5">{getStatusBadge()}</td>
-        <td className="px-3 py-1.5">
-          <button
-            type="button"
-            onClick={onDelete}
-            className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
-            aria-label="Delete"
-            title="Delete"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
+        <td className="px-4 py-1.5">
+          <div className="flex items-center justify-between">
+            {getStatusBadge()}
+            <button
+              type="button"
+              onClick={onDelete}
+              className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+              aria-label="Delete"
+              title="Delete"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
         </td>
       </tr>
     );
@@ -304,20 +306,20 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
           )}
         </td>
       )}
-      <td className="px-3 py-1.5 text-sm text-slate-900">
+      <td className="px-4 py-1.5 text-sm text-slate-900">
         <span onClick={isClientView ? undefined : handleStartEdit} className={clickableClass}>
           {payment.label}
         </span>
       </td>
-      <td className="px-3 py-1.5 text-sm text-slate-900">
+      <td className="px-4 py-1.5 text-sm text-slate-900">
         <span onClick={isClientView ? undefined : handleStartEdit} className={clickableClass}>
           {formatCurrency(payment.amount)}
         </span>
       </td>
-      <td className="px-3 py-1.5 text-sm text-slate-500">
+      <td className="px-4 py-1.5 text-sm text-slate-500">
         {payment.due_date ? formatShortDate(payment.due_date) : '-'}
       </td>
-      <td className="px-3 py-1.5">
+      <td className="px-4 py-1.5">
         <div className="flex items-center gap-2">
           {getStatusBadge()}
           {!isClientView && (
@@ -328,23 +330,21 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
               {payment.status === 'paid' ? 'Undo' : 'Mark Paid'}
             </button>
           )}
+          {!isClientView && (
+            <button
+              type="button"
+              onClick={onDelete}
+              className="ml-auto p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+              aria-label="Delete"
+              title="Delete"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          )}
         </div>
       </td>
-      {!isClientView && (
-        <td className="px-3 py-1.5">
-          <button
-            type="button"
-            onClick={onDelete}
-            className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
-            aria-label="Delete"
-            title="Delete"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
-        </td>
-      )}
     </tr>
   );
 }

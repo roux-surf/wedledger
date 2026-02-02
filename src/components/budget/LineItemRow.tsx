@@ -420,7 +420,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
     return (
       <Fragment>
         <tr ref={formRef} className="bg-slate-50">
-          <td className="px-3 py-2">
+          <td className="px-4 py-2">
             <div className="flex items-center gap-2">
               <input
                 ref={vendorInputRef}
@@ -481,7 +481,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
               </button>
             )}
           </td>
-          <td className="px-3 py-2">
+          <td className="px-4 py-2">
             <input
               ref={estimatedInputRef}
               type="text"
@@ -495,10 +495,10 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                 handleBlur(e);
               }}
               onFocus={(e) => e.target.select()}
-              className="w-20 px-2 py-1 border border-slate-300 rounded text-sm"
+              className="w-24 px-2 py-1 border border-slate-300 rounded text-sm"
             />
           </td>
-          <td className="px-3 py-2">
+          <td className="px-4 py-2">
             <input
               ref={actualInputRef}
               type="text"
@@ -512,28 +512,32 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                 handleBlur(e);
               }}
               onFocus={(e) => e.target.select()}
-              className="w-20 px-2 py-1 border border-slate-300 rounded text-sm"
+              className="w-24 px-2 py-1 border border-slate-300 rounded text-sm"
             />
           </td>
-          <td className="px-3 py-2 text-sm text-slate-900">{formatCurrency(displayPaid)}</td>
-          <td className="px-3 py-2 text-sm text-slate-900">{formatCurrency(remaining)}</td>
-          <td className="px-3 py-2">
-            <button
-              type="button"
-              onClick={onDelete}
-              className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
-              aria-label="Delete"
-              title="Delete"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
+          <td className="px-4 py-2 text-sm text-slate-900">{formatCurrency(displayPaid)}</td>
+          <td className="px-4 py-2 text-sm text-slate-900">
+            <div className="flex items-center justify-between">
+              <span>{formatCurrency(remaining)}</span>
+              {!isClientView && (
+                <button
+                  type="button"
+                  onClick={onDelete}
+                  className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+                  aria-label="Delete"
+                  title="Delete"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              )}
+            </div>
           </td>
         </tr>
         {isExpanded && (
           <tr>
-            <td colSpan={6} className="p-0">
+            <td colSpan={5} className="p-0">
               <PaymentSchedule
                 payments={payments}
                 lineItemId={item.id}
@@ -554,7 +558,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
   return (
     <Fragment>
       <tr ref={setSortableRef} style={sortableStyle}>
-        <td className="px-3 py-2 text-sm text-slate-900">
+        <td className="px-4 py-2 text-sm text-slate-900">
           <div className="flex items-center gap-2">
             {isDraggable && (
               <DragHandle listeners={sortableListeners} attributes={sortableAttributes} />
@@ -579,7 +583,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             </div>
           )}
         </td>
-        <td className="px-3 py-2 text-sm text-slate-900">
+        <td className="px-4 py-2 text-sm text-slate-900">
           <span
             onClick={isClientView ? undefined : () => handleStartEdit()}
             className={clickableClass}
@@ -587,7 +591,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             {formatCurrency(item.estimated_cost)}
           </span>
         </td>
-        <td className="px-3 py-2 text-sm text-slate-900">
+        <td className="px-4 py-2 text-sm text-slate-900">
           <span
             onClick={isClientView ? undefined : () => handleStartEdit()}
             className={clickableClass}
@@ -595,29 +599,31 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             {formatCurrency(item.actual_cost)}
           </span>
         </td>
-        <td className="px-3 py-2 text-sm text-slate-900">
+        <td className="px-4 py-2 text-sm text-slate-900">
           {formatCurrency(displayPaid)}
         </td>
-        <td className="px-3 py-2 text-sm text-slate-900">{formatCurrency(remaining)}</td>
-        {!isClientView && (
-          <td className="px-3 py-2">
-            <button
-              type="button"
-              onClick={onDelete}
-              className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
-              aria-label="Delete"
-              title="Delete"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          </td>
-        )}
+        <td className="px-4 py-2 text-sm text-slate-900">
+          <div className="flex items-center justify-between">
+            <span>{formatCurrency(remaining)}</span>
+            {!isClientView && (
+              <button
+                type="button"
+                onClick={onDelete}
+                className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+                aria-label="Delete"
+                title="Delete"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </td>
       </tr>
       {isExpanded && (
         <tr>
-          <td colSpan={!isClientView ? 6 : 5} className="p-0">
+          <td colSpan={5} className="p-0">
             <PaymentSchedule
               payments={payments}
               lineItemId={item.id}

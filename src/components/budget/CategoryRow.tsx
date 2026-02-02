@@ -585,14 +585,11 @@ export default function CategoryRow({
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-200">
-                      <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Vendor</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Estimated</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Actual</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Paid</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Remaining</th>
-                      {!isClientView && (
-                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Actions</th>
-                      )}
+                      <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Vendor</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Estimated</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Actual</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Paid</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Remaining</th>
                     </tr>
                   </thead>
                   <SortableContext items={lineItems.map(li => li.id)} strategy={verticalListSortingStrategy}>

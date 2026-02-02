@@ -186,7 +186,7 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
   // Table mode
   return (
     <tr className="bg-slate-50/30">
-      <td className="px-3 py-1.5">
+      <td className="px-4 py-1.5">
         <input
           ref={vendorRef}
           type="text"
@@ -197,7 +197,7 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
           placeholder="+ Add vendor..."
         />
       </td>
-      <td className="px-3 py-1.5">
+      <td className="px-4 py-1.5">
         <input
           type="text"
           inputMode="decimal"
@@ -205,11 +205,11 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
           onChange={e => setFormData(prev => ({ ...prev, estimated_cost: e.target.value }))}
           onBlur={e => handleNumericBlur('estimated_cost', e.target.value)}
           onKeyDown={handleKeyDown}
-          className="w-20 px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+          className="w-24 px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
           placeholder="0"
         />
       </td>
-      <td className="px-3 py-1.5">
+      <td className="px-4 py-1.5">
         <input
           type="text"
           inputMode="decimal"
@@ -217,23 +217,12 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
           onChange={e => setFormData(prev => ({ ...prev, actual_cost: e.target.value }))}
           onBlur={e => handleNumericBlur('actual_cost', e.target.value)}
           onKeyDown={handleKeyDown}
-          className="w-20 px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+          className="w-24 px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
           placeholder="0"
         />
       </td>
-      <td className="px-3 py-1.5 text-sm text-slate-400">-</td>
-      <td className="px-3 py-1.5 text-sm text-slate-400">-</td>
-      <td className="px-3 py-1.5">
-        <input
-          type="text"
-          value={formData.notes}
-          onChange={e => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-          onKeyDown={handleKeyDown}
-          className="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
-          placeholder="Notes"
-        />
-      </td>
-      <td className="px-3 py-1.5">
+      <td className="px-4 py-1.5 text-sm text-slate-400">-</td>
+      <td className="px-4 py-1.5 text-sm text-slate-400">
         <span className="text-xs text-slate-400">Enter to add</span>
       </td>
     </tr>

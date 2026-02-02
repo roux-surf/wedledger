@@ -156,13 +156,10 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, wedd
                   {!isClientView && hasMultiplePending && (
                     <th className="px-2 py-1.5 w-8"></th>
                   )}
-                  <th className="px-3 py-1.5 text-left text-xs font-medium text-slate-500 uppercase">Payment</th>
-                  <th className="px-3 py-1.5 text-left text-xs font-medium text-slate-500 uppercase">Amount</th>
-                  <th className="px-3 py-1.5 text-left text-xs font-medium text-slate-500 uppercase">Due Date</th>
-                  <th className="px-3 py-1.5 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
-                  {!isClientView && (
-                    <th className="px-3 py-1.5 text-left text-xs font-medium text-slate-500 uppercase">Actions</th>
-                  )}
+                  <th className="px-4 py-1.5 text-left text-xs font-medium text-slate-500 uppercase">Payment</th>
+                  <th className="px-4 py-1.5 text-left text-xs font-medium text-slate-500 uppercase">Amount</th>
+                  <th className="px-4 py-1.5 text-left text-xs font-medium text-slate-500 uppercase">Due Date</th>
+                  <th className="px-4 py-1.5 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
