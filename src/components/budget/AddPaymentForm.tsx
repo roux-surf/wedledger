@@ -18,7 +18,7 @@ export default function AddPaymentForm({ lineItemId, actualCost, onPaymentAdded 
   const [dueDate, setDueDate] = useState('');
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
-  const { showSaved } = useToast();
+  const { showSaved, showToast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +41,8 @@ export default function AddPaymentForm({ lineItemId, actualCost, onPaymentAdded 
       showSaved();
       onPaymentAdded();
     } catch (err) {
-      console.error('Failed to add payment:', err);
+      console.warn('Failed to add payment:', err);
+      showToast('Failed to add payment', 'error');
     } finally {
       setLoading(false);
     }

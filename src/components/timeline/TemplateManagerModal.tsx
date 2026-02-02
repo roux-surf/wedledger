@@ -33,16 +33,6 @@ export default function TemplateManagerModal({
 
   const supabase = createClient();
 
-  useEffect(() => {
-    if (isOpen && tab === 'load') {
-      fetchCustomTemplates();
-    }
-    if (isOpen) {
-      setSaveSuccess(false);
-      setTemplateName('');
-    }
-  }, [isOpen, tab]);
-
   const fetchCustomTemplates = async () => {
     setLoading(true);
     const { data } = await supabase
@@ -51,6 +41,22 @@ export default function TemplateManagerModal({
       .order('created_at', { ascending: false });
     setCustomTemplates((data || []) as MilestoneTemplate[]);
     setLoading(false);
+  };
+
+  // Fetch custom templates when the load tab is active.
+  // Data fetching in useEffect with setState is the standard React pattern.
+  /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
+  useEffect(() => {
+    if (isOpen && tab === 'load') {
+      fetchCustomTemplates();
+    }
+  }, [isOpen, tab]);
+  /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
+
+  const handleTabChange = (newTab: 'save' | 'load') => {
+    setTab(newTab);
+    setSaveSuccess(false);
+    setTemplateName('');
   };
 
   const handleSave = async () => {
@@ -118,7 +124,7 @@ export default function TemplateManagerModal({
       {/* Tab toggle */}
       <div className="flex gap-1 mb-4 bg-slate-100 rounded-lg p-1">
         <button
-          onClick={() => setTab('load')}
+          onClick={() => handleTabChange('load')}
           className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
             tab === 'load' ? 'bg-white shadow text-slate-900' : 'text-slate-600'
           }`}
@@ -126,7 +132,7 @@ export default function TemplateManagerModal({
           Load Template
         </button>
         <button
-          onClick={() => setTab('save')}
+          onClick={() => handleTabChange('save')}
           className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
             tab === 'save' ? 'bg-white shadow text-slate-900' : 'text-slate-600'
           }`}

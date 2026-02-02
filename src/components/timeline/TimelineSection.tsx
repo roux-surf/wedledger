@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { MilestoneWithBudget, MilestoneStatus, MilestoneTemplateItem, CategoryWithSpend } from '@/lib/types';
 import { calculateTargetDate } from '@/lib/milestoneTemplates';
@@ -29,7 +29,9 @@ export default function TimelineSection({
   isClientView,
   onUpdate,
 }: TimelineSectionProps) {
-  const [viewMode, setViewMode] = useState<'gantt' | 'list'>('gantt');
+  const [viewMode, setViewMode] = useState<'gantt' | 'list'>(() =>
+    typeof window !== 'undefined' && window.innerWidth < 768 ? 'list' : 'gantt'
+  );
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingMilestone, setEditingMilestone] = useState<MilestoneWithBudget | null>(null);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -38,13 +40,6 @@ export default function TimelineSection({
 
   const supabase = createClient();
   const { showSaved } = useToast();
-
-  // Default to list view on mobile
-  useEffect(() => {
-    if (window.innerWidth < 768) {
-      setViewMode('list');
-    }
-  }, []);
 
   const completed = milestones.filter((m) => m.status === 'completed').length;
   const total = milestones.length;
@@ -120,7 +115,7 @@ export default function TimelineSection({
     // Delete all existing milestones for this client
     const { error: deleteError } = await supabase.from('milestones').delete().eq('client_id', clientId);
     if (deleteError) {
-      console.error('[Timeline] Failed to delete existing milestones:', deleteError);
+      console.warn('[Timeline] Failed to delete existing milestones:', deleteError);
     }
 
     // Insert new milestones from template
@@ -139,7 +134,7 @@ export default function TimelineSection({
     if (rows.length > 0) {
       const { error: insertError } = await supabase.from('milestones').insert(rows);
       if (insertError) {
-        console.error('[Timeline] Failed to insert milestones:', insertError);
+        console.warn('[Timeline] Failed to insert milestones:', insertError);
       }
     }
 

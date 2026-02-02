@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import LineItemRow from './LineItemRow';
 
 interface LineItemsModalProps {
@@ -32,8 +33,10 @@ export default function LineItemsModal({
     booking_status: 'none' as BookingStatus,
   });
   const [loading, setLoading] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [deletingItem, setDeletingItem] = useState(false);
   const supabase = createClient();
-  const { showSaved } = useToast();
+  const { showSaved, showToast } = useToast();
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +67,8 @@ export default function LineItemsModal({
       showSaved();
       onUpdate();
     } catch (err) {
-      console.error('Failed to add line item:', err);
+      console.warn('Failed to add line item:', err);
+      showToast('Failed to add line item', 'error');
     } finally {
       setLoading(false);
     }
@@ -93,19 +97,28 @@ export default function LineItemsModal({
     }
   };
 
-  const handleDeleteItem = async (itemId: string) => {
-    if (!confirm('Are you sure you want to delete this line item?')) return;
+  const lineItems = (category.line_items || []) as LineItemWithPayments[];
 
-    try {
-      const { error } = await supabase.from('line_items').delete().eq('id', itemId);
-      if (error) throw error;
-      onUpdate();
-    } catch (err) {
-      console.error('Failed to delete line item:', err);
-    }
+  const handleDeleteItem = (itemId: string) => {
+    const item = lineItems.find(li => li.id === itemId);
+    setItemToDelete({ id: itemId, name: item?.vendor_name || 'this line item' });
   };
 
-  const lineItems = (category.line_items || []) as LineItemWithPayments[];
+  const handleDeleteItemConfirm = async () => {
+    if (!itemToDelete) return;
+    setDeletingItem(true);
+    try {
+      const { error } = await supabase.from('line_items').delete().eq('id', itemToDelete.id);
+      if (error) throw error;
+      setItemToDelete(null);
+      onUpdate();
+    } catch (err) {
+      console.warn('Failed to delete line item:', err);
+      showToast('Failed to delete line item', 'error');
+    } finally {
+      setDeletingItem(false);
+    }
+  };
   const totalActual = lineItems.reduce((sum, item) => sum + (Number(item.actual_cost) || 0), 0);
   const totalPaid = lineItems.reduce((sum, item) => {
     const hasPayments = item.payments && item.payments.length > 0;
@@ -114,6 +127,7 @@ export default function LineItemsModal({
   const totalRemaining = totalActual - totalPaid;
 
   return (
+    <>
     <Modal isOpen={isOpen} onClose={onClose} title={`${category.name} - Line Items`}>
       <div className="mb-4 p-4 bg-slate-50 rounded-lg">
         <div className="grid grid-cols-1 gap-2 md:grid-cols-3 md:gap-4 text-center">
@@ -253,5 +267,16 @@ export default function LineItemsModal({
         </div>
       )}
     </Modal>
+
+    <ConfirmDialog
+      isOpen={!!itemToDelete}
+      onClose={() => setItemToDelete(null)}
+      onConfirm={handleDeleteItemConfirm}
+      title="Delete Line Item"
+      message={`Are you sure you want to delete "${itemToDelete?.name}"?`}
+      confirmLabel="Delete"
+      loading={deletingItem}
+    />
+    </>
   );
 }

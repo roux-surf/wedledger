@@ -1,4 +1,4 @@
-import { CategoryWithSpend, LineItemWithPayments, Payment } from './types';
+import { CategoryWithSpend, LineItemWithPayments } from './types';
 
 // --- Chart data types ---
 

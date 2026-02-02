@@ -25,7 +25,7 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
   });
   const [, setLoading] = useState(false);
   const supabase = createClient();
-  const { showSaved } = useToast();
+  const { showSaved, showToast } = useToast();
   const labelRef = useRef<HTMLInputElement>(null);
   const amountRef = useRef<HTMLInputElement>(null);
   const dueDateRef = useRef<HTMLInputElement>(null);
@@ -63,7 +63,8 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
       showSaved();
       onUpdate();
     } catch (err) {
-      console.error('Failed to update payment:', err);
+      console.warn('Failed to update payment:', err);
+      showToast('Failed to update payment', 'error');
     } finally {
       setLoading(false);
     }
@@ -94,7 +95,8 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
       showSaved();
       onUpdate();
     } catch (err) {
-      console.error('Failed to toggle payment status:', err);
+      console.warn('Failed to toggle payment status:', err);
+      showToast('Failed to update payment status', 'error');
     }
   };
 

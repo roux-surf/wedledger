@@ -41,7 +41,7 @@ export default function ClientBudgetPage() {
   const clientInfoRef = useRef<HTMLDivElement>(null);
 
   const supabase = createClient();
-  const { showSaved } = useToast();
+  const { showSaved, showToast } = useToast();
 
   const fetchData = useCallback(async () => {
     try {
@@ -159,8 +159,8 @@ export default function ClientBudgetPage() {
 
       setMilestones(enrichedMilestones);
     } catch (err) {
-      console.error('Failed to fetch data:', err);
-      router.push('/dashboard');
+      console.warn('Failed to fetch data:', err);
+      showToast('Failed to load client data', 'error');
     } finally {
       setLoading(false);
     }
@@ -243,7 +243,8 @@ export default function ClientBudgetPage() {
         .eq('id', client.id);
 
       if (error) {
-        console.error('Failed to update budget:', error);
+        console.warn('Failed to update budget:', error);
+        showToast('Failed to update budget', 'error');
         setBudgetUpdateError(error.message || 'Failed to update budget');
         return;
       }
@@ -252,7 +253,8 @@ export default function ClientBudgetPage() {
       showSaved();
       fetchData();
     } catch (err) {
-      console.error('Failed to update budget:', err);
+      console.warn('Failed to update budget:', err);
+      showToast('Failed to update budget', 'error');
       setBudgetUpdateError('An unexpected error occurred');
     } finally {
       setBudgetUpdateLoading(false);
@@ -620,7 +622,8 @@ export default function ClientBudgetPage() {
             if (error) throw error;
             router.push('/dashboard');
           } catch (err) {
-            console.error('Failed to delete client:', err);
+            console.warn('Failed to delete client:', err);
+            showToast('Failed to delete client', 'error');
             setDeleting(false);
             setShowDeleteConfirm(false);
           }

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { ClientWithBudgetStatus } from '@/lib/types';
 import ClientCard from './ClientCard';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import { useToast } from '@/components/ui/Toast';
 
 interface ClientListProps {
   clients: ClientWithBudgetStatus[];
@@ -14,6 +15,7 @@ interface ClientListProps {
 export default function ClientList({ clients }: ClientListProps) {
   const router = useRouter();
   const supabase = createClient();
+  const { showToast } = useToast();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -30,7 +32,8 @@ export default function ClientList({ clients }: ClientListProps) {
       setDeleteTarget(null);
       router.refresh();
     } catch (err) {
-      console.error('Failed to delete client:', err);
+      console.warn('Failed to delete client:', err);
+      showToast('Failed to delete client', 'error');
     } finally {
       setDeleting(false);
     }

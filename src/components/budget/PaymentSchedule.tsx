@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Payment, formatCurrency } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import PaymentRow from './PaymentRow';
 import AddPaymentForm from './AddPaymentForm';
 import PaymentTemplateSelector from './PaymentTemplateSelector';
@@ -20,9 +21,11 @@ interface PaymentScheduleProps {
 
 export default function PaymentSchedule({ payments, lineItemId, actualCost, weddingDate, legacyPaidToDate, onUpdate, isClientView }: PaymentScheduleProps) {
   const supabase = createClient();
-  const { showSaved } = useToast();
+  const { showSaved, showToast } = useToast();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [paymentToDelete, setPaymentToDelete] = useState<{ id: string; label: string } | null>(null);
+  const [deletingPayment, setDeletingPayment] = useState(false);
 
   const totalScheduled = payments.reduce((sum, p) => sum + Number(p.amount), 0);
   const totalPaid = payments
@@ -33,14 +36,24 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, wedd
   const pendingPayments = payments.filter(p => p.status === 'pending');
   const hasMultiplePending = pendingPayments.length >= 2;
 
-  const handleDeletePayment = async (paymentId: string) => {
-    if (!confirm('Delete this payment?')) return;
+  const handleDeletePayment = (paymentId: string) => {
+    const payment = payments.find(p => p.id === paymentId);
+    setPaymentToDelete({ id: paymentId, label: payment?.label || 'this payment' });
+  };
+
+  const handleDeletePaymentConfirm = async () => {
+    if (!paymentToDelete) return;
+    setDeletingPayment(true);
     try {
-      const { error } = await supabase.from('payments').delete().eq('id', paymentId);
+      const { error } = await supabase.from('payments').delete().eq('id', paymentToDelete.id);
       if (error) throw error;
+      setPaymentToDelete(null);
       onUpdate();
     } catch (err) {
-      console.error('Failed to delete payment:', err);
+      console.warn('Failed to delete payment:', err);
+      showToast('Failed to delete payment', 'error');
+    } finally {
+      setDeletingPayment(false);
     }
   };
 
@@ -67,7 +80,8 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, wedd
       showSaved();
       onUpdate();
     } catch (err) {
-      console.error('Failed to mark all paid:', err);
+      console.warn('Failed to mark all paid:', err);
+      showToast('Failed to mark payments as paid', 'error');
     } finally {
       setBulkLoading(false);
     }
@@ -86,7 +100,8 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, wedd
       showSaved();
       onUpdate();
     } catch (err) {
-      console.error('Failed to mark selected paid:', err);
+      console.warn('Failed to mark selected paid:', err);
+      showToast('Failed to mark selected payments as paid', 'error');
     } finally {
       setBulkLoading(false);
     }
@@ -203,6 +218,16 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, wedd
           <AddPaymentForm lineItemId={lineItemId} actualCost={actualCost} onPaymentAdded={onUpdate} />
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={!!paymentToDelete}
+        onClose={() => setPaymentToDelete(null)}
+        onConfirm={handleDeletePaymentConfirm}
+        title="Delete Payment"
+        message={`Are you sure you want to delete "${paymentToDelete?.label}"?`}
+        confirmLabel="Delete"
+        loading={deletingPayment}
+      />
     </div>
   );
 }

@@ -24,7 +24,7 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
   const [showMore, setShowMore] = useState(false);
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
-  const { showSaved } = useToast();
+  const { showSaved, showToast } = useToast();
   const vendorRef = useRef<HTMLInputElement>(null);
 
   const resetForm = () => {
@@ -64,7 +64,8 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
       onUpdate();
       setTimeout(() => vendorRef.current?.focus(), 0);
     } catch (err) {
-      console.error('Failed to add line item:', err);
+      console.warn('Failed to add line item:', err);
+      showToast('Failed to add line item', 'error');
     } finally {
       setLoading(false);
     }

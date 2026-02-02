@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { MilestoneWithBudget, MilestoneStatus, formatShortDate } from '@/lib/types';
-import { getGanttPosition, getMonthsBetween, formatRelativeMonths } from '@/lib/milestoneTemplates';
+import { getGanttPosition, getMonthsBetween } from '@/lib/milestoneTemplates';
 import MilestoneStatusBadge from './MilestoneStatusBadge';
 import BudgetLinkBadge from './BudgetLinkBadge';
 
@@ -66,7 +66,7 @@ export default function GanttTimeline({
   milestones,
   weddingDate,
   isClientView,
-  onStatusChange,
+  onStatusChange: _onStatusChange,
   onEdit,
 }: GanttTimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null);

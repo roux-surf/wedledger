@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { formatCurrency } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
-import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 
 interface PaymentTemplateSelectorProps {
@@ -59,7 +58,7 @@ export default function PaymentTemplateSelector({ lineItemId, actualCost, weddin
   const [loading, setLoading] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const supabase = createClient();
-  const { showSaved } = useToast();
+  const { showSaved, showToast } = useToast();
 
   const applyTemplate = async (template: PaymentTemplate) => {
     setLoading(true);
@@ -82,7 +81,8 @@ export default function PaymentTemplateSelector({ lineItemId, actualCost, weddin
       showSaved();
       onPaymentsCreated();
     } catch (err) {
-      console.error('Failed to apply payment template:', err);
+      console.warn('Failed to apply payment template:', err);
+      showToast('Failed to apply payment template', 'error');
     } finally {
       setLoading(false);
       setSelectedTemplate(null);

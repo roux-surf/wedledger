@@ -37,7 +37,7 @@ export default function ClientDashboard({
   totalBudget,
   totalSpent,
   remaining,
-  clientName,
+  clientName: _clientName,
   weddingDate,
   city,
   state,

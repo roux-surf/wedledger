@@ -134,7 +134,7 @@ Write 1-2 short paragraphs summarizing the budget status. Use a conversational, 
 
     return NextResponse.json({ summary });
   } catch (error) {
-    console.error('Error generating summary:', error);
+    console.warn('Error generating summary:', error);
     return NextResponse.json({ error: 'Failed to generate summary' }, { status: 500 });
   }
 }

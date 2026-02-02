@@ -92,7 +92,7 @@ export default function NewClientPage() {
 
       // Guardrail: fall back to Skip if template is invalid or budget is missing/zero
       if (selectedTemplate && !level) {
-        console.error(`[Template] Unknown template id "${selectedTemplate}", falling back to Skip`);
+        console.warn(`[Template] Unknown template id "${selectedTemplate}", falling back to Skip`);
       }
       if (level && totalBudget <= 0) {
         console.warn(`[Template] Total budget is ${totalBudget}, skipping template allocation`);
@@ -103,7 +103,7 @@ export default function NewClientPage() {
       if (applyTemplate && level) {
         for (const cat of Object.keys(level.categoryAllocations)) {
           if (!DEFAULT_CATEGORIES.includes(cat)) {
-            console.error(`[Template] "${level.displayName}" has unknown category "${cat}" — will be ignored`);
+            console.warn(`[Template] "${level.displayName}" has unknown category "${cat}" — will be ignored`);
           }
         }
         for (const cat of DEFAULT_CATEGORIES) {
@@ -129,11 +129,11 @@ export default function NewClientPage() {
         const diff = Math.abs(allocatedSum - totalBudget);
         const tolerance = DEFAULT_CATEGORIES.length; // $1 rounding per category
         if (diff > tolerance) {
-          console.error(`[Template] Allocation sum $${allocatedSum} differs from budget $${totalBudget} by $${diff} (tolerance: $${tolerance})`);
+          console.warn(`[Template] Allocation sum $${allocatedSum} differs from budget $${totalBudget} by $${diff} (tolerance: $${tolerance})`);
         }
-        console.log(`[Template] Applied "${level.displayName}" to $${totalBudget} budget → allocated $${allocatedSum} across ${categories.length} categories`);
+        console.warn(`[Template] Applied "${level.displayName}" to $${totalBudget} budget → allocated $${allocatedSum} across ${categories.length} categories`);
       } else {
-        console.log('[Template] No template applied — all category targets set to $0');
+        console.warn('[Template] No template applied — all category targets set to $0');
       }
 
       const { data: createdCategories, error: categoriesError } = await supabase
@@ -169,7 +169,7 @@ export default function NewClientPage() {
           .insert(milestoneRows);
 
         if (milestonesError) {
-          console.error('[Milestones] Failed to create milestones:', milestonesError);
+          console.warn('[Milestones] Failed to create milestones:', milestonesError);
         }
       }
 

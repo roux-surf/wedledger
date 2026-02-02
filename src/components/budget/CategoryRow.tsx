@@ -8,6 +8,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } 
 import { CSS } from '@dnd-kit/utilities';
 import { useToast } from '@/components/ui/Toast';
 import DragHandle from '@/components/ui/DragHandle';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import LineItemRow from './LineItemRow';
 import AddLineItemRow from './AddLineItemRow';
 
@@ -50,8 +51,10 @@ export default function CategoryRow({
   const [targetAmount, setTargetAmount] = useState(category.target_amount.toString());
   const [allocationPercent, setAllocationPercent] = useState('');
   const [, setLoading] = useState(false);
+  const [lineItemToDelete, setLineItemToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [deletingLineItem, setDeletingLineItem] = useState(false);
   const supabase = createClient();
-  const { showSaved } = useToast();
+  const { showSaved, showToast } = useToast();
 
   const {
     attributes,
@@ -89,13 +92,13 @@ export default function CategoryRow({
       await Promise.all(updates);
       onUpdate();
     } catch (err) {
-      console.error('Failed to reorder line items:', err);
+      console.warn('Failed to reorder line items:', err);
+      showToast('Failed to reorder line items', 'error');
     }
   };
 
   const targetInputRef = useRef<HTMLInputElement>(null);
   const percentInputRef = useRef<HTMLInputElement>(null);
-  const rowRef = useRef<HTMLTableRowElement>(null);
 
   // Calculate allocation percentage from target amount
   const calculatePercent = (amount: number): string => {
@@ -182,7 +185,8 @@ export default function CategoryRow({
       showSaved();
       onUpdate();
     } catch (err) {
-      console.error('Failed to update category:', err);
+      console.warn('Failed to update category:', err);
+      showToast('Failed to update category', 'error');
     } finally {
       setLoading(false);
     }
@@ -444,14 +448,24 @@ export default function CategoryRow({
   const lineItems = category.line_items || [];
   const hasLineItems = lineItems.length > 0;
 
-  const handleDeleteLineItem = async (itemId: string) => {
-    if (!confirm('Are you sure you want to delete this line item?')) return;
+  const handleDeleteLineItem = (itemId: string) => {
+    const item = (category.line_items || []).find(li => li.id === itemId);
+    setLineItemToDelete({ id: itemId, name: item?.vendor_name || 'this line item' });
+  };
+
+  const handleDeleteLineItemConfirm = async () => {
+    if (!lineItemToDelete) return;
+    setDeletingLineItem(true);
     try {
-      const { error } = await supabase.from('line_items').delete().eq('id', itemId);
+      const { error } = await supabase.from('line_items').delete().eq('id', lineItemToDelete.id);
       if (error) throw error;
+      setLineItemToDelete(null);
       onUpdate();
     } catch (err) {
-      console.error('Failed to delete line item:', err);
+      console.warn('Failed to delete line item:', err);
+      showToast('Failed to delete line item', 'error');
+    } finally {
+      setDeletingLineItem(false);
     }
   };
 
@@ -618,6 +632,16 @@ export default function CategoryRow({
           </td>
         </tr>
       )}
+
+      <ConfirmDialog
+        isOpen={!!lineItemToDelete}
+        onClose={() => setLineItemToDelete(null)}
+        onConfirm={handleDeleteLineItemConfirm}
+        title="Delete Line Item"
+        message={`Are you sure you want to delete "${lineItemToDelete?.name}"?`}
+        confirmLabel="Delete"
+        loading={deletingLineItem}
+      />
     </>
   );
 }

@@ -17,6 +17,8 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from '@dnd-kit/sortable';
+import { useToast } from '@/components/ui/Toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import CategoryRow from './CategoryRow';
 import LineItemsModal from './LineItemsModal';
 import AddCategoryForm from './AddCategoryForm';
@@ -41,7 +43,10 @@ export default function CategoryTable({
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
   const [expandedDesktopIds, setExpandedDesktopIds] = useState<Set<string>>(new Set());
   const [orderedCategories, setOrderedCategories] = useState(categories);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const supabase = createClient();
+  const { showToast } = useToast();
 
   // Sync ordered categories when props change
   useEffect(() => {
@@ -80,22 +85,30 @@ export default function CategoryTable({
       await Promise.all(updates);
       onUpdate();
     } catch (err) {
-      console.error('Failed to reorder categories:', err);
+      console.warn('Failed to reorder categories:', err);
+      showToast('Failed to reorder categories', 'error');
       setOrderedCategories(categories); // Rollback
     }
   }, [orderedCategories, categories, supabase, onUpdate]);
 
-  const handleDeleteCategory = async (categoryId: string) => {
-    if (!confirm('Are you sure you want to delete this category? All line items will also be deleted.')) {
-      return;
-    }
+  const handleDeleteCategory = (categoryId: string) => {
+    const cat = orderedCategories.find(c => c.id === categoryId);
+    setDeleteTarget({ id: categoryId, name: cat?.name || 'this category' });
+  };
 
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      const { error } = await supabase.from('categories').delete().eq('id', categoryId);
+      const { error } = await supabase.from('categories').delete().eq('id', deleteTarget.id);
       if (error) throw error;
+      setDeleteTarget(null);
       onUpdate();
     } catch (err) {
-      console.error('Failed to delete category:', err);
+      console.warn('Failed to delete category:', err);
+      showToast('Failed to delete category', 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -115,7 +128,8 @@ export default function CategoryTable({
       await Promise.all(updates);
       onUpdate();
     } catch (err) {
-      console.error('Failed to move category:', err);
+      console.warn('Failed to move category:', err);
+      showToast('Failed to move category', 'error');
       setOrderedCategories(categories);
     }
   }, [orderedCategories, categories, supabase, onUpdate]);
@@ -298,6 +312,16 @@ export default function CategoryTable({
           isClientView={isClientView}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Category"
+        message={`Are you sure you want to delete "${deleteTarget?.name}"? All line items will also be deleted.`}
+        confirmLabel="Delete Category"
+        loading={deleting}
+      />
     </>
   );
 }

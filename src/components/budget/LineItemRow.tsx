@@ -34,7 +34,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
   });
   const [, setLoading] = useState(false);
   const supabase = createClient();
-  const { showSaved } = useToast();
+  const { showSaved, showToast } = useToast();
 
   const {
     attributes: sortableAttributes,
@@ -92,7 +92,8 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
       showSaved();
       onUpdate();
     } catch (err) {
-      console.error('Failed to update booking status:', err);
+      console.warn('Failed to update booking status:', err);
+      showToast('Failed to update booking status', 'error');
     }
   };
 
@@ -124,7 +125,8 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
       showSaved();
       onUpdate();
     } catch (err) {
-      console.error('Failed to update line item:', err);
+      console.warn('Failed to update line item:', err);
+      showToast('Failed to update line item', 'error');
     } finally {
       setLoading(false);
     }
