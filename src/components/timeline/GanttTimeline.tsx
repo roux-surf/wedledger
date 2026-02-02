@@ -142,10 +142,9 @@ export default function GanttTimeline({
                 <div className="w-40 shrink-0 px-3 py-1 border-r border-slate-100 flex items-center min-w-0">
                   <span className={`text-xs font-medium truncate ${
                     m.status === 'completed' ? 'text-slate-400 line-through' : 'text-slate-700'
-                  }`}>
+                  }`} title={m.title}>
                     {m.title}
                   </span>
-                  <span className="text-[10px] text-slate-400 shrink-0 ml-1">·&nbsp;{formatShortDate(m.target_date)}</span>
                 </div>
 
                 {/* Bar area */}
