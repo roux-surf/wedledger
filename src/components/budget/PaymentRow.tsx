@@ -12,9 +12,12 @@ interface PaymentRowProps {
   onDelete: () => void;
   isClientView: boolean;
   renderMode?: 'table' | 'card';
+  showCheckbox?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
 }
 
-export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, renderMode = 'table' }: PaymentRowProps) {
+export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, renderMode = 'table', showCheckbox, isSelected, onToggleSelect }: PaymentRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     label: payment.label,
@@ -217,6 +220,7 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
   if (isEditing && !isClientView) {
     return (
       <tr className="bg-slate-50">
+        {showCheckbox && <td className="px-2 py-1.5"></td>}
         <td className="px-3 py-1.5">
           <input
             ref={labelRef}
@@ -269,6 +273,18 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
 
   return (
     <tr className={payment.status === 'paid' ? 'opacity-60' : ''}>
+      {showCheckbox && (
+        <td className="px-2 py-1.5">
+          {payment.status === 'pending' && (
+            <input
+              type="checkbox"
+              checked={isSelected || false}
+              onChange={onToggleSelect}
+              className="rounded border-slate-300"
+            />
+          )}
+        </td>
+      )}
       <td className="px-3 py-1.5 text-sm text-slate-900">
         <span onClick={isClientView ? undefined : handleStartEdit} className={clickableClass}>
           {payment.label}

@@ -51,6 +51,11 @@ CREATE TABLE line_items (
   actual_cost DECIMAL(12,2) NOT NULL DEFAULT 0,
   paid_to_date DECIMAL(12,2) NOT NULL DEFAULT 0,
   notes TEXT,
+  booking_status TEXT NOT NULL DEFAULT 'none'
+    CHECK (booking_status IN ('none', 'inquired', 'booked', 'contracted', 'completed')),
+  vendor_phone TEXT,
+  vendor_email TEXT,
+  sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

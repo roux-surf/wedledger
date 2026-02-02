@@ -3,9 +3,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { CategoryWithSpend, LineItemWithPayments, formatCurrency, formatPercent, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
+import DragHandle from '@/components/ui/DragHandle';
 import LineItemRow from './LineItemRow';
+import AddLineItemRow from './AddLineItemRow';
 
 interface CategoryRowProps {
   category: CategoryWithSpend;
@@ -20,6 +25,9 @@ interface CategoryRowProps {
   renderMode?: 'table' | 'card';
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  isDraggable?: boolean;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }
 
 export default function CategoryRow({
@@ -35,6 +43,9 @@ export default function CategoryRow({
   renderMode = 'table',
   isExpanded,
   onToggleExpand,
+  isDraggable,
+  onMoveUp,
+  onMoveDown,
 }: CategoryRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [targetAmount, setTargetAmount] = useState(category.target_amount.toString());
@@ -42,6 +53,46 @@ export default function CategoryRow({
   const [, setLoading] = useState(false);
   const supabase = createClient();
   const { showSaved } = useToast();
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: category.id, disabled: !isDraggable || renderMode === 'card' });
+
+  const sortableStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : undefined,
+  };
+
+  const lineItemSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
+
+  const handleLineItemDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const items = category.line_items || [];
+    const oldIndex = items.findIndex(li => li.id === active.id);
+    const newIndex = items.findIndex(li => li.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const newOrder = arrayMove(items, oldIndex, newIndex);
+    try {
+      const updates = newOrder.map((li, idx) => (
+        supabase.from('line_items').update({ sort_order: idx }).eq('id', li.id)
+      ));
+      await Promise.all(updates);
+      onUpdate();
+    } catch (err) {
+      console.error('Failed to reorder line items:', err);
+    }
+  };
 
   const targetInputRef = useRef<HTMLInputElement>(null);
   const percentInputRef = useRef<HTMLInputElement>(null);
@@ -199,7 +250,7 @@ export default function CategoryRow({
 
   if (renderMode === 'card') {
     const lineItems = category.line_items || [];
-    const hasExpandBehavior = isClientView && onToggleExpand;
+    const hasExpandBehavior = !!onToggleExpand;
     const hasLineItems = lineItems.length > 0;
 
     return (
@@ -309,9 +360,35 @@ export default function CategoryRow({
           {/* Coordinator actions */}
           {!isClientView && !isEditing && (
             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
-              <Button size="sm" variant="secondary" onClick={onViewLineItems}>
-                Items
-              </Button>
+              {(onMoveUp || onMoveDown) && (
+                <div className="flex items-center gap-0.5 mr-1">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onMoveUp?.(); }}
+                    disabled={!onMoveUp}
+                    className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Move up"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onMoveDown?.(); }}
+                    disabled={!onMoveDown}
+                    className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Move down"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                  </button>
+                </div>
+              )}
+              <button
+                onClick={onViewLineItems}
+                className="text-xs text-slate-500 hover:text-slate-700 underline"
+                title="Open line items detail view"
+              >
+                Detail view
+              </button>
               <Button size="sm" variant="danger" onClick={onDelete}>
                 Delete
               </Button>
@@ -330,6 +407,27 @@ export default function CategoryRow({
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Expanded line items (coordinator card mode) */}
+        {isExpanded && !isClientView && (
+          <div className="px-4 pb-4">
+            {lineItems.length > 0 ? (
+              <div className="bg-slate-50 rounded-lg divide-y divide-slate-200">
+                {lineItems.map((item: LineItemWithPayments) => (
+                  <LineItemRow
+                    key={item.id}
+                    item={item}
+                    onUpdate={onUpdate}
+                    onDelete={() => handleDeleteLineItem(item.id)}
+                    isClientView={false}
+                    renderMode="card"
+                  />
+                ))}
+              </div>
+            ) : null}
+            <AddLineItemRow categoryId={category.id} onUpdate={onUpdate} renderMode="card" />
           </div>
         )}
       </div>
@@ -352,9 +450,12 @@ export default function CategoryRow({
 
   return (
     <>
-      <tr ref={rowRef} className={`break-inside-avoid ${getRowBackground()}`}>
+      <tr ref={setNodeRef} style={sortableStyle} className={`break-inside-avoid ${getRowBackground()}`}>
         <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900`}>
           <div className="flex items-center gap-2">
+            {isDraggable && (
+              <DragHandle listeners={listeners} attributes={attributes} />
+            )}
             <button
               type="button"
               onClick={onToggleExpand}
@@ -447,9 +548,13 @@ export default function CategoryRow({
         {!isClientView && (
           <td className="px-4 py-3 text-sm">
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="secondary" onClick={onViewLineItems}>
-                Items
-              </Button>
+              <button
+                onClick={onViewLineItems}
+                className="text-xs text-slate-500 hover:text-slate-700 underline"
+                title="Open line items detail view"
+              >
+                Detail
+              </button>
               <Button size="sm" variant="danger" onClick={onDelete}>
                 Delete
               </Button>
@@ -460,8 +565,8 @@ export default function CategoryRow({
       {isExpanded && (
         <tr className="bg-slate-50/50">
           <td colSpan={isClientView ? 5 : 6} className="px-4 py-3">
-            {hasLineItems ? (
-              <div className="ml-6 overflow-x-auto">
+            <div className="ml-6 overflow-x-auto">
+              <DndContext sensors={lineItemSensors} collisionDetection={closestCenter} onDragEnd={handleLineItemDragEnd}>
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-200">
@@ -478,22 +583,29 @@ export default function CategoryRow({
                       )}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {lineItems.map((item: LineItemWithPayments) => (
-                      <LineItemRow
-                        key={item.id}
-                        item={item}
-                        onUpdate={onUpdate}
-                        onDelete={() => handleDeleteLineItem(item.id)}
-                        isClientView={isClientView}
-                      />
-                    ))}
-                  </tbody>
+                  <SortableContext items={lineItems.map(li => li.id)} strategy={verticalListSortingStrategy}>
+                    <tbody className="divide-y divide-slate-100">
+                      {lineItems.map((item: LineItemWithPayments) => (
+                        <LineItemRow
+                          key={item.id}
+                          item={item}
+                          onUpdate={onUpdate}
+                          onDelete={() => handleDeleteLineItem(item.id)}
+                          isClientView={isClientView}
+                          isDraggable={!isClientView}
+                        />
+                      ))}
+                      {!isClientView && (
+                        <AddLineItemRow categoryId={category.id} onUpdate={onUpdate} />
+                      )}
+                    </tbody>
+                  </SortableContext>
                 </table>
-              </div>
-            ) : (
-              <p className="ml-6 text-sm text-slate-500 italic">No line items</p>
-            )}
+              </DndContext>
+              {isClientView && !hasLineItems && (
+                <p className="text-sm text-slate-500 italic py-2">No line items</p>
+              )}
+            </div>
           </td>
         </tr>
       )}

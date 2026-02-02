@@ -28,6 +28,16 @@ export interface Category {
   created_at: string;
 }
 
+export type BookingStatus = 'none' | 'inquired' | 'booked' | 'contracted' | 'completed';
+
+export const BOOKING_STATUS_CONFIG: Record<BookingStatus, { label: string; color: string; bg: string }> = {
+  none: { label: 'None', color: 'text-slate-500', bg: 'bg-slate-100' },
+  inquired: { label: 'Inquired', color: 'text-blue-700', bg: 'bg-blue-100' },
+  booked: { label: 'Booked', color: 'text-amber-700', bg: 'bg-amber-100' },
+  contracted: { label: 'Contracted', color: 'text-purple-700', bg: 'bg-purple-100' },
+  completed: { label: 'Completed', color: 'text-green-700', bg: 'bg-green-100' },
+};
+
 export interface LineItem {
   id: string;
   category_id: string;
@@ -36,6 +46,10 @@ export interface LineItem {
   actual_cost: number;
   paid_to_date: number;
   notes: string | null;
+  booking_status: BookingStatus;
+  vendor_phone: string | null;
+  vendor_email: string | null;
+  sort_order: number;
   created_at: string;
 }
 

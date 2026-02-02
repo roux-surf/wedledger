@@ -8,10 +8,11 @@ import { useToast } from '@/components/ui/Toast';
 
 interface AddPaymentFormProps {
   lineItemId: string;
+  actualCost?: number;
   onPaymentAdded: () => void;
 }
 
-export default function AddPaymentForm({ lineItemId, onPaymentAdded }: AddPaymentFormProps) {
+export default function AddPaymentForm({ lineItemId, actualCost, onPaymentAdded }: AddPaymentFormProps) {
   const [label, setLabel] = useState('');
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -78,17 +79,29 @@ export default function AddPaymentForm({ lineItemId, onPaymentAdded }: AddPaymen
       </div>
       <div className="w-full md:w-28">
         <label className="block text-xs font-medium text-slate-600 mb-1">Amount</label>
-        <input
-          type="text"
-          inputMode="decimal"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          onBlur={handleAmountBlur}
-          onKeyDown={handleKeyDown}
-          onFocus={(e) => e.target.select()}
-          className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
-          placeholder="0"
-        />
+        <div className="flex items-center gap-1">
+          <input
+            type="text"
+            inputMode="decimal"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            onBlur={handleAmountBlur}
+            onKeyDown={handleKeyDown}
+            onFocus={(e) => e.target.select()}
+            className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+            placeholder="0"
+          />
+          {actualCost !== undefined && actualCost > 0 && (
+            <button
+              type="button"
+              onClick={() => setAmount(sanitizeNumericString(actualCost))}
+              className="shrink-0 px-1.5 py-1.5 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded whitespace-nowrap"
+              title="Fill with actual cost"
+            >
+              Fill
+            </button>
+          )}
+        </div>
       </div>
       <div className="w-full md:w-36">
         <label className="block text-xs font-medium text-slate-600 mb-1">Due Date</label>

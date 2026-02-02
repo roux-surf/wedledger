@@ -81,6 +81,7 @@ export default function ClientBudgetPage() {
             .from('line_items')
             .select('*')
             .eq('category_id', category.id)
+            .order('sort_order', { ascending: true })
             .order('created_at', { ascending: true });
 
           const items = lineItems || [];

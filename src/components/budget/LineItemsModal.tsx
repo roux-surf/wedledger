@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CategoryWithSpend, LineItemWithPayments, formatCurrency, parseNumericInput, sanitizeNumericString } from '@/lib/types';
+import { CategoryWithSpend, LineItemWithPayments, BookingStatus, formatCurrency, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
@@ -29,6 +29,7 @@ export default function LineItemsModal({
     estimated_cost: '',
     actual_cost: '',
     notes: '',
+    booking_status: 'none' as BookingStatus,
   });
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
@@ -47,6 +48,7 @@ export default function LineItemsModal({
         actual_cost: parseNumericInput(newItem.actual_cost),
         paid_to_date: 0,
         notes: newItem.notes || null,
+        booking_status: newItem.booking_status,
       });
 
       if (error) throw error;
@@ -56,6 +58,7 @@ export default function LineItemsModal({
         estimated_cost: '',
         actual_cost: '',
         notes: '',
+        booking_status: 'none',
       });
       setShowAddForm(false);
       showSaved();
@@ -85,6 +88,7 @@ export default function LineItemsModal({
         estimated_cost: '',
         actual_cost: '',
         notes: '',
+        booking_status: 'none',
       });
     }
   };
@@ -236,6 +240,20 @@ export default function LineItemsModal({
                   rows={2}
                   placeholder="Internal notes..."
                 />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Booking Status</label>
+                <select
+                  value={newItem.booking_status}
+                  onChange={(e) => setNewItem((prev) => ({ ...prev, booking_status: e.target.value as BookingStatus }))}
+                  className="w-full px-3 py-2 border border-slate-300 rounded text-sm bg-white"
+                >
+                  <option value="none">None</option>
+                  <option value="inquired">Inquired</option>
+                  <option value="booked">Booked</option>
+                  <option value="contracted">Contracted</option>
+                  <option value="completed">Completed</option>
+                </select>
               </div>
               <div className="flex gap-2">
                 <Button type="submit" disabled={loading || !newItem.vendor_name.trim()}>

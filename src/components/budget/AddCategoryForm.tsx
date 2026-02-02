@@ -28,10 +28,20 @@ export default function AddCategoryForm({ budgetId, onCategoryAdded }: AddCatego
     setError(null);
 
     try {
+      // Get max sort_order for this budget
+      const { data: existing } = await supabase
+        .from('categories')
+        .select('sort_order')
+        .eq('budget_id', budgetId)
+        .order('sort_order', { ascending: false })
+        .limit(1);
+      const nextSortOrder = existing && existing.length > 0 ? (existing[0].sort_order || 0) + 1 : 0;
+
       const { error: insertError } = await supabase.from('categories').insert({
         budget_id: budgetId,
         name: name.trim(),
         target_amount: parseNumericInput(targetAmount),
+        sort_order: nextSortOrder,
       });
 
       if (insertError) throw insertError;
