@@ -5,7 +5,6 @@ import { LineItemWithPayments, Payment, BookingStatus, formatCurrency, parseNume
 import { createClient } from '@/lib/supabase/client';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import DragHandle from '@/components/ui/DragHandle';
 import PaymentSchedule from './PaymentSchedule';
@@ -56,7 +55,6 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
   const vendorInputRef = useRef<HTMLInputElement>(null);
   const estimatedInputRef = useRef<HTMLInputElement>(null);
   const actualInputRef = useRef<HTMLInputElement>(null);
-  const notesInputRef = useRef<HTMLTextAreaElement>(null);
   const phoneInputRef = useRef<HTMLInputElement>(null);
   const emailInputRef = useRef<HTMLInputElement>(null);
 
@@ -186,7 +184,6 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
       vendorInputRef.current,
       estimatedInputRef.current,
       actualInputRef.current,
-      notesInputRef.current,
       phoneInputRef.current,
       emailInputRef.current,
     ];
@@ -302,19 +299,6 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                 />
               </div>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Notes</label>
-              <textarea
-                ref={notesInputRef}
-                name="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                onBlur={handleBlur}
-                className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
-                rows={2}
-              />
-            </div>
             {!showContactFields ? (
               <button
                 type="button"
@@ -355,9 +339,17 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                 </div>
               </div>
             )}
-            <Button size="sm" variant="danger" onClick={onDelete}>
-              Delete
-            </Button>
+            <button
+              type="button"
+              onClick={onDelete}
+              className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+              aria-label="Delete"
+              title="Delete"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
           </div>
         </div>
       );
@@ -387,9 +379,6 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             <span>Actual: {formatCurrency(item.actual_cost)}</span>
             <span>Paid: {formatCurrency(displayPaid)}</span>
           </div>
-          {!isClientView && item.notes && (
-            <p className="text-xs text-slate-400 mt-1 truncate">{item.notes}</p>
-          )}
           {!isClientView && (item.vendor_phone || item.vendor_email) && (
             <div className="flex items-center gap-3 text-xs text-slate-400 mt-1">
               {item.vendor_phone && <span>{item.vendor_phone}</span>}
@@ -398,9 +387,17 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
           )}
           {!isClientView && (
             <div className="mt-2">
-              <Button size="sm" variant="danger" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
-                Delete
-              </Button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+                aria-label="Delete"
+                title="Delete"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
             </div>
           )}
         </div>
@@ -521,26 +518,22 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
           <td className="px-3 py-2 text-sm text-slate-900">{formatCurrency(displayPaid)}</td>
           <td className="px-3 py-2 text-sm text-slate-900">{formatCurrency(remaining)}</td>
           <td className="px-3 py-2">
-            <textarea
-              ref={notesInputRef}
-              name="notes"
-              value={formData.notes}
-              onChange={handleChange}
-              onKeyDown={handleKeyDown}
-              onBlur={handleBlur}
-              className="w-full px-2 py-1 border border-slate-300 rounded text-sm"
-              rows={1}
-            />
-          </td>
-          <td className="px-3 py-2">
-            <Button size="sm" variant="danger" onClick={onDelete}>
-              Delete
-            </Button>
+            <button
+              type="button"
+              onClick={onDelete}
+              className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+              aria-label="Delete"
+              title="Delete"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
           </td>
         </tr>
         {isExpanded && (
           <tr>
-            <td colSpan={7} className="p-0">
+            <td colSpan={6} className="p-0">
               <PaymentSchedule
                 payments={payments}
                 lineItemId={item.id}
@@ -607,26 +600,24 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
         </td>
         <td className="px-3 py-2 text-sm text-slate-900">{formatCurrency(remaining)}</td>
         {!isClientView && (
-          <td className="px-3 py-2 text-sm text-slate-500 max-w-[150px] truncate">
-            <span
-              onClick={isClientView ? undefined : () => handleStartEdit()}
-              className={clickableClass}
-            >
-              {item.notes || '-'}
-            </span>
-          </td>
-        )}
-        {!isClientView && (
           <td className="px-3 py-2">
-            <Button size="sm" variant="danger" onClick={onDelete}>
-              Delete
-            </Button>
+            <button
+              type="button"
+              onClick={onDelete}
+              className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+              aria-label="Delete"
+              title="Delete"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
           </td>
         )}
       </tr>
       {isExpanded && (
         <tr>
-          <td colSpan={!isClientView ? 7 : 5} className="p-0">
+          <td colSpan={!isClientView ? 6 : 5} className="p-0">
             <PaymentSchedule
               payments={payments}
               lineItemId={item.id}

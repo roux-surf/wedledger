@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/client';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import DragHandle from '@/components/ui/DragHandle';
 import LineItemRow from './LineItemRow';
@@ -389,9 +388,17 @@ export default function CategoryRow({
               >
                 Detail view
               </button>
-              <Button size="sm" variant="danger" onClick={onDelete}>
-                Delete
-              </Button>
+              <button
+                type="button"
+                onClick={onDelete}
+                className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+                aria-label="Delete"
+                title="Delete"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
             </div>
           )}
         </div>
@@ -555,9 +562,17 @@ export default function CategoryRow({
               >
                 Detail
               </button>
-              <Button size="sm" variant="danger" onClick={onDelete}>
-                Delete
-              </Button>
+              <button
+                type="button"
+                onClick={onDelete}
+                className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+                aria-label="Delete"
+                title="Delete"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
             </div>
           </td>
         )}
@@ -575,9 +590,6 @@ export default function CategoryRow({
                       <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Actual</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Paid</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Remaining</th>
-                      {!isClientView && (
-                        <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Notes</th>
-                      )}
                       {!isClientView && (
                         <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Actions</th>
                       )}
