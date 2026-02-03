@@ -16,6 +16,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [signupComplete, setSignupComplete] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -34,7 +35,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
           },
         });
         if (error) throw error;
-        // For dev purposes, auto-login after signup if email confirmation is disabled
+        // Try auto-login (works when email confirmation is disabled)
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -42,6 +43,9 @@ export default function AuthForm({ mode }: AuthFormProps) {
         if (!signInError) {
           router.push('/dashboard');
           router.refresh();
+        } else {
+          // Email confirmation is enabled — show confirmation message
+          setSignupComplete(true);
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -59,14 +63,70 @@ export default function AuthForm({ mode }: AuthFormProps) {
     }
   };
 
-  return (
-    <div className="w-full max-w-md">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">WedLedger</h1>
-        <p className="text-slate-600 mt-2">
-          {mode === 'login' ? 'Sign in to your account' : 'Create your account'}
+  if (signupComplete) {
+    return (
+      <div className="w-full max-w-md">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-slate-900">WedLedger</h1>
+        </div>
+
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-6 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+            <svg className="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-semibold text-emerald-900">Check your email</h2>
+          <p className="mt-2 text-sm text-emerald-700">
+            We sent a confirmation link to <span className="font-medium">{email}</span>. Click the link in your email to activate your account.
+          </p>
+        </div>
+
+        <p className="mt-4 text-center text-sm text-slate-600">
+          Already confirmed?{' '}
+          <Link href="/login" className="text-slate-900 font-medium hover:underline">
+            Sign in
+          </Link>
         </p>
       </div>
+    );
+  }
+
+  return (
+    <div className="w-full max-w-md">
+      <div className="text-center mb-6">
+        <h1 className="text-2xl font-bold text-slate-900">WedLedger</h1>
+      </div>
+
+      {/* Mode tabs */}
+      <div className="flex mb-6 rounded-lg bg-slate-100 p-1">
+        <Link
+          href="/login"
+          className={`flex-1 rounded-md py-2 text-center text-sm font-medium transition-colors ${
+            mode === 'login'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          Sign In
+        </Link>
+        <Link
+          href="/signup"
+          className={`flex-1 rounded-md py-2 text-center text-sm font-medium transition-colors ${
+            mode === 'signup'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          Sign Up
+        </Link>
+      </div>
+
+      {mode === 'signup' && (
+        <p className="text-sm text-slate-500 text-center mb-4">
+          Create a new account to get started.
+        </p>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
@@ -97,7 +157,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         />
 
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Sign Up'}
+          {loading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Create Account'}
         </Button>
       </form>
 
