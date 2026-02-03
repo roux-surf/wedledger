@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   buildCashFlowData,
-  buildCategoryAllocationData,
   buildPaidVsRemainingData,
   buildPaymentScheduleData,
 } from '../clientDataTransformers';
@@ -103,26 +102,6 @@ describe('buildCashFlowData', () => {
     const result = buildCashFlowData(categories, '2025-01-01T00:00:00Z');
     // Should span from Jan 2025 to at least Jun 2025
     expect(result.length).toBeGreaterThanOrEqual(6);
-  });
-});
-
-describe('buildCategoryAllocationData', () => {
-  it('filters out categories with zero target', () => {
-    const categories = [
-      makeCategory({ name: 'Venue', target_amount: 10000, actual_spend: 5000 }),
-      makeCategory({ id: 'cat-2', name: 'Misc', target_amount: 0, actual_spend: 0 }),
-    ];
-    const result = buildCategoryAllocationData(categories);
-    expect(result).toHaveLength(1);
-    expect(result[0].name).toBe('Venue');
-  });
-
-  it('maps fields correctly', () => {
-    const categories = [
-      makeCategory({ name: 'Catering', target_amount: 8000, actual_spend: 3000 }),
-    ];
-    const result = buildCategoryAllocationData(categories);
-    expect(result[0]).toEqual({ name: 'Catering', value: 8000, spent: 3000 });
   });
 });
 

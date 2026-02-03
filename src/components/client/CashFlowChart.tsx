@@ -32,23 +32,20 @@ export default function CashFlowChart({ data }: CashFlowChartProps) {
       </h4>
 
       {data.length === 0 ? (
-        <div className="flex items-center justify-center h-[220px] lg:h-[300px]">
+        <div className="flex items-center justify-center h-[260px] lg:h-[340px]">
           <p className="text-slate-400 text-sm">No payment data available yet.</p>
         </div>
       ) : (
-        <div className="h-[220px] lg:h-[300px]">
+        <div className="h-[260px] lg:h-[340px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+            <BarChart data={data} margin={{ top: 5, right: 16, left: 8, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
               <XAxis
                 dataKey="label"
-                interval={0}
-                tick={{ fill: '#64748b', fontSize: 10 }}
+                interval="preserveStartEnd"
+                tick={{ fill: '#64748b', fontSize: 12 }}
                 axisLine={{ stroke: '#e2e8f0' }}
                 tickLine={false}
-                angle={-45}
-                textAnchor="end"
-                height={50}
               />
               <YAxis
                 tick={{ fill: '#64748b', fontSize: 12 }}
@@ -60,7 +57,7 @@ export default function CashFlowChart({ data }: CashFlowChartProps) {
               <Legend
                 wrapperStyle={{ fontSize: 12, color: '#64748b' }}
               />
-              <Bar dataKey="paid" name="Paid" fill="#10b981" stackId="stack" radius={[0, 0, 0, 0]} />
+              <Bar dataKey="paid" name="Paid" fill="#10b981" stackId="stack" radius={[2, 2, 2, 2]} />
               <Bar dataKey="upcoming" name="Upcoming" fill="#3b82f6" stackId="stack" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>

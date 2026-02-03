@@ -4,12 +4,10 @@ import { useMemo, RefObject } from 'react';
 import { CategoryWithSpend, formatCurrency, formatDate } from '@/lib/types';
 import {
   buildCashFlowData,
-  buildCategoryAllocationData,
   buildPaidVsRemainingData,
   buildPaymentScheduleData,
 } from '@/lib/clientDataTransformers';
 import CashFlowChart from './CashFlowChart';
-import BudgetByCategoryChart from './BudgetByCategoryChart';
 import PaidVsRemainingChart from './PaidVsRemainingChart';
 import ClientPaymentSchedule from './ClientPaymentSchedule';
 import CategoryTable from '@/components/budget/CategoryTable';
@@ -50,7 +48,6 @@ export default function ClientDashboard({
   clientSummary,
 }: ClientDashboardProps) {
   const cashFlowData = useMemo(() => buildCashFlowData(categories, clientCreatedAt), [categories, clientCreatedAt]);
-  const categoryAllocationData = useMemo(() => buildCategoryAllocationData(categories), [categories]);
   const paidVsRemainingData = useMemo(() => buildPaidVsRemainingData(categories, totalBudget), [categories, totalBudget]);
   const paymentScheduleData = useMemo(() => buildPaymentScheduleData(categories), [categories]);
 
@@ -110,10 +107,13 @@ export default function ClientDashboard({
         </div>
       )}
 
-      {/* Charts Grid: 2x2 on desktop, single column on mobile */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      {/* Cash Flow Timeline — full width */}
+      <div className="mb-6">
         <CashFlowChart data={cashFlowData} />
-        <BudgetByCategoryChart data={categoryAllocationData} totalBudget={totalBudget} />
+      </div>
+
+      {/* Financial Position + Upcoming Payments — side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <PaidVsRemainingChart data={paidVsRemainingData} />
         <ClientPaymentSchedule payments={paymentScheduleData} />
       </div>

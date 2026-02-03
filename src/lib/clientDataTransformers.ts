@@ -9,12 +9,6 @@ export interface CashFlowDataPoint {
   upcoming: number;
 }
 
-export interface CategoryAllocationDataPoint {
-  name: string;
-  value: number; // target_amount (allocation)
-  spent: number;
-}
-
 export interface PaidVsRemainingData {
   totalBudget: number;
   totalCommitted: number;
@@ -138,20 +132,6 @@ export function buildCashFlowData(categories: CategoryWithSpend[], clientCreated
 }
 
 /**
- * Maps categories to pie chart data showing allocation (target) and spent amounts.
- * Only includes categories with a non-zero target.
- */
-export function buildCategoryAllocationData(categories: CategoryWithSpend[]): CategoryAllocationDataPoint[] {
-  return categories
-    .filter((cat) => Number(cat.target_amount) > 0)
-    .map((cat) => ({
-      name: cat.name,
-      value: Number(cat.target_amount),
-      spent: cat.actual_spend,
-    }));
-}
-
-/**
  * Computes overall financial position: paid, pending, uncommitted.
  * - totalCommitted = sum of all actual_cost across all line items
  * - totalPaid = sum of all paid payments
@@ -228,18 +208,3 @@ export function buildPaymentScheduleData(categories: CategoryWithSpend[]): Sched
   });
 }
 
-// Color palette for category pie chart
-export const CATEGORY_COLORS = [
-  '#34d399', // emerald-400
-  '#60a5fa', // blue-400
-  '#a78bfa', // violet-400
-  '#f472b6', // pink-400
-  '#fb923c', // orange-400
-  '#facc15', // yellow-400
-  '#2dd4bf', // teal-400
-  '#c084fc', // purple-400
-  '#f87171', // red-400
-  '#38bdf8', // sky-400
-  '#4ade80', // green-400
-  '#818cf8', // indigo-400
-];
