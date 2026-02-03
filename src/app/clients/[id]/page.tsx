@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Client, Budget, CategoryWithSpend, LineItem, LineItemWithPayments, Payment, MilestoneWithBudget, formatCurrency, formatDate, formatPercent, getBudgetStatus, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import { getWeddingLevelById } from '@/lib/budgetTemplates';
-import CategoryTable from '@/components/budget/CategoryTable';
+import BudgetTabs from '@/components/budget/BudgetTabs';
 import BudgetSummary from '@/components/budget/BudgetSummary';
 import TimelineSection from '@/components/timeline/TimelineSection';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -584,8 +584,8 @@ export default function ClientBudgetPage() {
         {/* Categories Table - Coordinator View only (Client view handled by ClientDashboard) */}
         {!isClientView && (
           <div className="mb-6">
-            <h3 className="font-semibold text-slate-900 text-lg mb-4">Budget Categories</h3>
-            <CategoryTable
+            <h3 className="font-semibold text-slate-900 text-lg mb-4">Budget</h3>
+            <BudgetTabs
               categories={categories}
               budgetId={budget.id}
               totalBudget={Number(client.total_budget)}

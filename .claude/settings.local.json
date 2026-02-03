@@ -13,7 +13,9 @@
       "Bash(npx next build)",
       "Bash(findstr:*)",
       "WebSearch",
-      "Bash(dir \"C:\\\\Users\\\\wengl\\\\OneDrive\\\\Documents\\\\Vibe Coding\\\\projects\\\\wedledger\" /s /b)"
+      "Bash(dir \"C:\\\\Users\\\\wengl\\\\OneDrive\\\\Documents\\\\Vibe Coding\\\\projects\\\\wedledger\" /s /b)",
+      "Bash(npx eslint:*)",
+      "Bash(npx vitest:*)"
     ]
   }
 }
