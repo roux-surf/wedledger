@@ -21,10 +21,12 @@ interface LineItemRowProps {
   onCategoryChange?: (newCategoryId: string) => void;
   categoryId?: string;
   categoryOptions?: { id: string; name: string }[];
+  showStatusColumn?: boolean;
 }
 
-export default function LineItemRow({ item, onUpdate, onDelete, isClientView, renderMode = 'table', isDraggable, categoryName, onCategoryChange, categoryId, categoryOptions }: LineItemRowProps) {
-  const colCount = categoryName !== undefined ? 6 : 5;
+export default function LineItemRow({ item, onUpdate, onDelete, isClientView, renderMode = 'table', isDraggable, categoryName, onCategoryChange, categoryId, categoryOptions, showStatusColumn }: LineItemRowProps) {
+  const baseColCount = (categoryName !== undefined ? 6 : 5) + (showStatusColumn ? 1 : 0);
+  const colCount = baseColCount + (!isClientView ? 1 : 0);
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showContactFields, setShowContactFields] = useState(false);
@@ -434,7 +436,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
     return (
       <Fragment>
         <tr ref={formRef} className="bg-slate-50">
-          <td className="px-4 py-2">
+          <td className="px-4 py-3">
             <div className="flex items-center gap-2">
               <input
                 ref={vendorInputRef}
@@ -447,18 +449,20 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                 onFocus={(e) => e.target.select()}
                 className="w-full px-2 py-1 border border-slate-300 rounded text-sm"
               />
-              <select
-                name="booking_status"
-                value={formData.booking_status}
-                onChange={handleChange}
-                className="px-1 py-1 border border-slate-300 rounded text-xs bg-white"
-              >
-                <option value="none">None</option>
-                <option value="inquired">Inquired</option>
-                <option value="booked">Booked</option>
-                <option value="contracted">Contracted</option>
-                <option value="completed">Completed</option>
-              </select>
+              {!showStatusColumn && (
+                <select
+                  name="booking_status"
+                  value={formData.booking_status}
+                  onChange={handleChange}
+                  className="px-1 py-1 border border-slate-300 rounded text-xs bg-white"
+                >
+                  <option value="none">None</option>
+                  <option value="inquired">Inquired</option>
+                  <option value="booked">Booked</option>
+                  <option value="contracted">Contracted</option>
+                  <option value="completed">Completed</option>
+                </select>
+              )}
             </div>
             {showContactFields ? (
               <div className="flex gap-2 mt-1">
@@ -495,10 +499,26 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
               </button>
             )}
           </td>
-          {categoryName !== undefined && (
-            <td className="px-4 py-2 text-sm text-slate-500">{categoryName}</td>
+          {showStatusColumn && (
+            <td className="px-4 py-3">
+              <select
+                name="booking_status"
+                value={formData.booking_status}
+                onChange={handleChange}
+                className="px-1 py-1 border border-slate-300 rounded text-xs bg-white"
+              >
+                <option value="none">None</option>
+                <option value="inquired">Inquired</option>
+                <option value="booked">Booked</option>
+                <option value="contracted">Contracted</option>
+                <option value="completed">Completed</option>
+              </select>
+            </td>
           )}
-          <td className="px-4 py-2">
+          {categoryName !== undefined && (
+            <td className="px-4 py-3 text-sm text-slate-500">{categoryName}</td>
+          )}
+          <td className="px-4 py-3 text-right">
             <input
               ref={estimatedInputRef}
               type="text"
@@ -512,10 +532,10 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                 handleBlur(e);
               }}
               onFocus={(e) => e.target.select()}
-              className="w-24 px-2 py-1 border border-slate-300 rounded text-sm"
+              className="w-24 px-2 py-1 border border-slate-300 rounded text-sm text-right"
             />
           </td>
-          <td className="px-4 py-2">
+          <td className="px-4 py-3 text-right">
             <input
               ref={actualInputRef}
               type="text"
@@ -529,27 +549,25 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                 handleBlur(e);
               }}
               onFocus={(e) => e.target.select()}
-              className="w-24 px-2 py-1 border border-slate-300 rounded text-sm"
+              className="w-24 px-2 py-1 border border-slate-300 rounded text-sm text-right"
             />
           </td>
-          <td className="px-4 py-2 text-sm text-slate-900">{formatCurrency(displayPaid)}</td>
-          <td className="px-4 py-2 text-sm text-slate-900">
-            <div className="flex items-center justify-between">
-              <span className={getRemainingColor()}>{formatCurrency(remaining)}</span>
-              {!isClientView && (
-                <button
-                  type="button"
-                  onClick={onDelete}
-                  className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
-                  aria-label="Delete"
-                  title="Delete"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              )}
-            </div>
+          <td className="px-4 py-3 text-sm text-slate-900 text-right whitespace-nowrap">{formatCurrency(displayPaid)}</td>
+          <td className="px-4 py-3 text-sm text-right whitespace-nowrap">
+            <span className={getRemainingColor()}>{formatCurrency(remaining)}</span>
+          </td>
+          <td className="px-4 py-3 text-sm">
+            <button
+              type="button"
+              onClick={onDelete}
+              className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+              aria-label="Delete"
+              title="Delete"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
           </td>
         </tr>
         {isExpanded && (
@@ -575,7 +593,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
   return (
     <Fragment>
       <tr ref={setSortableRef} style={sortableStyle}>
-        <td className="px-4 py-2 text-sm text-slate-900">
+        <td className="px-4 py-3 text-sm text-slate-900">
           <div className="flex items-center gap-2">
             {isDraggable && (
               <DragHandle listeners={sortableListeners} attributes={sortableAttributes} />
@@ -586,22 +604,27 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             >
               {item.vendor_name}
             </span>
+            {!showStatusColumn && (
+              <BookingStatusBadge
+                status={item.booking_status || 'none'}
+                editable={!isClientView}
+                onChange={handleBookingStatusChange}
+              />
+            )}
+            {paymentBadge}
+          </div>
+        </td>
+        {showStatusColumn && (
+          <td className="px-4 py-3 text-sm">
             <BookingStatusBadge
               status={item.booking_status || 'none'}
               editable={!isClientView}
               onChange={handleBookingStatusChange}
             />
-            {paymentBadge}
-          </div>
-          {!isClientView && (item.vendor_phone || item.vendor_email) && (
-            <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
-              {item.vendor_phone && <span>{item.vendor_phone}</span>}
-              {item.vendor_email && <span>{item.vendor_email}</span>}
-            </div>
-          )}
-        </td>
+          </td>
+        )}
         {categoryName !== undefined && (
-          <td className="px-4 py-2 text-sm text-slate-500">
+          <td className="px-4 py-3 text-sm text-slate-500">
             {onCategoryChange && categoryOptions && !isClientView ? (
               <select
                 value={categoryId || ''}
@@ -617,7 +640,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             )}
           </td>
         )}
-        <td className="px-4 py-2 text-sm text-slate-900">
+        <td className="px-4 py-3 text-sm text-slate-900 text-right whitespace-nowrap">
           <span
             onClick={isClientView ? undefined : () => handleStartEdit()}
             className={clickableClass}
@@ -625,7 +648,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             {formatCurrency(item.estimated_cost)}
           </span>
         </td>
-        <td className="px-4 py-2 text-sm text-slate-900">
+        <td className="px-4 py-3 text-sm text-slate-900 text-right whitespace-nowrap">
           <span
             onClick={isClientView ? undefined : () => handleStartEdit()}
             className={clickableClass}
@@ -633,27 +656,27 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             {formatCurrency(item.actual_cost)}
           </span>
         </td>
-        <td className="px-4 py-2 text-sm text-slate-900">
+        <td className="px-4 py-3 text-sm text-slate-900 text-right whitespace-nowrap">
           {formatCurrency(displayPaid)}
         </td>
-        <td className="px-4 py-2 text-sm text-slate-900">
-          <div className="flex items-center justify-between">
-            <span className={getRemainingColor()}>{formatCurrency(remaining)}</span>
-            {!isClientView && (
-              <button
-                type="button"
-                onClick={onDelete}
-                className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
-                aria-label="Delete"
-                title="Delete"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            )}
-          </div>
+        <td className="px-4 py-3 text-sm text-right whitespace-nowrap">
+          <span className={getRemainingColor()}>{formatCurrency(remaining)}</span>
         </td>
+        {!isClientView && (
+          <td className="px-4 py-3 text-sm">
+            <button
+              type="button"
+              onClick={onDelete}
+              className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+              aria-label="Delete"
+              title="Delete"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </td>
+        )}
       </tr>
       {isExpanded && (
         <tr>

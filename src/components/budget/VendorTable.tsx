@@ -162,20 +162,28 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
                 Vendor
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Category
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Estimated
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Actual
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Paid
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Remaining
               </th>
+              {!isClientView && (
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-16">
+                  <span className="sr-only">Actions</span>
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className={`divide-y ${isClientView ? 'divide-slate-200' : 'divide-slate-100'}`}>
@@ -191,14 +199,16 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
                 onCategoryChange={(newCatId) => handleCategoryChange(vendor.id, newCatId)}
                 categoryId={vendor.categoryId}
                 categoryOptions={categoryOptions}
+                showStatusColumn
               />
             ))}
             {!isClientView && (
               <tr className="bg-slate-50/30">
-                <td className="px-4 py-1.5">
+                <td className="px-4 py-2">
                   <input
                     ref={vendorInputRef}
                     type="text"
+                    autoComplete="off"
                     value={addVendorName}
                     onChange={(e) => setAddVendorName(e.target.value)}
                     onKeyDown={handleAddKeyDown}
@@ -206,7 +216,8 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
                     placeholder="+ Add vendor..."
                   />
                 </td>
-                <td className="px-4 py-1.5">
+                <td className="px-4 py-2"></td>
+                <td className="px-4 py-2">
                   <select
                     value={effectiveCategoryId}
                     onChange={(e) => setAddCategoryId(e.target.value)}
@@ -217,34 +228,37 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
                     ))}
                   </select>
                 </td>
-                <td className="px-4 py-1.5">
+                <td className="px-4 py-2 text-right">
                   <input
                     type="text"
                     inputMode="decimal"
+                    autoComplete="off"
                     value={addEstimated}
                     onChange={(e) => setAddEstimated(e.target.value)}
                     onBlur={(e) => handleNumericBlur(e.target.value, setAddEstimated)}
                     onKeyDown={handleAddKeyDown}
-                    className="w-24 px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+                    className="w-24 px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400 text-right"
                     placeholder="0"
                   />
                 </td>
-                <td className="px-4 py-1.5">
+                <td className="px-4 py-2 text-right">
                   <input
                     type="text"
                     inputMode="decimal"
+                    autoComplete="off"
                     value={addActual}
                     onChange={(e) => setAddActual(e.target.value)}
                     onBlur={(e) => handleNumericBlur(e.target.value, setAddActual)}
                     onKeyDown={handleAddKeyDown}
-                    className="w-24 px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+                    className="w-24 px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400 text-right"
                     placeholder="0"
                   />
                 </td>
-                <td className="px-4 py-1.5 text-sm text-slate-400">-</td>
-                <td className="px-4 py-1.5 text-sm text-slate-400">
+                <td className="px-4 py-2 text-sm text-slate-400 text-right">-</td>
+                <td className="px-4 py-2 text-sm text-slate-400 text-right">
                   <span className="text-xs text-slate-400">Enter to add</span>
                 </td>
+                <td className="px-4 py-2"></td>
               </tr>
             )}
           </tbody>
@@ -253,10 +267,12 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
               <tr>
                 <td className="px-4 py-3 text-sm font-medium text-slate-900">Total</td>
                 <td className="px-4 py-3"></td>
-                <td className="px-4 py-3 text-sm font-medium text-slate-900">{formatCurrency(totals.estimated)}</td>
-                <td className="px-4 py-3 text-sm font-medium text-slate-900">{formatCurrency(totals.actual)}</td>
-                <td className="px-4 py-3 text-sm font-medium text-slate-900">{formatCurrency(totals.paid)}</td>
                 <td className="px-4 py-3"></td>
+                <td className="px-4 py-3 text-sm font-medium text-slate-900 text-right">{formatCurrency(totals.estimated)}</td>
+                <td className="px-4 py-3 text-sm font-medium text-slate-900 text-right">{formatCurrency(totals.actual)}</td>
+                <td className="px-4 py-3 text-sm font-medium text-slate-900 text-right">{formatCurrency(totals.paid)}</td>
+                <td className="px-4 py-3"></td>
+                {!isClientView && <td className="px-4 py-3"></td>}
               </tr>
             </tfoot>
           )}
@@ -280,6 +296,7 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
               <div className="space-y-2">
                 <input
                   type="text"
+                  autoComplete="off"
                   value={addVendorName}
                   onChange={(e) => setAddVendorName(e.target.value)}
                   onKeyDown={handleAddKeyDown}
@@ -301,6 +318,7 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
                       <input
                         type="text"
                         inputMode="decimal"
+                        autoComplete="off"
                         value={addEstimated}
                         onChange={(e) => setAddEstimated(e.target.value)}
                         onBlur={(e) => handleNumericBlur(e.target.value, setAddEstimated)}
@@ -311,6 +329,7 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
                       <input
                         type="text"
                         inputMode="decimal"
+                        autoComplete="off"
                         value={addActual}
                         onChange={(e) => setAddActual(e.target.value)}
                         onBlur={(e) => handleNumericBlur(e.target.value, setAddActual)}
