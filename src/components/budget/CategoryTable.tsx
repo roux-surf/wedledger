@@ -20,7 +20,6 @@ import {
 import { useToast } from '@/components/ui/Toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import CategoryRow from './CategoryRow';
-import LineItemsModal from './LineItemsModal';
 import AddCategoryForm from './AddCategoryForm';
 
 interface CategoryTableProps {
@@ -38,10 +37,7 @@ export default function CategoryTable({
   onUpdate,
   isClientView,
 }: CategoryTableProps) {
-  const [selectedCategory, setSelectedCategory] = useState<CategoryWithSpend | null>(null);
   const [editingRowIndex, setEditingRowIndex] = useState<number | null>(null);
-  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
-  const [expandedDesktopIds, setExpandedDesktopIds] = useState<Set<string>>(new Set());
   const [orderedCategories, setOrderedCategories] = useState(categories);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -52,11 +48,6 @@ export default function CategoryTable({
   useEffect(() => {
     setOrderedCategories(categories);
   }, [categories]);
-
-  // Clear desktop expanded rows when switching between coordinator/client view
-  useEffect(() => {
-    setExpandedDesktopIds(new Set());
-  }, [isClientView]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -159,7 +150,6 @@ export default function CategoryTable({
       category={category}
       totalBudget={totalBudget}
       onUpdate={onUpdate}
-      onViewLineItems={() => setSelectedCategory(category)}
       onDelete={() => handleDeleteCategory(category.id)}
       isClientView={isClientView}
       shouldStartEditing={editingRowIndex === index}
@@ -178,24 +168,6 @@ export default function CategoryTable({
         }
       }}
       renderMode={mode === 'card' ? 'card' : 'table'}
-      isExpanded={mode === 'card'
-        ? expandedCategoryId === category.id
-        : expandedDesktopIds.has(category.id)
-      }
-      onToggleExpand={mode === 'card'
-        ? () => setExpandedCategoryId(expandedCategoryId === category.id ? null : category.id)
-        : () => {
-          setExpandedDesktopIds(prev => {
-            const next = new Set(prev);
-            if (next.has(category.id)) {
-              next.delete(category.id);
-            } else {
-              next.add(category.id);
-            }
-            return next;
-          });
-        }
-      }
       isDraggable={!isClientView}
       onMoveUp={index > 0 ? () => handleMoveCategory(category.id, 'up') : undefined}
       onMoveDown={index < orderedCategories.length - 1 ? () => handleMoveCategory(category.id, 'down') : undefined}
@@ -320,21 +292,6 @@ export default function CategoryTable({
           <h3 className="text-sm font-medium text-slate-900 mb-3">Add Category</h3>
           <AddCategoryForm budgetId={budgetId} onCategoryAdded={onUpdate} />
         </div>
-      )}
-
-      {selectedCategory && (
-        <LineItemsModal
-          isOpen={!!selectedCategory}
-          onClose={() => setSelectedCategory(null)}
-          category={selectedCategory}
-          onUpdate={() => {
-            onUpdate();
-            // Refresh the selected category data
-            const updated = orderedCategories.find((c) => c.id === selectedCategory.id);
-            if (updated) setSelectedCategory(updated);
-          }}
-          isClientView={isClientView}
-        />
       )}
 
       <ConfirmDialog

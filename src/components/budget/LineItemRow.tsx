@@ -17,9 +17,14 @@ interface LineItemRowProps {
   isClientView: boolean;
   renderMode?: 'table' | 'card';
   isDraggable?: boolean;
+  categoryName?: string;
+  onCategoryChange?: (newCategoryId: string) => void;
+  categoryId?: string;
+  categoryOptions?: { id: string; name: string }[];
 }
 
-export default function LineItemRow({ item, onUpdate, onDelete, isClientView, renderMode = 'table', isDraggable }: LineItemRowProps) {
+export default function LineItemRow({ item, onUpdate, onDelete, isClientView, renderMode = 'table', isDraggable, categoryName, onCategoryChange, categoryId, categoryOptions }: LineItemRowProps) {
+  const colCount = categoryName !== undefined ? 6 : 5;
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showContactFields, setShowContactFields] = useState(false);
@@ -366,9 +371,14 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
         >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <span className={`text-sm font-medium text-slate-900 ${!isClientView ? 'cursor-pointer' : ''}`}>
-                {item.vendor_name}
-              </span>
+              <div>
+                <span className={`text-sm font-medium text-slate-900 ${!isClientView ? 'cursor-pointer' : ''}`}>
+                  {item.vendor_name}
+                </span>
+                {categoryName && (
+                  <p className="text-xs text-slate-400">{categoryName}</p>
+                )}
+              </div>
               <BookingStatusBadge
                 status={item.booking_status || 'none'}
                 editable={false}
@@ -485,6 +495,9 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
               </button>
             )}
           </td>
+          {categoryName !== undefined && (
+            <td className="px-4 py-2 text-sm text-slate-500">{categoryName}</td>
+          )}
           <td className="px-4 py-2">
             <input
               ref={estimatedInputRef}
@@ -541,7 +554,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
         </tr>
         {isExpanded && (
           <tr>
-            <td colSpan={5} className="p-0">
+            <td colSpan={colCount} className="p-0">
               <PaymentSchedule
                 payments={payments}
                 lineItemId={item.id}
@@ -587,6 +600,23 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             </div>
           )}
         </td>
+        {categoryName !== undefined && (
+          <td className="px-4 py-2 text-sm text-slate-500">
+            {onCategoryChange && categoryOptions && !isClientView ? (
+              <select
+                value={categoryId || ''}
+                onChange={(e) => onCategoryChange(e.target.value)}
+                className="px-1 py-0.5 border border-slate-200 rounded text-sm bg-white"
+              >
+                {categoryOptions.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            ) : (
+              categoryName
+            )}
+          </td>
+        )}
         <td className="px-4 py-2 text-sm text-slate-900">
           <span
             onClick={isClientView ? undefined : () => handleStartEdit()}
@@ -627,7 +657,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
       </tr>
       {isExpanded && (
         <tr>
-          <td colSpan={5} className="p-0">
+          <td colSpan={colCount} className="p-0">
             <PaymentSchedule
               payments={payments}
               lineItemId={item.id}
