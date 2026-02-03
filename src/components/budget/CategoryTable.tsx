@@ -220,7 +220,13 @@ export default function CategoryTable({
                   Allocation
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Estimated
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Actual Spend
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Paid
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Difference
@@ -251,7 +257,13 @@ export default function CategoryTable({
                     </span>
                   </td>
                   <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right whitespace-nowrap`}>
+                    {formatCurrency(orderedCategories.reduce((sum, cat) => sum + cat.estimated_total, 0))}
+                  </td>
+                  <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right whitespace-nowrap`}>
                     {formatCurrency(orderedCategories.reduce((sum, cat) => sum + cat.actual_spend, 0))}
+                  </td>
+                  <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right whitespace-nowrap`}>
+                    {formatCurrency(orderedCategories.reduce((sum, cat) => sum + cat.total_paid, 0))}
                   </td>
                   <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'}`}></td>
                   {!isClientView && <td className="px-4 py-3"></td>}
@@ -277,9 +289,21 @@ export default function CategoryTable({
                 </span>
               </div>
               <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-500 uppercase">Estimated</span>
+                <span className="text-sm font-medium text-slate-900">
+                  {formatCurrency(orderedCategories.reduce((sum, cat) => sum + cat.estimated_total, 0))}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
                 <span className="text-xs text-slate-500 uppercase">Actual Spend</span>
                 <span className="text-sm font-medium text-slate-900">
                   {formatCurrency(orderedCategories.reduce((sum, cat) => sum + cat.actual_spend, 0))}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-500 uppercase">Paid</span>
+                <span className="text-sm font-medium text-slate-900">
+                  {formatCurrency(orderedCategories.reduce((sum, cat) => sum + cat.total_paid, 0))}
                 </span>
               </div>
             </div>

@@ -348,8 +348,16 @@ export default function CategoryRow({
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-500">Estimated</span>
+                <span className="font-medium text-slate-900">{formatCurrency(category.estimated_total)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-500">Committed</span>
                 <span className="font-medium text-slate-900">{formatCurrency(category.actual_spend)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-500">Paid</span>
+                <span className="font-medium text-slate-900">{formatCurrency(category.total_paid)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-500">Remaining</span>
@@ -561,7 +569,9 @@ export default function CategoryRow({
             </span>
           )}
         </td>
+        <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right whitespace-nowrap`}>{formatCurrency(category.estimated_total)}</td>
         <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right whitespace-nowrap`}>{formatCurrency(category.actual_spend)}</td>
+        <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right whitespace-nowrap`}>{formatCurrency(category.total_paid)}</td>
         <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-right whitespace-nowrap ${getDifferenceColor()}`}>
           {isOver ? '-' : '+'}
           {formatCurrency(Math.abs(difference))}
@@ -593,7 +603,7 @@ export default function CategoryRow({
       </tr>
       {isExpanded && (
         <tr className="bg-slate-50/50">
-          <td colSpan={isClientView ? 5 : 6} className="px-4 py-3">
+          <td colSpan={isClientView ? 7 : 8} className="px-4 py-3">
             <div className="ml-6 overflow-x-auto">
               <DndContext sensors={lineItemSensors} collisionDetection={closestCenter} onDragEnd={handleLineItemDragEnd}>
                 <table className="w-full text-sm">

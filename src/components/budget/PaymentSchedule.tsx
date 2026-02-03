@@ -13,13 +13,14 @@ interface PaymentScheduleProps {
   payments: Payment[];
   lineItemId: string;
   actualCost?: number;
+  estimatedCost?: number;
   weddingDate?: string;
   legacyPaidToDate: number;
   onUpdate: () => void;
   isClientView: boolean;
 }
 
-export default function PaymentSchedule({ payments, lineItemId, actualCost, weddingDate, legacyPaidToDate, onUpdate, isClientView }: PaymentScheduleProps) {
+export default function PaymentSchedule({ payments, lineItemId, actualCost, estimatedCost, weddingDate, legacyPaidToDate, onUpdate, isClientView }: PaymentScheduleProps) {
   const supabase = createClient();
   const { showSaved, showToast } = useToast();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -45,8 +46,19 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, wedd
     if (!paymentToDelete) return;
     setDeletingPayment(true);
     try {
+      const deletedPayment = payments.find(p => p.id === paymentToDelete.id);
       const { error } = await supabase.from('payments').delete().eq('id', paymentToDelete.id);
       if (error) throw error;
+
+      // If actual_cost matches totalScheduled (auto-set from payments), sync it down
+      if (deletedPayment && actualCost === totalScheduled) {
+        const newTotal = totalScheduled - Number(deletedPayment.amount);
+        await supabase
+          .from('line_items')
+          .update({ actual_cost: Math.max(0, newTotal) })
+          .eq('id', lineItemId);
+      }
+
       setPaymentToDelete(null);
       onUpdate();
     } catch (err) {
@@ -108,7 +120,8 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, wedd
   };
 
   const hasLegacyData = legacyPaidToDate > 0 && payments.length === 0;
-  const showTemplateSelector = !isClientView && payments.length === 0 && (actualCost || 0) > 0;
+  const templateCost = (actualCost || 0) > 0 ? actualCost! : (estimatedCost || 0);
+  const showTemplateSelector = !isClientView && payments.length === 0 && templateCost > 0;
 
   return (
     <div className="bg-slate-50 border-t border-slate-200">
@@ -116,10 +129,22 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, wedd
       {showTemplateSelector && (
         <PaymentTemplateSelector
           lineItemId={lineItemId}
-          actualCost={actualCost!}
+          actualCost={templateCost}
           weddingDate={weddingDate}
           onPaymentsCreated={onUpdate}
         />
+      )}
+
+      {/* Payment mismatch warnings */}
+      {payments.length > 0 && (actualCost || 0) > 0 && totalScheduled > (actualCost || 0) && (
+        <div className="px-4 py-2 border-b border-amber-200 bg-amber-50 text-xs text-amber-700">
+          Scheduled payments exceed actual cost by {formatCurrency(totalScheduled - (actualCost || 0))}
+        </div>
+      )}
+      {payments.length > 0 && (actualCost || 0) > 0 && totalScheduled < (actualCost || 0) && totalScheduled > 0 && (
+        <div className="px-4 py-2 border-b border-slate-200 bg-slate-50 text-xs text-slate-500">
+          Scheduled payments are {formatCurrency((actualCost || 0) - totalScheduled)} less than actual cost
+        </div>
       )}
 
       {/* Summary bar */}
@@ -215,7 +240,7 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, wedd
       {/* Add payment form */}
       {!isClientView && (
         <div className="px-4 py-3 border-t border-slate-200">
-          <AddPaymentForm lineItemId={lineItemId} actualCost={actualCost} onPaymentAdded={onUpdate} />
+          <AddPaymentForm lineItemId={lineItemId} actualCost={actualCost} totalScheduled={totalScheduled} onPaymentAdded={onUpdate} />
         </div>
       )}
 

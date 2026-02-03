@@ -50,6 +50,8 @@ function makeCategory(overrides: Partial<CategoryWithSpend> = {}): CategoryWithS
     sort_order: 0,
     created_at: '2025-01-01T00:00:00Z',
     actual_spend: 5000,
+    estimated_total: 0,
+    total_paid: 0,
     line_items: [],
     ...overrides,
   };
@@ -122,9 +124,11 @@ describe('buildPaidVsRemainingData', () => {
     expect(result.totalPaid).toBe(3000);
     expect(result.totalPending).toBe(5000);
     expect(result.uncommitted).toBe(12000);
+    expect(result.overBudget).toBe(0);
+    expect(result.overPaid).toBe(0);
   });
 
-  it('floors uncommitted at 0 when over budget', () => {
+  it('shows negative uncommitted and positive overBudget when over budget', () => {
     const categories: CategoryWithSpend[] = [
       makeCategory({
         line_items: [
@@ -134,7 +138,9 @@ describe('buildPaidVsRemainingData', () => {
     ];
 
     const result = buildPaidVsRemainingData(categories, 10000);
-    expect(result.uncommitted).toBe(0);
+    expect(result.uncommitted).toBe(-5000);
+    expect(result.overBudget).toBe(5000);
+    expect(result.overPaid).toBe(0);
   });
 
   it('handles empty categories', () => {
@@ -143,6 +149,8 @@ describe('buildPaidVsRemainingData', () => {
     expect(result.totalPaid).toBe(0);
     expect(result.totalPending).toBe(0);
     expect(result.uncommitted).toBe(50000);
+    expect(result.overBudget).toBe(0);
+    expect(result.overPaid).toBe(0);
   });
 });
 

@@ -128,9 +128,24 @@ export default function ClientBudgetPage() {
             0
           );
 
+          const estimatedTotal = lineItemsWithPayments.reduce(
+            (sum: number, item: LineItemWithPayments) => sum + (Number(item.estimated_cost) || 0),
+            0
+          );
+
+          const categoryTotalPaid = lineItemsWithPayments.reduce(
+            (sum: number, item: LineItemWithPayments) => {
+              const hasPayments = item.payments && item.payments.length > 0;
+              return sum + (hasPayments ? item.total_paid : (Number(item.paid_to_date) || 0));
+            },
+            0
+          );
+
           return {
             ...category,
             actual_spend: actualSpend,
+            estimated_total: estimatedTotal,
+            total_paid: categoryTotalPaid,
             line_items: lineItemsWithPayments,
           };
         })

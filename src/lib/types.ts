@@ -103,6 +103,8 @@ export function formatShortDate(dateString: string): string {
 
 export interface CategoryWithSpend extends Category {
   actual_spend: number;
+  estimated_total: number;
+  total_paid: number;
   line_items?: LineItemWithPayments[];
 }
 

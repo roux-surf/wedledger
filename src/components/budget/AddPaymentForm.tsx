@@ -2,17 +2,18 @@
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { parseNumericInput, sanitizeNumericString } from '@/lib/types';
+import { parseNumericInput, sanitizeNumericString, formatCurrency } from '@/lib/types';
 import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 
 interface AddPaymentFormProps {
   lineItemId: string;
   actualCost?: number;
+  totalScheduled?: number;
   onPaymentAdded: () => void;
 }
 
-export default function AddPaymentForm({ lineItemId, actualCost, onPaymentAdded }: AddPaymentFormProps) {
+export default function AddPaymentForm({ lineItemId, actualCost, totalScheduled = 0, onPaymentAdded }: AddPaymentFormProps) {
   const [label, setLabel] = useState('');
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -26,14 +27,23 @@ export default function AddPaymentForm({ lineItemId, actualCost, onPaymentAdded 
 
     setLoading(true);
     try {
+      const newAmount = parseNumericInput(amount);
       const { error } = await supabase.from('payments').insert({
         line_item_id: lineItemId,
         label: label.trim(),
-        amount: parseNumericInput(amount),
+        amount: newAmount,
         due_date: dueDate || null,
       });
 
       if (error) throw error;
+
+      // Auto-sync actual_cost when it tracks totalScheduled (auto-derived from payments)
+      if (newAmount > 0 && (actualCost === undefined || actualCost === 0 || actualCost === totalScheduled)) {
+        await supabase
+          .from('line_items')
+          .update({ actual_cost: totalScheduled + newAmount })
+          .eq('id', lineItemId);
+      }
 
       setLabel('');
       setAmount('');
@@ -80,29 +90,22 @@ export default function AddPaymentForm({ lineItemId, actualCost, onPaymentAdded 
       </div>
       <div className="w-full md:w-28">
         <label className="block text-xs font-medium text-slate-600 mb-1">Amount</label>
-        <div className="flex items-center gap-1">
-          <input
-            type="text"
-            inputMode="decimal"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            onBlur={handleAmountBlur}
-            onKeyDown={handleKeyDown}
-            onFocus={(e) => e.target.select()}
-            className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
-            placeholder="0"
-          />
-          {actualCost !== undefined && actualCost > 0 && (
-            <button
-              type="button"
-              onClick={() => setAmount(sanitizeNumericString(actualCost))}
-              className="shrink-0 px-1.5 py-1.5 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded whitespace-nowrap"
-              title="Fill with actual cost"
-            >
-              Fill
-            </button>
-          )}
-        </div>
+        <input
+          type="text"
+          inputMode="decimal"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          onBlur={handleAmountBlur}
+          onKeyDown={handleKeyDown}
+          onFocus={(e) => e.target.select()}
+          className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+          placeholder="0"
+        />
+        {actualCost !== undefined && actualCost > 0 && actualCost !== totalScheduled && parseNumericInput(amount) > 0 && (parseNumericInput(amount) + totalScheduled) > actualCost && (
+          <p className="text-xs text-amber-600 mt-1">
+            Total will exceed actual cost by {formatCurrency(parseNumericInput(amount) + totalScheduled - actualCost)}
+          </p>
+        )}
       </div>
       <div className="w-full md:w-36">
         <label className="block text-xs font-medium text-slate-600 mb-1">Due Date</label>

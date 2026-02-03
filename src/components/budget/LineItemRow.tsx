@@ -109,11 +109,6 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
         vendor_phone: formData.vendor_phone || null,
         vendor_email: formData.vendor_email || null,
       };
-      // Sync paid_to_date for backward compat
-      if (hasPayments) {
-        updateData.paid_to_date = item.total_paid;
-      }
-
       const { error } = await supabase
         .from('line_items')
         .update(updateData)
@@ -199,7 +194,13 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
     handleSave();
   };
 
-  const remaining = parseNumericInput(formData.actual_cost) - displayPaid;
+  const remaining = (isEditing ? parseNumericInput(formData.actual_cost) : item.actual_cost) - displayPaid;
+
+  const getRemainingColor = () => {
+    if (remaining < 0) return 'text-red-600';
+    if (remaining === 0) return 'text-green-600';
+    return '';
+  };
 
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -374,7 +375,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
               />
               {paymentBadge}
             </div>
-            <span className="text-sm text-slate-600">{formatCurrency(remaining)} remaining</span>
+            <span className={`text-sm ${getRemainingColor() || 'text-slate-600'}`}>{formatCurrency(remaining)} remaining</span>
           </div>
           <div className="flex items-center gap-4 text-xs text-slate-500">
             <span>Est: {formatCurrency(item.estimated_cost)}</span>
@@ -408,6 +409,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             payments={payments}
             lineItemId={item.id}
             actualCost={item.actual_cost}
+            estimatedCost={item.estimated_cost}
             legacyPaidToDate={item.paid_to_date}
             onUpdate={onUpdate}
             isClientView={isClientView}
@@ -520,7 +522,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
           <td className="px-4 py-2 text-sm text-slate-900">{formatCurrency(displayPaid)}</td>
           <td className="px-4 py-2 text-sm text-slate-900">
             <div className="flex items-center justify-between">
-              <span>{formatCurrency(remaining)}</span>
+              <span className={getRemainingColor()}>{formatCurrency(remaining)}</span>
               {!isClientView && (
                 <button
                   type="button"
@@ -606,7 +608,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
         </td>
         <td className="px-4 py-2 text-sm text-slate-900">
           <div className="flex items-center justify-between">
-            <span>{formatCurrency(remaining)}</span>
+            <span className={getRemainingColor()}>{formatCurrency(remaining)}</span>
             {!isClientView && (
               <button
                 type="button"

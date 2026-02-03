@@ -130,10 +130,14 @@ export default function LineItemsModal({
     <>
     <Modal isOpen={isOpen} onClose={onClose} title={`${category.name} - Line Items`}>
       <div className="mb-4 p-4 bg-slate-50 rounded-lg">
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-3 md:gap-4 text-center">
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4 text-center">
           <div>
             <p className="text-xs text-slate-500 uppercase">Target</p>
             <p className="text-lg font-semibold text-slate-900">{formatCurrency(category.target_amount)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 uppercase">Estimated</p>
+            <p className="text-lg font-semibold text-slate-900">{formatCurrency(category.estimated_total)}</p>
           </div>
           <div>
             <p className="text-xs text-slate-500 uppercase">Actual Spend</p>

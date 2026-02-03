@@ -15,6 +15,8 @@ export interface PaidVsRemainingData {
   totalPaid: number;
   totalPending: number;
   uncommitted: number;
+  overBudget: number;
+  overPaid: number;
 }
 
 export interface ScheduledPayment {
@@ -152,8 +154,10 @@ export function buildPaidVsRemainingData(
     }
   }
 
-  const totalPending = Math.max(0, totalCommitted - totalPaid);
-  const uncommitted = Math.max(0, totalBudget - totalCommitted);
+  const totalPending = totalCommitted - totalPaid;
+  const uncommitted = totalBudget - totalCommitted;
+  const overBudget = Math.max(0, totalCommitted - totalBudget);
+  const overPaid = Math.max(0, totalPaid - totalCommitted);
 
   return {
     totalBudget,
@@ -161,6 +165,8 @@ export function buildPaidVsRemainingData(
     totalPaid: Math.round(totalPaid * 100) / 100,
     totalPending: Math.round(totalPending * 100) / 100,
     uncommitted: Math.round(uncommitted * 100) / 100,
+    overBudget: Math.round(overBudget * 100) / 100,
+    overPaid: Math.round(overPaid * 100) / 100,
   };
 }
 
