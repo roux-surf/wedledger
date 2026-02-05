@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, Fragment } from 'react';
 import { LineItemWithPayments, Payment, BookingStatus, formatCurrency, parseNumericInput, sanitizeNumericString } from '@/lib/types';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabaseClient } from '@/lib/supabase/client';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useToast } from '@/components/ui/Toast';
@@ -40,7 +40,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
     vendor_email: item.vendor_email || '',
   });
   const [, setLoading] = useState(false);
-  const supabase = createClient();
+  const supabase = useSupabaseClient();
   const { showSaved, showToast } = useToast();
 
   const {

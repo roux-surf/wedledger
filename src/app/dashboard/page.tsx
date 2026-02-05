@@ -1,7 +1,9 @@
+import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import ClientList from '@/components/dashboard/ClientList';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import UpcomingPayments from '@/components/dashboard/UpcomingPayments';
 import UpcomingMilestones from '@/components/dashboard/UpcomingMilestones';
 import { Client, ClientWithBudgetStatus, PaymentAlert, MilestoneAlert, getBudgetStatus, getPaymentUrgency, getMilestoneUrgency } from '@/lib/types';
@@ -213,41 +215,22 @@ async function getUpcomingMilestones(userId: string): Promise<MilestoneAlert[]> 
   }));
 }
 
-async function signOut() {
-  'use server';
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-  redirect('/login');
-}
-
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { userId } = await auth();
 
-  if (!user) {
-    redirect('/login');
+  if (!userId) {
+    redirect('/sign-in');
   }
 
   const [clients, paymentAlerts, milestoneAlerts] = await Promise.all([
-    getClientsWithBudgetStatus(user.id),
-    getUpcomingPayments(user.id),
-    getUpcomingMilestones(user.id),
+    getClientsWithBudgetStatus(userId),
+    getUpcomingPayments(userId),
+    getUpcomingMilestones(userId),
   ]);
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-slate-900">WedLedger</h1>
-          <form action={signOut}>
-            <Button variant="secondary" size="sm" type="submit">
-              Sign Out
-            </Button>
-          </form>
-        </div>
-      </header>
+      <DashboardHeader />
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">

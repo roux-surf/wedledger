@@ -9,7 +9,7 @@
 -- Stores wedding client information for each coordinator
 CREATE TABLE clients (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  user_id TEXT NOT NULL,
   name TEXT NOT NULL,
   wedding_date DATE NOT NULL,
   city TEXT NOT NULL,
@@ -380,7 +380,7 @@ CREATE POLICY "Users can delete own milestones" ON milestones
 
 CREATE TABLE milestone_templates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  user_id TEXT NOT NULL,
   name TEXT NOT NULL,
   base_level_id TEXT,
   milestones JSONB NOT NULL DEFAULT '[]',

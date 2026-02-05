@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { formatCurrency } from '@/lib/types';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabaseClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
 
 interface PaymentTemplateSelectorProps {
@@ -57,7 +57,7 @@ function computeDueDate(weddingDate: string | undefined, monthsBefore?: number):
 export default function PaymentTemplateSelector({ lineItemId, actualCost, weddingDate, onPaymentsCreated }: PaymentTemplateSelectorProps) {
   const [loading, setLoading] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const supabase = createClient();
+  const supabase = useSupabaseClient();
   const { showSaved, showToast } = useToast();
 
   const applyTemplate = async (template: PaymentTemplate) => {

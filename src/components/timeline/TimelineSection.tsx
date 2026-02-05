@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabaseClient } from '@/lib/supabase/client';
 import { MilestoneWithBudget, MilestoneStatus, MilestoneTemplateItem, CategoryWithSpend } from '@/lib/types';
 import { calculateTargetDate } from '@/lib/milestoneTemplates';
 import { useToast } from '@/components/ui/Toast';
@@ -38,7 +38,7 @@ export default function TimelineSection({
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const supabase = createClient();
+  const supabase = useSupabaseClient();
   const { showSaved } = useToast();
 
   const completed = milestones.filter((m) => m.status === 'completed').length;

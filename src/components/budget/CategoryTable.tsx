@@ -1,26 +1,71 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { CategoryWithSpend, formatCurrency, formatPercent } from '@/lib/types';
-import { createClient } from '@/lib/supabase/client';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-  arrayMove,
-} from '@dnd-kit/sortable';
+import { useSupabaseClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import CategoryRow from './CategoryRow';
 import AddCategoryForm from './AddCategoryForm';
+
+type SortKey = 'name' | 'target_amount' | 'allocation' | 'estimated_total' | 'actual_spend' | 'total_paid' | 'difference';
+
+interface SortConfig {
+  key: SortKey;
+  direction: 'asc' | 'desc';
+}
+
+function SortIndicator({ direction }: { direction: 'asc' | 'desc' | null }) {
+  if (direction === 'asc') {
+    return (
+      <svg className="w-3.5 h-3.5 inline-block ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+      </svg>
+    );
+  }
+  if (direction === 'desc') {
+    return (
+      <svg className="w-3.5 h-3.5 inline-block ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    );
+  }
+  // Unsorted hint: subtle double chevron
+  return (
+    <svg className="w-3.5 h-3.5 inline-block ml-1 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5 5 5M7 13l5 5 5-5" />
+    </svg>
+  );
+}
+
+function SortHeader({
+  label,
+  sortKey,
+  sortConfig,
+  onSort,
+  align = 'right',
+}: {
+  label: string;
+  sortKey: SortKey;
+  sortConfig: SortConfig | null;
+  onSort: (key: SortKey) => void;
+  align?: 'left' | 'right';
+}) {
+  const isActive = sortConfig?.key === sortKey;
+  const direction = isActive ? sortConfig!.direction : null;
+
+  return (
+    <th
+      className={`px-4 py-3 text-xs font-medium uppercase tracking-wider select-none cursor-pointer hover:text-slate-700 hover:bg-slate-100 ${
+        align === 'right' ? 'text-right' : 'text-left'
+      } ${isActive ? 'text-slate-700' : 'text-slate-500'}`}
+      onClick={() => onSort(sortKey)}
+    >
+      {label}
+      <SortIndicator direction={direction} />
+    </th>
+  );
+}
 
 interface CategoryTableProps {
   categories: CategoryWithSpend[];
@@ -41,7 +86,8 @@ export default function CategoryTable({
   const [orderedCategories, setOrderedCategories] = useState(categories);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const supabase = createClient();
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+  const supabase = useSupabaseClient();
   const { showToast } = useToast();
 
   // Sync ordered categories when props change
@@ -49,38 +95,47 @@ export default function CategoryTable({
     setOrderedCategories(categories);
   }, [categories]);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor)
-  );
+  const handleSort = useCallback((key: SortKey) => {
+    setSortConfig(prev => {
+      if (!prev || prev.key !== key) return { key, direction: 'asc' };
+      if (prev.direction === 'asc') return { key, direction: 'desc' };
+      return null;
+    });
+  }, []);
 
-  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
+  const sortedCategories = useMemo(() => {
+    if (!sortConfig) return orderedCategories;
 
-    const oldIndex = orderedCategories.findIndex(c => c.id === active.id);
-    const newIndex = orderedCategories.findIndex(c => c.id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
-
-    const newOrder = arrayMove(orderedCategories, oldIndex, newIndex);
-    setOrderedCategories(newOrder);
-
-    // Batch update sort_order values
-    try {
-      const updates = newOrder.map((cat, idx) => (
-        supabase
-          .from('categories')
-          .update({ sort_order: idx })
-          .eq('id', cat.id)
-      ));
-      await Promise.all(updates);
-      onUpdate();
-    } catch (err) {
-      console.warn('Failed to reorder categories:', err);
-      showToast('Failed to reorder categories', 'error');
-      setOrderedCategories(categories); // Rollback
-    }
-  }, [orderedCategories, categories, supabase, onUpdate]);
+    const { key, direction } = sortConfig;
+    const sorted = [...orderedCategories].sort((a, b) => {
+      let cmp = 0;
+      switch (key) {
+        case 'name':
+          cmp = a.name.localeCompare(b.name);
+          break;
+        case 'target_amount':
+          cmp = a.target_amount - b.target_amount;
+          break;
+        case 'allocation':
+          cmp = a.target_amount - b.target_amount;
+          break;
+        case 'estimated_total':
+          cmp = a.estimated_total - b.estimated_total;
+          break;
+        case 'actual_spend':
+          cmp = a.actual_spend - b.actual_spend;
+          break;
+        case 'total_paid':
+          cmp = a.total_paid - b.total_paid;
+          break;
+        case 'difference':
+          cmp = (a.target_amount - a.actual_spend) - (b.target_amount - b.actual_spend);
+          break;
+      }
+      return direction === 'desc' ? -cmp : cmp;
+    });
+    return sorted;
+  }, [orderedCategories, sortConfig]);
 
   const handleDeleteCategory = (categoryId: string) => {
     const cat = orderedCategories.find(c => c.id === categoryId);
@@ -103,28 +158,6 @@ export default function CategoryTable({
     }
   };
 
-  const handleMoveCategory = useCallback(async (categoryId: string, direction: 'up' | 'down') => {
-    const idx = orderedCategories.findIndex(c => c.id === categoryId);
-    if (idx === -1) return;
-    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
-    if (targetIdx < 0 || targetIdx >= orderedCategories.length) return;
-
-    const newOrder = arrayMove(orderedCategories, idx, targetIdx);
-    setOrderedCategories(newOrder);
-
-    try {
-      const updates = newOrder.map((cat, i) => (
-        supabase.from('categories').update({ sort_order: i }).eq('id', cat.id)
-      ));
-      await Promise.all(updates);
-      onUpdate();
-    } catch (err) {
-      console.warn('Failed to move category:', err);
-      showToast('Failed to move category', 'error');
-      setOrderedCategories(categories);
-    }
-  }, [orderedCategories, categories, supabase, onUpdate]);
-
   // Calculate total allocation percentage
   const totalAllocated = orderedCategories.reduce((sum, cat) => sum + Number(cat.target_amount), 0);
   const totalAllocationPercent = totalBudget > 0 ? (totalAllocated / totalBudget) * 100 : 0;
@@ -141,8 +174,6 @@ export default function CategoryTable({
   };
 
   const allocationStatus = getAllocationStatus();
-
-  const categoryIds = orderedCategories.map(c => c.id);
 
   const renderCategoryRow = (category: CategoryWithSpend, index: number, mode: 'table' | 'card') => (
     <CategoryRow
@@ -168,9 +199,6 @@ export default function CategoryTable({
         }
       }}
       renderMode={mode === 'card' ? 'card' : 'table'}
-      isDraggable={!isClientView}
-      onMoveUp={index > 0 ? () => handleMoveCategory(category.id, 'up') : undefined}
-      onMoveDown={index < orderedCategories.length - 1 ? () => handleMoveCategory(category.id, 'down') : undefined}
     />
   );
 
@@ -178,72 +206,80 @@ export default function CategoryTable({
     <>
       <div className="bg-white border border-slate-200 rounded-lg overflow-hidden print:rounded-none print:border-slate-300">
         {/* Desktop table */}
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <table className="hidden md:table print:table w-full print:text-sm">
-            <thead className="bg-slate-50">
-              <tr className="border-b border-slate-200">
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Category
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Target
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Allocation
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Estimated
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Actual Spend
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Paid
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Difference
-                </th>
-                {!isClientView && (
+        <table className="hidden md:table print:table w-full print:text-sm">
+          <thead className="bg-slate-50">
+            <tr className="border-b border-slate-200">
+              {!isClientView ? (
+                <>
+                  <SortHeader label="Category" sortKey="name" sortConfig={sortConfig} onSort={handleSort} align="left" />
+                  <SortHeader label="Target" sortKey="target_amount" sortConfig={sortConfig} onSort={handleSort} />
+                  <SortHeader label="Allocation" sortKey="allocation" sortConfig={sortConfig} onSort={handleSort} />
+                  <SortHeader label="Estimated" sortKey="estimated_total" sortConfig={sortConfig} onSort={handleSort} />
+                  <SortHeader label="Actual Spend" sortKey="actual_spend" sortConfig={sortConfig} onSort={handleSort} />
+                  <SortHeader label="Paid" sortKey="total_paid" sortConfig={sortConfig} onSort={handleSort} />
+                  <SortHeader label="Difference" sortKey="difference" sortConfig={sortConfig} onSort={handleSort} />
                   <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                     Actions
                   </th>
-                )}
+                </>
+              ) : (
+                <>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Category
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Target
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Allocation
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Estimated
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Actual Spend
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Paid
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    Difference
+                  </th>
+                </>
+              )}
+            </tr>
+          </thead>
+          <tbody className={`divide-y ${isClientView ? 'divide-slate-200' : 'divide-slate-100'}`}>
+            {sortedCategories.map((category, index) => renderCategoryRow(category, index, 'table'))}
+          </tbody>
+          {orderedCategories.length > 0 && (
+            <tfoot className="bg-slate-50 border-t border-slate-200">
+              <tr className="break-inside-avoid">
+                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900`}>Total</td>
+                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right whitespace-nowrap`}>
+                  {formatCurrency(totalAllocated)}
+                </td>
+                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-right whitespace-nowrap`}>
+                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-sm font-medium ${allocationStatus.bg} ${allocationStatus.color}`}>
+                    {formatPercent(totalAllocationPercent)}
+                    <span className="text-xs font-normal">({allocationStatus.label})</span>
+                  </span>
+                </td>
+                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right whitespace-nowrap`}>
+                  {formatCurrency(orderedCategories.reduce((sum, cat) => sum + cat.estimated_total, 0))}
+                </td>
+                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right whitespace-nowrap`}>
+                  {formatCurrency(orderedCategories.reduce((sum, cat) => sum + cat.actual_spend, 0))}
+                </td>
+                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right whitespace-nowrap`}>
+                  {formatCurrency(orderedCategories.reduce((sum, cat) => sum + cat.total_paid, 0))}
+                </td>
+                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'}`}></td>
+                {!isClientView && <td className="px-4 py-3"></td>}
               </tr>
-            </thead>
-            <SortableContext items={categoryIds} strategy={verticalListSortingStrategy}>
-              <tbody className={`divide-y ${isClientView ? 'divide-slate-200' : 'divide-slate-100'}`}>
-                {orderedCategories.map((category, index) => renderCategoryRow(category, index, 'table'))}
-              </tbody>
-            </SortableContext>
-            {orderedCategories.length > 0 && (
-              <tfoot className="bg-slate-50 border-t border-slate-200">
-                <tr className="break-inside-avoid">
-                  <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900`}>Total</td>
-                  <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right whitespace-nowrap`}>
-                    {formatCurrency(totalAllocated)}
-                  </td>
-                  <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-right whitespace-nowrap`}>
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-sm font-medium ${allocationStatus.bg} ${allocationStatus.color}`}>
-                      {formatPercent(totalAllocationPercent)}
-                      <span className="text-xs font-normal">({allocationStatus.label})</span>
-                    </span>
-                  </td>
-                  <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right whitespace-nowrap`}>
-                    {formatCurrency(orderedCategories.reduce((sum, cat) => sum + cat.estimated_total, 0))}
-                  </td>
-                  <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right whitespace-nowrap`}>
-                    {formatCurrency(orderedCategories.reduce((sum, cat) => sum + cat.actual_spend, 0))}
-                  </td>
-                  <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right whitespace-nowrap`}>
-                    {formatCurrency(orderedCategories.reduce((sum, cat) => sum + cat.total_paid, 0))}
-                  </td>
-                  <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'}`}></td>
-                  {!isClientView && <td className="px-4 py-3"></td>}
-                </tr>
-              </tfoot>
-            )}
-          </table>
-        </DndContext>
+            </tfoot>
+          )}
+        </table>
 
         {/* Mobile card list */}
         <div className="md:hidden print:hidden divide-y divide-slate-200">

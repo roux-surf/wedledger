@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { CategoryWithSpend, LineItemWithPayments, BookingStatus, formatCurrency, parseNumericInput, sanitizeNumericString } from '@/lib/types';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabaseClient } from '@/lib/supabase/client';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
@@ -35,7 +35,7 @@ export default function LineItemsModal({
   const [loading, setLoading] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ id: string; name: string } | null>(null);
   const [deletingItem, setDeletingItem] = useState(false);
-  const supabase = createClient();
+  const supabase = useSupabaseClient();
   const { showSaved, showToast } = useToast();
 
   const handleAddItem = async (e: React.FormEvent) => {

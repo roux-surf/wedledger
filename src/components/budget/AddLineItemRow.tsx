@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { BookingStatus, parseNumericInput, sanitizeNumericString } from '@/lib/types';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabaseClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
 
 interface AddLineItemRowProps {
@@ -23,7 +23,7 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
   });
   const [showMore, setShowMore] = useState(false);
   const [loading, setLoading] = useState(false);
-  const supabase = createClient();
+  const supabase = useSupabaseClient();
   const { showSaved, showToast } = useToast();
   const vendorRef = useRef<HTMLInputElement>(null);
 

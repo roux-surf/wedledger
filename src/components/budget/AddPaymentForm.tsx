@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabaseClient } from '@/lib/supabase/client';
 import { parseNumericInput, sanitizeNumericString, formatCurrency } from '@/lib/types';
 import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
@@ -18,7 +18,7 @@ export default function AddPaymentForm({ lineItemId, actualCost, totalScheduled 
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [loading, setLoading] = useState(false);
-  const supabase = createClient();
+  const supabase = useSupabaseClient();
   const { showSaved, showToast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {

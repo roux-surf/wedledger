@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { useUser } from '@clerk/nextjs';
+import { useSupabaseClient } from '@/lib/supabase/client';
 import { DEFAULT_CATEGORIES, US_STATES } from '@/lib/constants';
 import { parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import { WEDDING_LEVELS, getWeddingLevelById } from '@/lib/budgetTemplates';
@@ -24,7 +25,8 @@ export default function NewClientPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
+  const { user } = useUser();
+  const supabase = useSupabaseClient();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -49,10 +51,6 @@ export default function NewClientPage() {
     setLoading(true);
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
       if (!user) {
         throw new Error('Not authenticated');
       }

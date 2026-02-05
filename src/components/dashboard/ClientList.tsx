@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabaseClient } from '@/lib/supabase/client';
 import { ClientWithBudgetStatus } from '@/lib/types';
 import ClientCard from './ClientCard';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -14,7 +14,7 @@ interface ClientListProps {
 
 export default function ClientList({ clients }: ClientListProps) {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useSupabaseClient();
   const { showToast } = useToast();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);

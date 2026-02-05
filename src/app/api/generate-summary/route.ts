@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@/lib/supabase/server';
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -10,23 +11,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Client ID is required' }, { status: 400 });
     }
 
-    const supabase = await createClient();
+    const { userId } = await auth();
 
-    // Verify user is authenticated
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const supabase = await createClient();
 
     // Fetch client data
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .select('*')
       .eq('id', clientId)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single();
 
     if (clientError || !client) {

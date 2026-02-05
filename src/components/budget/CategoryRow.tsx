@@ -2,11 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { CategoryWithSpend, formatCurrency, formatPercent, parseNumericInput, sanitizeNumericString } from '@/lib/types';
-import { createClient } from '@/lib/supabase/client';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { useSupabaseClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
-import DragHandle from '@/components/ui/DragHandle';
 
 interface CategoryRowProps {
   category: CategoryWithSpend;
@@ -18,9 +15,6 @@ interface CategoryRowProps {
   shouldStartEditing?: boolean;
   onEditingChange?: (editing: boolean) => void;
   renderMode?: 'table' | 'card';
-  isDraggable?: boolean;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
 }
 
 export default function CategoryRow({
@@ -33,31 +27,13 @@ export default function CategoryRow({
   shouldStartEditing,
   onEditingChange,
   renderMode = 'table',
-  isDraggable,
-  onMoveUp,
-  onMoveDown,
 }: CategoryRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [targetAmount, setTargetAmount] = useState(category.target_amount.toString());
   const [allocationPercent, setAllocationPercent] = useState('');
   const [, setLoading] = useState(false);
-  const supabase = createClient();
+  const supabase = useSupabaseClient();
   const { showSaved, showToast } = useToast();
-
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: category.id, disabled: !isDraggable || renderMode === 'card' });
-
-  const sortableStyle = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : undefined,
-  };
 
   const targetInputRef = useRef<HTMLInputElement>(null);
   const percentInputRef = useRef<HTMLInputElement>(null);
@@ -314,28 +290,6 @@ export default function CategoryRow({
           {/* Coordinator actions */}
           {!isClientView && !isEditing && (
             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
-              {(onMoveUp || onMoveDown) && (
-                <div className="flex items-center gap-0.5 mr-1">
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onMoveUp?.(); }}
-                    disabled={!onMoveUp}
-                    className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                    aria-label="Move up"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onMoveDown?.(); }}
-                    disabled={!onMoveDown}
-                    className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed"
-                    aria-label="Move down"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                  </button>
-                </div>
-              )}
               <button
                 type="button"
                 onClick={onDelete}
@@ -355,14 +309,9 @@ export default function CategoryRow({
   }
 
   return (
-    <tr ref={setNodeRef} style={sortableStyle} className={`break-inside-avoid ${getRowBackground()}`}>
+    <tr className={`break-inside-avoid ${getRowBackground()}`}>
       <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900`}>
-        <div className="flex items-center gap-2">
-          {isDraggable && (
-            <DragHandle listeners={listeners} attributes={attributes} />
-          )}
-          <span>{category.name}</span>
-        </div>
+        {category.name}
       </td>
       <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right whitespace-nowrap`}>
         {isEditing && !isClientView ? (

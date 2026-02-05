@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabaseClient } from '@/lib/supabase/client';
 import { parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -17,7 +17,7 @@ export default function AddCategoryForm({ budgetId, onCategoryAdded }: AddCatego
   const [targetAmount, setTargetAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
+  const supabase = useSupabaseClient();
   const { showSaved } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {

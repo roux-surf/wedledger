@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useUser } from '@clerk/nextjs';
+import { useSupabaseClient } from '@/lib/supabase/client';
 import { MilestoneWithBudget, MilestoneTemplate, MilestoneTemplateItem } from '@/lib/types';
 import { WEDDING_LEVELS } from '@/lib/budgetTemplates';
 import { getDefaultMilestonesForLevel as getMilestoneDefaults } from '@/lib/milestoneTemplates';
@@ -31,7 +32,8 @@ export default function TemplateManagerModal({
   const [loading, setLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const supabase = createClient();
+  const { user } = useUser();
+  const supabase = useSupabaseClient();
 
   const fetchCustomTemplates = async () => {
     setLoading(true);
@@ -62,10 +64,6 @@ export default function TemplateManagerModal({
   const handleSave = async () => {
     if (!templateName.trim()) return;
     setSaving(true);
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
 
     if (!user) {
       setSaving(false);

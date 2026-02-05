@@ -1,6 +1,8 @@
-import { createBrowserClient } from '@supabase/ssr';
+import { useSession } from '@clerk/nextjs';
+import { createClient as supabaseCreateClient } from '@supabase/supabase-js';
+import { useMemo } from 'react';
 
-export function createClient() {
+function getSupabaseEnv() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -10,5 +12,31 @@ export function createClient() {
     );
   }
 
-  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+  return { supabaseUrl, supabaseAnonKey };
+}
+
+export function useSupabaseClient() {
+  const { session } = useSession();
+
+  return useMemo(() => {
+    const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv();
+
+    return supabaseCreateClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        fetch: async (url, options = {}) => {
+          const token = await session?.getToken({ template: 'supabase' });
+          const headers = new Headers(options.headers);
+          if (token) {
+            headers.set('Authorization', `Bearer ${token}`);
+          }
+          return fetch(url, { ...options, headers });
+        },
+      },
+    });
+  }, [session]);
+}
+
+export function createClient() {
+  const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv();
+  return supabaseCreateClient(supabaseUrl, supabaseAnonKey);
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabaseClient } from '@/lib/supabase/client';
 import { Client, Budget, CategoryWithSpend, LineItem, LineItemWithPayments, Payment, MilestoneWithBudget, formatCurrency, formatDate, formatPercent, getBudgetStatus, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import { getWeddingLevelById } from '@/lib/budgetTemplates';
 import BudgetTabs from '@/components/budget/BudgetTabs';
@@ -40,7 +40,7 @@ export default function ClientBudgetPage() {
   const [showStickyHeader, setShowStickyHeader] = useState(false);
   const clientInfoRef = useRef<HTMLDivElement>(null);
 
-  const supabase = createClient();
+  const supabase = useSupabaseClient();
   const { showSaved, showToast } = useToast();
 
   const fetchData = useCallback(async () => {

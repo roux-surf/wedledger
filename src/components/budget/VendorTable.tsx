@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useRef } from 'react';
 import { CategoryWithSpend, LineItemWithPayments, BookingStatus, formatCurrency, parseNumericInput, sanitizeNumericString } from '@/lib/types';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabaseClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import LineItemRow from './LineItemRow';
@@ -27,7 +27,7 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
   const [addCategoryId, setAddCategoryId] = useState('');
   const [addLoading, setAddLoading] = useState(false);
   const vendorInputRef = useRef<HTMLInputElement>(null);
-  const supabase = createClient();
+  const supabase = useSupabaseClient();
   const { showSaved, showToast } = useToast();
 
   const categoryOptions = useMemo(() => {

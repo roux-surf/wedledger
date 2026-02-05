@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Payment, formatCurrency } from '@/lib/types';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabaseClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import PaymentRow from './PaymentRow';
@@ -21,7 +21,7 @@ interface PaymentScheduleProps {
 }
 
 export default function PaymentSchedule({ payments, lineItemId, actualCost, estimatedCost, weddingDate, legacyPaidToDate, onUpdate, isClientView }: PaymentScheduleProps) {
-  const supabase = createClient();
+  const supabase = useSupabaseClient();
   const { showSaved, showToast } = useToast();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);

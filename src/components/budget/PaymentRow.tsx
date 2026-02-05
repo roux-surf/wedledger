@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Payment, formatCurrency, formatShortDate, getPaymentUrgency, parseNumericInput, sanitizeNumericString } from '@/lib/types';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabaseClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
 
 interface PaymentRowProps {
@@ -24,7 +24,7 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
     due_date: payment.due_date || '',
   });
   const [, setLoading] = useState(false);
-  const supabase = createClient();
+  const supabase = useSupabaseClient();
   const { showSaved, showToast } = useToast();
   const labelRef = useRef<HTMLInputElement>(null);
   const amountRef = useRef<HTMLInputElement>(null);
