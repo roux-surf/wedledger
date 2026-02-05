@@ -84,16 +84,16 @@ ALTER TABLE line_items ENABLE ROW LEVEL SECURITY;
 -- =============================================
 
 CREATE POLICY "Users can view own clients" ON clients
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING ((auth.jwt()->>'sub') = user_id);
 
 CREATE POLICY "Users can insert own clients" ON clients
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK ((auth.jwt()->>'sub') = user_id);
 
 CREATE POLICY "Users can update own clients" ON clients
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING ((auth.jwt()->>'sub') = user_id);
 
 CREATE POLICY "Users can delete own clients" ON clients
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR DELETE USING ((auth.jwt()->>'sub') = user_id);
 
 -- =============================================
 -- BUDGETS POLICIES
@@ -105,7 +105,7 @@ CREATE POLICY "Users can view own budgets" ON budgets
     EXISTS (
       SELECT 1 FROM clients
       WHERE clients.id = budgets.client_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -114,7 +114,7 @@ CREATE POLICY "Users can insert own budgets" ON budgets
     EXISTS (
       SELECT 1 FROM clients
       WHERE clients.id = budgets.client_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -123,7 +123,7 @@ CREATE POLICY "Users can update own budgets" ON budgets
     EXISTS (
       SELECT 1 FROM clients
       WHERE clients.id = budgets.client_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -132,7 +132,7 @@ CREATE POLICY "Users can delete own budgets" ON budgets
     EXISTS (
       SELECT 1 FROM clients
       WHERE clients.id = budgets.client_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -147,7 +147,7 @@ CREATE POLICY "Users can view own categories" ON categories
       SELECT 1 FROM budgets
       JOIN clients ON clients.id = budgets.client_id
       WHERE budgets.id = categories.budget_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -157,7 +157,7 @@ CREATE POLICY "Users can insert own categories" ON categories
       SELECT 1 FROM budgets
       JOIN clients ON clients.id = budgets.client_id
       WHERE budgets.id = categories.budget_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -167,7 +167,7 @@ CREATE POLICY "Users can update own categories" ON categories
       SELECT 1 FROM budgets
       JOIN clients ON clients.id = budgets.client_id
       WHERE budgets.id = categories.budget_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -177,7 +177,7 @@ CREATE POLICY "Users can delete own categories" ON categories
       SELECT 1 FROM budgets
       JOIN clients ON clients.id = budgets.client_id
       WHERE budgets.id = categories.budget_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -193,7 +193,7 @@ CREATE POLICY "Users can view own line_items" ON line_items
       JOIN budgets ON budgets.id = categories.budget_id
       JOIN clients ON clients.id = budgets.client_id
       WHERE categories.id = line_items.category_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -204,7 +204,7 @@ CREATE POLICY "Users can insert own line_items" ON line_items
       JOIN budgets ON budgets.id = categories.budget_id
       JOIN clients ON clients.id = budgets.client_id
       WHERE categories.id = line_items.category_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -215,7 +215,7 @@ CREATE POLICY "Users can update own line_items" ON line_items
       JOIN budgets ON budgets.id = categories.budget_id
       JOIN clients ON clients.id = budgets.client_id
       WHERE categories.id = line_items.category_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -226,7 +226,7 @@ CREATE POLICY "Users can delete own line_items" ON line_items
       JOIN budgets ON budgets.id = categories.budget_id
       JOIN clients ON clients.id = budgets.client_id
       WHERE categories.id = line_items.category_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -265,7 +265,7 @@ CREATE POLICY "Users can view own payments" ON payments
       JOIN budgets ON budgets.id = categories.budget_id
       JOIN clients ON clients.id = budgets.client_id
       WHERE line_items.id = payments.line_item_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -277,7 +277,7 @@ CREATE POLICY "Users can insert own payments" ON payments
       JOIN budgets ON budgets.id = categories.budget_id
       JOIN clients ON clients.id = budgets.client_id
       WHERE line_items.id = payments.line_item_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -289,7 +289,7 @@ CREATE POLICY "Users can update own payments" ON payments
       JOIN budgets ON budgets.id = categories.budget_id
       JOIN clients ON clients.id = budgets.client_id
       WHERE line_items.id = payments.line_item_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -301,7 +301,7 @@ CREATE POLICY "Users can delete own payments" ON payments
       JOIN budgets ON budgets.id = categories.budget_id
       JOIN clients ON clients.id = budgets.client_id
       WHERE line_items.id = payments.line_item_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -342,7 +342,7 @@ CREATE POLICY "Users can view own milestones" ON milestones
     EXISTS (
       SELECT 1 FROM clients
       WHERE clients.id = milestones.client_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -351,7 +351,7 @@ CREATE POLICY "Users can insert own milestones" ON milestones
     EXISTS (
       SELECT 1 FROM clients
       WHERE clients.id = milestones.client_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -360,7 +360,7 @@ CREATE POLICY "Users can update own milestones" ON milestones
     EXISTS (
       SELECT 1 FROM clients
       WHERE clients.id = milestones.client_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -369,7 +369,7 @@ CREATE POLICY "Users can delete own milestones" ON milestones
     EXISTS (
       SELECT 1 FROM clients
       WHERE clients.id = milestones.client_id
-      AND clients.user_id = auth.uid()
+      AND clients.user_id = (auth.jwt()->>'sub')
     )
   );
 
@@ -392,13 +392,13 @@ CREATE INDEX idx_milestone_templates_user_id ON milestone_templates(user_id);
 ALTER TABLE milestone_templates ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own milestone_templates" ON milestone_templates
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING ((auth.jwt()->>'sub') = user_id);
 
 CREATE POLICY "Users can insert own milestone_templates" ON milestone_templates
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK ((auth.jwt()->>'sub') = user_id);
 
 CREATE POLICY "Users can update own milestone_templates" ON milestone_templates
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING ((auth.jwt()->>'sub') = user_id);
 
 CREATE POLICY "Users can delete own milestone_templates" ON milestone_templates
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR DELETE USING ((auth.jwt()->>'sub') = user_id);
