@@ -209,43 +209,17 @@ export default function CategoryTable({
         <table className="hidden md:table print:table w-full print:text-sm">
           <thead className="bg-slate-50">
             <tr className="border-b border-slate-200">
-              {!isClientView ? (
-                <>
-                  <SortHeader label="Category" sortKey="name" sortConfig={sortConfig} onSort={handleSort} align="left" />
-                  <SortHeader label="Target" sortKey="target_amount" sortConfig={sortConfig} onSort={handleSort} />
-                  <SortHeader label="Allocation" sortKey="allocation" sortConfig={sortConfig} onSort={handleSort} />
-                  <SortHeader label="Estimated" sortKey="estimated_total" sortConfig={sortConfig} onSort={handleSort} />
-                  <SortHeader label="Actual Spend" sortKey="actual_spend" sortConfig={sortConfig} onSort={handleSort} />
-                  <SortHeader label="Paid" sortKey="total_paid" sortConfig={sortConfig} onSort={handleSort} />
-                  <SortHeader label="Difference" sortKey="difference" sortConfig={sortConfig} onSort={handleSort} />
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </>
-              ) : (
-                <>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Target
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Allocation
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Estimated
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Actual Spend
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Paid
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Difference
-                  </th>
-                </>
+              <SortHeader label="Category" sortKey="name" sortConfig={sortConfig} onSort={handleSort} align="left" />
+              <SortHeader label="Target" sortKey="target_amount" sortConfig={sortConfig} onSort={handleSort} />
+              <SortHeader label="Allocation" sortKey="allocation" sortConfig={sortConfig} onSort={handleSort} />
+              <SortHeader label="Estimated" sortKey="estimated_total" sortConfig={sortConfig} onSort={handleSort} />
+              <SortHeader label="Actual Spend" sortKey="actual_spend" sortConfig={sortConfig} onSort={handleSort} />
+              <SortHeader label="Paid" sortKey="total_paid" sortConfig={sortConfig} onSort={handleSort} />
+              <SortHeader label="Difference" sortKey="difference" sortConfig={sortConfig} onSort={handleSort} />
+              {!isClientView && (
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Actions
+                </th>
               )}
             </tr>
           </thead>
