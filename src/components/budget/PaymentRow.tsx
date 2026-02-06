@@ -7,6 +7,9 @@ import { useToast } from '@/components/ui/Toast';
 
 interface PaymentRowProps {
   payment: Payment;
+  lineItemId: string;
+  actualCost?: number;
+  totalScheduled: number;
   onUpdate: () => void;
   onDelete: () => void;
   isClientView: boolean;
@@ -16,7 +19,7 @@ interface PaymentRowProps {
   onToggleSelect?: () => void;
 }
 
-export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, renderMode = 'table', showCheckbox, isSelected, onToggleSelect }: PaymentRowProps) {
+export default function PaymentRow({ payment, lineItemId, actualCost, totalScheduled, onUpdate, onDelete, isClientView, renderMode = 'table', showCheckbox, isSelected, onToggleSelect }: PaymentRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     label: payment.label,
@@ -49,16 +52,30 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
   const handleSave = async () => {
     setLoading(true);
     try {
+      const newAmount = parseNumericInput(formData.amount);
+      const oldAmount = Number(payment.amount);
+      const amountDelta = newAmount - oldAmount;
+
       const { error } = await supabase
         .from('payments')
         .update({
           label: formData.label,
-          amount: parseNumericInput(formData.amount),
+          amount: newAmount,
           due_date: formData.due_date || null,
         })
         .eq('id', payment.id);
 
       if (error) throw error;
+
+      // Sync actual_cost when it tracks totalScheduled (auto-derived from payments)
+      if (amountDelta !== 0 && actualCost === totalScheduled) {
+        const newActualCost = Math.max(0, totalScheduled + amountDelta);
+        await supabase
+          .from('line_items')
+          .update({ actual_cost: newActualCost })
+          .eq('id', lineItemId);
+      }
+
       setIsEditing(false);
       showSaved();
       onUpdate();

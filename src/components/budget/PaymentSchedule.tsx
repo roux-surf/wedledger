@@ -207,6 +207,9 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, esti
                   <PaymentRow
                     key={payment.id}
                     payment={payment}
+                    lineItemId={lineItemId}
+                    actualCost={actualCost}
+                    totalScheduled={totalScheduled}
                     onUpdate={onUpdate}
                     onDelete={() => handleDeletePayment(payment.id)}
                     isClientView={isClientView}
@@ -224,6 +227,9 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, esti
               <PaymentRow
                 key={payment.id}
                 payment={payment}
+                lineItemId={lineItemId}
+                actualCost={actualCost}
+                totalScheduled={totalScheduled}
                 onUpdate={onUpdate}
                 onDelete={() => handleDeletePayment(payment.id)}
                 isClientView={isClientView}
