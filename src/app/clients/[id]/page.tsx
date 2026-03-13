@@ -407,7 +407,7 @@ export default function ClientBudgetPage() {
                 <span className="font-medium text-slate-900">{formatCurrency(totalSpent)}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-500">Remaining:</span>
+                <span className="text-slate-500">{remaining >= 0 ? 'Remaining:' : 'Over budget:'}</span>
                 <span className={`font-medium ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {formatCurrency(Math.abs(remaining))}
                 </span>
@@ -608,7 +608,7 @@ export default function ClientBudgetPage() {
               </div>
               <div className="flex justify-between mt-1.5">
                 <span className="text-xs text-slate-400">{formatCurrency(totalSpent)} committed</span>
-                <span className="text-xs text-slate-400">{formatCurrency(Math.abs(remaining))} remaining</span>
+                <span className="text-xs text-slate-400">{remaining >= 0 ? `${formatCurrency(remaining)} remaining` : `${formatCurrency(Math.abs(remaining))} over budget`}</span>
               </div>
             </div>
 

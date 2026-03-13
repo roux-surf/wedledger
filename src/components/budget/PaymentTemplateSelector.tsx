@@ -56,11 +56,11 @@ function computeDueDate(weddingDate: string | undefined, monthsBefore?: number):
 
 export default function PaymentTemplateSelector({ lineItemId, actualCost, weddingDate, onPaymentsCreated }: PaymentTemplateSelectorProps) {
   const [loading, setLoading] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const supabase = useSupabaseClient();
   const { showSaved, showToast } = useToast();
 
   const applyTemplate = async (template: PaymentTemplate) => {
+    if (loading) return;
     setLoading(true);
     try {
       const payments = template.splits.map(split => ({
@@ -85,7 +85,6 @@ export default function PaymentTemplateSelector({ lineItemId, actualCost, weddin
       showToast('Failed to apply payment template', 'error');
     } finally {
       setLoading(false);
-      setSelectedTemplate(null);
     }
   };
 
@@ -99,42 +98,17 @@ export default function PaymentTemplateSelector({ lineItemId, actualCost, weddin
           <button
             key={template.name}
             type="button"
-            onClick={() => {
-              if (selectedTemplate === template.name) {
-                applyTemplate(template);
-              } else {
-                setSelectedTemplate(template.name);
-              }
-            }}
+            onClick={() => applyTemplate(template)}
             disabled={loading}
-            className={`px-2.5 py-1.5 rounded text-xs font-medium transition-colors ${
-              selectedTemplate === template.name
-                ? 'bg-blue-600 text-white'
-                : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
-            }`}
+            className="px-2.5 py-1.5 rounded text-xs font-medium transition-colors bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
-            {selectedTemplate === template.name ? `Apply ${template.name}?` : template.name}
+            {template.name}
+            <span className="ml-1.5 text-slate-400">
+              ({template.splits.map(s => `${s.percent}%`).join('/')})
+            </span>
           </button>
         ))}
-        {selectedTemplate && (
-          <button
-            type="button"
-            onClick={() => setSelectedTemplate(null)}
-            className="px-2 py-1.5 text-xs text-slate-500 hover:text-slate-700"
-          >
-            Cancel
-          </button>
-        )}
       </div>
-      {selectedTemplate && (
-        <div className="mt-2 text-xs text-slate-500">
-          {TEMPLATES.find(t => t.name === selectedTemplate)?.splits.map((s, i) => (
-            <span key={i} className="mr-3">
-              {s.label}: {formatCurrency(Math.round(actualCost * s.percent / 100 * 100) / 100)}
-            </span>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

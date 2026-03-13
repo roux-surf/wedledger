@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useRef } from 'react';
-import { CategoryWithSpend, LineItemWithPayments, BookingStatus, formatCurrency, parseNumericInput, sanitizeNumericString } from '@/lib/types';
+import { CategoryWithSpend, BookingStatus, formatCurrency, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import { useSupabaseClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -13,56 +13,38 @@ interface VendorTableProps {
   isClientView: boolean;
 }
 
-interface FlatVendor extends LineItemWithPayments {
-  categoryName: string;
-  categoryId: string;
-}
-
 export default function VendorTable({ categories, onUpdate, isClientView }: VendorTableProps) {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [addVendorName, setAddVendorName] = useState('');
-  const [addEstimated, setAddEstimated] = useState('');
-  const [addActual, setAddActual] = useState('');
-  const [addCategoryId, setAddCategoryId] = useState('');
+  const [addState, setAddState] = useState<{ categoryId: string; vendorName: string; estimated: string; actual: string }>({
+    categoryId: '', vendorName: '', estimated: '', actual: '',
+  });
   const [addLoading, setAddLoading] = useState(false);
-  const vendorInputRef = useRef<HTMLInputElement>(null);
+  const vendorInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const supabase = useSupabaseClient();
   const { showSaved, showToast } = useToast();
 
-  const categoryOptions = useMemo(() => {
-    return categories.map((cat) => ({ id: cat.id, name: cat.name }));
-  }, [categories]);
-
-  // Default add category to first category
-  const effectiveCategoryId = addCategoryId || (categoryOptions.length > 0 ? categoryOptions[0].id : '');
-
-  const vendors = useMemo<FlatVendor[]>(() => {
-    return categories.flatMap((cat) =>
-      (cat.line_items || []).map((item) => ({
-        ...item,
-        categoryName: cat.name,
-        categoryId: cat.id,
-      }))
-    );
+  const allVendors = useMemo(() => {
+    return categories.flatMap((cat) => cat.line_items || []);
   }, [categories]);
 
   const totals = useMemo(() => {
-    return vendors.reduce(
-      (acc, v) => {
-        acc.estimated += Number(v.estimated_cost) || 0;
-        acc.actual += Number(v.actual_cost) || 0;
-        const hasPayments = v.payments && v.payments.length > 0;
-        acc.paid += hasPayments ? v.total_paid : (Number(v.paid_to_date) || 0);
+    return categories.reduce(
+      (acc, cat) => {
+        for (const v of cat.line_items || []) {
+          acc.estimated += Number(v.estimated_cost) || 0;
+          acc.actual += Number(v.actual_cost) || 0;
+          const hasPayments = v.payments && v.payments.length > 0;
+          acc.paid += hasPayments ? v.total_paid : (Number(v.paid_to_date) || 0);
+        }
         return acc;
       },
       { estimated: 0, actual: 0, paid: 0 }
     );
-  }, [vendors]);
+  }, [categories]);
 
-  const handleDeleteLineItem = (itemId: string) => {
-    const item = vendors.find((v) => v.id === itemId);
-    setDeleteTarget({ id: itemId, name: item?.vendor_name || 'this vendor' });
+  const handleDeleteLineItem = (itemId: string, vendorName: string) => {
+    setDeleteTarget({ id: itemId, name: vendorName });
   };
 
   const handleDeleteConfirm = async () => {
@@ -81,42 +63,26 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
     }
   };
 
-  const handleCategoryChange = async (itemId: string, newCategoryId: string) => {
-    try {
-      const { error } = await supabase
-        .from('line_items')
-        .update({ category_id: newCategoryId })
-        .eq('id', itemId);
-      if (error) throw error;
-      onUpdate();
-    } catch (err) {
-      console.warn('Failed to update category:', err);
-      showToast('Failed to update category', 'error');
-    }
-  };
-
-  const handleAddVendor = async () => {
-    if (!addVendorName.trim() || addLoading || !effectiveCategoryId) return;
+  const handleAddVendor = async (categoryId: string) => {
+    if (!addState.vendorName.trim() || addLoading || !categoryId) return;
 
     setAddLoading(true);
     try {
       const { error } = await supabase.from('line_items').insert({
-        category_id: effectiveCategoryId,
-        vendor_name: addVendorName.trim(),
-        estimated_cost: parseNumericInput(addEstimated),
-        actual_cost: parseNumericInput(addActual),
+        category_id: categoryId,
+        vendor_name: addState.vendorName.trim(),
+        estimated_cost: parseNumericInput(addState.estimated),
+        actual_cost: parseNumericInput(addState.actual),
         paid_to_date: 0,
         booking_status: 'none' as BookingStatus,
       });
 
       if (error) throw error;
 
-      setAddVendorName('');
-      setAddEstimated('');
-      setAddActual('');
+      setAddState({ categoryId: '', vendorName: '', estimated: '', actual: '' });
       showSaved();
       onUpdate();
-      setTimeout(() => vendorInputRef.current?.focus(), 0);
+      setTimeout(() => vendorInputRefs.current[categoryId]?.focus(), 0);
     } catch (err) {
       console.warn('Failed to add vendor:', err);
       showToast('Failed to add vendor', 'error');
@@ -125,31 +91,38 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
     }
   };
 
-  const handleAddKeyDown = (e: React.KeyboardEvent) => {
+  const handleAddKeyDown = (e: React.KeyboardEvent, categoryId: string) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleAddVendor();
+      handleAddVendor(categoryId);
     } else if (e.key === 'Escape') {
       e.preventDefault();
-      setAddVendorName('');
-      setAddEstimated('');
-      setAddActual('');
+      setAddState({ categoryId: '', vendorName: '', estimated: '', actual: '' });
     }
   };
 
-  const handleNumericBlur = (value: string, setter: (val: string) => void) => {
+  const handleNumericBlur = (value: string, field: 'estimated' | 'actual') => {
     const numValue = parseNumericInput(value);
     const clamped = Math.max(0, numValue);
-    setter(clamped > 0 ? sanitizeNumericString(clamped) : '');
+    setAddState((prev) => ({ ...prev, [field]: clamped > 0 ? sanitizeNumericString(clamped) : '' }));
   };
 
-  if (vendors.length === 0 && isClientView) {
+  const startAdding = (categoryId: string) => {
+    setAddState({ categoryId, vendorName: '', estimated: '', actual: '' });
+    setTimeout(() => vendorInputRefs.current[categoryId]?.focus(), 0);
+  };
+
+  const hasAnyVendors = allVendors.length > 0;
+
+  if (!hasAnyVendors && isClientView) {
     return (
       <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
         <div className="p-8 text-center text-slate-500">No vendors yet.</div>
       </div>
     );
   }
+
+  const colCount = 5 + (isClientView ? 0 : 1);
 
   return (
     <>
@@ -163,9 +136,6 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Status
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                Category
               </th>
               <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Estimated
@@ -186,87 +156,122 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
               )}
             </tr>
           </thead>
-          <tbody className={`divide-y ${isClientView ? 'divide-slate-200' : 'divide-slate-100'}`}>
-            {vendors.map((vendor) => (
-              <LineItemRow
-                key={vendor.id}
-                item={vendor}
-                onUpdate={onUpdate}
-                onDelete={() => handleDeleteLineItem(vendor.id)}
-                isClientView={isClientView}
-                renderMode="table"
-                categoryName={vendor.categoryName}
-                onCategoryChange={(newCatId) => handleCategoryChange(vendor.id, newCatId)}
-                categoryId={vendor.categoryId}
-                categoryOptions={categoryOptions}
-                showStatusColumn
-              />
-            ))}
-            {!isClientView && (
-              <tr className="bg-slate-50/30">
-                <td className="px-4 py-2">
-                  <input
-                    ref={vendorInputRef}
-                    type="text"
-                    autoComplete="off"
-                    value={addVendorName}
-                    onChange={(e) => setAddVendorName(e.target.value)}
-                    onKeyDown={handleAddKeyDown}
-                    className="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
-                    placeholder="+ Add vendor..."
+          {categories.map((cat) => {
+            const items = cat.line_items || [];
+            const isAddingHere = addState.categoryId === cat.id;
+            return (
+              <tbody key={cat.id} className="divide-y divide-slate-100">
+                {/* Category group header */}
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <td colSpan={colCount} className="px-4 py-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">{cat.name}</span>
+                      <span className="text-xs text-slate-400">{formatCurrency(cat.target_amount)} budget</span>
+                    </div>
+                  </td>
+                </tr>
+                {/* Vendor rows */}
+                {items.length === 0 && isClientView && (
+                  <tr>
+                    <td colSpan={colCount} className="px-4 py-3 text-center text-xs text-slate-400">
+                      No vendors yet
+                    </td>
+                  </tr>
+                )}
+                {items.length === 0 && !isClientView && (
+                  <tr>
+                    <td colSpan={colCount} className="px-4 py-3 text-center text-xs text-slate-400">
+                      No vendors yet
+                    </td>
+                  </tr>
+                )}
+                {items.map((item) => (
+                  <LineItemRow
+                    key={item.id}
+                    item={item}
+                    onUpdate={onUpdate}
+                    onDelete={() => handleDeleteLineItem(item.id, item.vendor_name)}
+                    isClientView={isClientView}
+                    renderMode="table"
+                    showStatusColumn
                   />
-                </td>
-                <td className="px-4 py-2"></td>
-                <td className="px-4 py-2">
-                  <select
-                    value={effectiveCategoryId}
-                    onChange={(e) => setAddCategoryId(e.target.value)}
-                    className="px-1 py-1 border border-slate-200 rounded text-sm bg-white"
-                  >
-                    {categoryOptions.map((cat) => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-4 py-2 text-right">
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    autoComplete="off"
-                    value={addEstimated}
-                    onChange={(e) => setAddEstimated(e.target.value)}
-                    onBlur={(e) => handleNumericBlur(e.target.value, setAddEstimated)}
-                    onKeyDown={handleAddKeyDown}
-                    className="w-24 px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400 text-right"
-                    placeholder="0"
-                  />
-                </td>
-                <td className="px-4 py-2 text-right">
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    autoComplete="off"
-                    value={addActual}
-                    onChange={(e) => setAddActual(e.target.value)}
-                    onBlur={(e) => handleNumericBlur(e.target.value, setAddActual)}
-                    onKeyDown={handleAddKeyDown}
-                    className="w-24 px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400 text-right"
-                    placeholder="0"
-                  />
-                </td>
-                <td className="px-4 py-2 text-sm text-slate-400 text-right">-</td>
-                <td className="px-4 py-2 text-sm text-slate-400 text-right">
-                  <span className="text-xs text-slate-400">Enter to add</span>
-                </td>
-                <td className="px-4 py-2"></td>
-              </tr>
-            )}
-          </tbody>
-          {vendors.length > 0 && (
+                ))}
+                {/* Per-category add vendor row */}
+                {!isClientView && (
+                  isAddingHere || items.length === 0 ? (
+                    <tr className="bg-slate-50/30">
+                      <td className="px-4 py-2">
+                        <input
+                          ref={(el) => { vendorInputRefs.current[cat.id] = el; }}
+                          type="text"
+                          autoComplete="off"
+                          value={isAddingHere ? addState.vendorName : ''}
+                          onChange={(e) => {
+                            if (!isAddingHere) startAdding(cat.id);
+                            setAddState((prev) => ({ ...prev, categoryId: cat.id, vendorName: e.target.value }));
+                          }}
+                          onFocus={() => { if (!isAddingHere) startAdding(cat.id); }}
+                          onKeyDown={(e) => handleAddKeyDown(e, cat.id)}
+                          className="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+                          placeholder="+ Add vendor..."
+                        />
+                      </td>
+                      <td className="px-4 py-2"></td>
+                      <td className="px-4 py-2 text-right">
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          autoComplete="off"
+                          value={isAddingHere ? addState.estimated : ''}
+                          onChange={(e) => setAddState((prev) => ({ ...prev, categoryId: cat.id, estimated: e.target.value }))}
+                          onFocus={() => { if (!isAddingHere) startAdding(cat.id); }}
+                          onBlur={(e) => { if (isAddingHere) handleNumericBlur(e.target.value, 'estimated'); }}
+                          onKeyDown={(e) => handleAddKeyDown(e, cat.id)}
+                          className="w-24 px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400 text-right"
+                          placeholder="0"
+                        />
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          autoComplete="off"
+                          value={isAddingHere ? addState.actual : ''}
+                          onChange={(e) => setAddState((prev) => ({ ...prev, categoryId: cat.id, actual: e.target.value }))}
+                          onFocus={() => { if (!isAddingHere) startAdding(cat.id); }}
+                          onBlur={(e) => { if (isAddingHere) handleNumericBlur(e.target.value, 'actual'); }}
+                          onKeyDown={(e) => handleAddKeyDown(e, cat.id)}
+                          className="w-24 px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400 text-right"
+                          placeholder="0"
+                        />
+                      </td>
+                      <td className="px-4 py-2 text-sm text-slate-400 text-right">-</td>
+                      <td className="px-4 py-2 text-right">
+                        <span className="text-xs text-slate-400">Enter to add</span>
+                      </td>
+                      <td className="px-4 py-2"></td>
+                    </tr>
+                  ) : (
+                    <tr>
+                      <td colSpan={colCount} className="px-4 py-1.5">
+                        <button
+                          type="button"
+                          onClick={() => startAdding(cat.id)}
+                          className="text-sm text-slate-400 hover:text-slate-600"
+                        >
+                          + Add vendor...
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                )}
+              </tbody>
+            );
+          })}
+          {hasAnyVendors && (
             <tfoot className="bg-slate-50 border-t border-slate-200">
               <tr>
                 <td className="px-4 py-3 text-sm font-medium text-slate-900">Total</td>
-                <td className="px-4 py-3"></td>
                 <td className="px-4 py-3"></td>
                 <td className="px-4 py-3 text-sm font-medium text-slate-900 text-right">{formatCurrency(totals.estimated)}</td>
                 <td className="px-4 py-3 text-sm font-medium text-slate-900 text-right">{formatCurrency(totals.actual)}</td>
@@ -279,73 +284,105 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
         </table>
 
         {/* Mobile card list */}
-        <div className="md:hidden print:hidden divide-y divide-slate-200">
-          {vendors.map((vendor) => (
-            <LineItemRow
-              key={vendor.id}
-              item={vendor}
-              onUpdate={onUpdate}
-              onDelete={() => handleDeleteLineItem(vendor.id)}
-              isClientView={isClientView}
-              renderMode="card"
-              categoryName={vendor.categoryName}
-            />
-          ))}
-          {!isClientView && categoryOptions.length > 0 && (
-            <div className="p-3 bg-slate-50/50 border-t border-dashed border-slate-200">
-              <div className="space-y-2">
-                <input
-                  type="text"
-                  autoComplete="off"
-                  value={addVendorName}
-                  onChange={(e) => setAddVendorName(e.target.value)}
-                  onKeyDown={handleAddKeyDown}
-                  className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
-                  placeholder="+ Add vendor..."
-                />
-                {addVendorName.trim() && (
-                  <>
-                    <select
-                      value={effectiveCategoryId}
-                      onChange={(e) => setAddCategoryId(e.target.value)}
-                      className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white text-slate-600"
-                    >
-                      {categoryOptions.map((cat) => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                      ))}
-                    </select>
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        autoComplete="off"
-                        value={addEstimated}
-                        onChange={(e) => setAddEstimated(e.target.value)}
-                        onBlur={(e) => handleNumericBlur(e.target.value, setAddEstimated)}
-                        onKeyDown={handleAddKeyDown}
-                        className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
-                        placeholder="Estimated $"
-                      />
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        autoComplete="off"
-                        value={addActual}
-                        onChange={(e) => setAddActual(e.target.value)}
-                        onBlur={(e) => handleNumericBlur(e.target.value, setAddActual)}
-                        onKeyDown={handleAddKeyDown}
-                        className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
-                        placeholder="Actual $"
-                      />
-                    </div>
-                    <p className="text-xs text-slate-400">Press Enter to add, Escape to clear</p>
-                  </>
-                )}
+        <div className="md:hidden print:hidden">
+          {categories.map((cat) => {
+            const items = cat.line_items || [];
+            const isAddingHere = addState.categoryId === cat.id;
+            return (
+              <div key={cat.id}>
+                {/* Category group header */}
+                <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">{cat.name}</span>
+                    <span className="text-xs text-slate-400">{formatCurrency(cat.target_amount)} budget</span>
+                  </div>
+                </div>
+                {/* Vendor cards */}
+                <div className="divide-y divide-slate-100">
+                  {items.length === 0 && isClientView && (
+                    <div className="px-4 py-3 text-center text-xs text-slate-400">No vendors yet</div>
+                  )}
+                  {items.length === 0 && !isClientView && (
+                    <div className="px-4 py-3 text-center text-xs text-slate-400">No vendors yet</div>
+                  )}
+                  {items.map((item) => (
+                    <LineItemRow
+                      key={item.id}
+                      item={item}
+                      onUpdate={onUpdate}
+                      onDelete={() => handleDeleteLineItem(item.id, item.vendor_name)}
+                      isClientView={isClientView}
+                      renderMode="card"
+                    />
+                  ))}
+                  {/* Per-category add vendor card */}
+                  {!isClientView && (
+                    isAddingHere || items.length === 0 ? (
+                      <div className="p-3 bg-slate-50/50">
+                        <div className="space-y-2">
+                          <input
+                            ref={(el) => { vendorInputRefs.current[cat.id] = el; }}
+                            type="text"
+                            autoComplete="off"
+                            value={isAddingHere ? addState.vendorName : ''}
+                            onChange={(e) => {
+                              if (!isAddingHere) startAdding(cat.id);
+                              setAddState((prev) => ({ ...prev, categoryId: cat.id, vendorName: e.target.value }));
+                            }}
+                            onFocus={() => { if (!isAddingHere) startAdding(cat.id); }}
+                            onKeyDown={(e) => handleAddKeyDown(e, cat.id)}
+                            className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+                            placeholder="+ Add vendor..."
+                          />
+                          {isAddingHere && addState.vendorName.trim() && (
+                            <>
+                              <div className="grid grid-cols-2 gap-2">
+                                <input
+                                  type="text"
+                                  inputMode="decimal"
+                                  autoComplete="off"
+                                  value={addState.estimated}
+                                  onChange={(e) => setAddState((prev) => ({ ...prev, estimated: e.target.value }))}
+                                  onBlur={(e) => handleNumericBlur(e.target.value, 'estimated')}
+                                  onKeyDown={(e) => handleAddKeyDown(e, cat.id)}
+                                  className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+                                  placeholder="Estimated $"
+                                />
+                                <input
+                                  type="text"
+                                  inputMode="decimal"
+                                  autoComplete="off"
+                                  value={addState.actual}
+                                  onChange={(e) => setAddState((prev) => ({ ...prev, actual: e.target.value }))}
+                                  onBlur={(e) => handleNumericBlur(e.target.value, 'actual')}
+                                  onKeyDown={(e) => handleAddKeyDown(e, cat.id)}
+                                  className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+                                  placeholder="Actual $"
+                                />
+                              </div>
+                              <p className="text-xs text-slate-400">Press Enter to add, Escape to clear</p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="px-4 py-2">
+                        <button
+                          type="button"
+                          onClick={() => startAdding(cat.id)}
+                          className="text-sm text-slate-400 hover:text-slate-600"
+                        >
+                          + Add vendor...
+                        </button>
+                      </div>
+                    )
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-          {vendors.length > 0 && (
-            <div className="p-4 bg-slate-50">
+            );
+          })}
+          {hasAnyVendors && (
+            <div className="p-4 bg-slate-50 border-t border-slate-200">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-medium text-slate-900">Total</span>
               </div>
@@ -357,10 +394,6 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
             </div>
           )}
         </div>
-
-        {vendors.length === 0 && isClientView && (
-          <div className="p-8 text-center text-slate-500">No vendors yet.</div>
-        )}
       </div>
 
       <ConfirmDialog

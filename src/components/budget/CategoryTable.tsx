@@ -116,7 +116,7 @@ export default function CategoryTable({
           cmp = a.actual_spend - b.actual_spend;
           break;
         case 'difference':
-          cmp = (a.target_amount - a.actual_spend) - (b.target_amount - b.actual_spend);
+          cmp = (a.actual_spend - a.target_amount) - (b.actual_spend - b.target_amount);
           break;
       }
       return direction === 'desc' ? -cmp : cmp;
@@ -147,7 +147,7 @@ export default function CategoryTable({
 
   const totalAllocated = orderedCategories.reduce((sum, cat) => sum + Number(cat.target_amount), 0);
   const totalActualSpend = orderedCategories.reduce((sum, cat) => sum + cat.actual_spend, 0);
-  const totalDiff = totalAllocated - totalActualSpend;
+  const totalDiff = totalActualSpend - totalAllocated;
   const totalRatio = totalAllocated > 0 ? totalActualSpend / totalAllocated : (totalActualSpend > 0 ? 2 : 0);
   const totalBarWidth = Math.min(totalRatio * 100, 100);
 
@@ -158,7 +158,7 @@ export default function CategoryTable({
   };
 
   const getTotalDiffColor = () => {
-    if (totalDiff < 0) return 'text-red-600';
+    if (totalDiff > 0) return 'text-red-600';
     if (totalRatio >= 0.85) return 'text-amber-600';
     return 'text-green-600';
   };
@@ -220,16 +220,19 @@ export default function CategoryTable({
                 <p className="text-xs text-slate-500 mt-0.5">{formatCurrency(totalAllocated)} allocated</p>
               </div>
               <div className="w-36 shrink-0">
-                <div className="h-1 bg-slate-200 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all ${getTotalBarColor()}`}
-                    style={{ width: `${totalBarWidth}%` }}
-                  />
+                <div className="print:hidden">
+                  <div className="h-1 bg-slate-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${getTotalBarColor()}`}
+                      style={{ width: `${totalBarWidth}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between mt-1">
+                    <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(totalActualSpend)}</span>
+                    <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(totalAllocated)}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between mt-1">
-                  <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(totalActualSpend)}</span>
-                  <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(totalAllocated)}</span>
-                </div>
+                <span className="hidden print:inline text-xs text-slate-600 tabular-nums">{formatCurrency(totalActualSpend)} / {formatCurrency(totalAllocated)}</span>
               </div>
               <div className="w-24 text-right shrink-0">
                 <span className={`text-sm font-medium tabular-nums ${getTotalDiffColor()}`}>
@@ -262,7 +265,9 @@ export default function CategoryTable({
         )}
 
         {orderedCategories.length === 0 && (
-          <div className="p-8 text-center text-slate-500">No categories yet.</div>
+          <div className="m-4 p-8 text-center text-sm text-slate-500 border-2 border-dashed border-slate-200 rounded-lg">
+            No categories yet. Add one below to start building your budget.
+          </div>
         )}
       </div>
 

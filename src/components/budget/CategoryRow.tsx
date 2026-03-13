@@ -50,15 +50,15 @@ function getDifferenceDisplay(target: number, actual: number) {
   if (actual === 0 && target === 0) return { text: '—', color: 'text-slate-300' };
   if (actual === 0) return { text: '—', color: 'text-slate-300' };
 
-  const diff = target - actual;
+  const diff = actual - target;
   const ratio = target > 0 ? actual / target : (actual > 0 ? 2 : 0);
 
   let color: string;
-  if (diff < 0) color = 'text-red-600';
+  if (diff > 0) color = 'text-red-600';
   else if (ratio >= 0.85) color = 'text-amber-600';
   else color = 'text-green-600';
 
-  const sign = diff >= 0 ? '+' : '-';
+  const sign = diff > 0 ? '+' : diff < 0 ? '-' : '';
   return { text: `${sign}${formatCurrency(Math.abs(diff))}`, color };
 }
 
@@ -102,7 +102,7 @@ export default function CategoryRow({
       <>
         <div
           onClick={handleRowClick}
-          className="p-4 cursor-pointer hover:bg-slate-50 transition-colors active:bg-slate-100"
+          className="p-4 cursor-pointer hover:bg-slate-50 transition-colors duration-100 active:bg-slate-100"
         >
           {/* Top: name + difference */}
           <div className="flex items-start justify-between gap-3 mb-2">
@@ -151,7 +151,7 @@ export default function CategoryRow({
         onClick={handleRowClick}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        className="flex items-center gap-4 px-4 py-3 border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors group"
+        className="flex items-center gap-4 px-4 py-3 border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors duration-100 group"
       >
         {/* Zone 1 — Category info */}
         <div className="flex-1 min-w-0">
@@ -161,16 +161,19 @@ export default function CategoryRow({
 
         {/* Zone 2 — Progress bar */}
         <div className="w-36 shrink-0">
-          <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all ${getBarColor(ratio)}`}
-              style={{ width: `${barWidth}%` }}
-            />
+          <div className="print:hidden">
+            <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${getBarColor(ratio)}`}
+                style={{ width: `${barWidth}%` }}
+              />
+            </div>
+            <div className="flex justify-between mt-1">
+              <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(actual)}</span>
+              <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(target)}</span>
+            </div>
           </div>
-          <div className="flex justify-between mt-1">
-            <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(actual)}</span>
-            <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(target)}</span>
-          </div>
+          <span className="hidden print:inline text-xs text-slate-600 tabular-nums">{formatCurrency(actual)} / {formatCurrency(target)}</span>
         </div>
 
         {/* Zone 3 — Difference */}
