@@ -192,12 +192,12 @@ describe('getMilestoneUrgency', () => {
 describe('formatShortDate', () => {
   it('formats a date string to short format', () => {
     const result = formatShortDate('2025-06-15');
-    expect(result).toBe('Jun 15');
+    expect(result).toBe('Jun 15, 2025');
   });
 
   it('formats a January date', () => {
     const result = formatShortDate('2025-01-01');
-    expect(result).toBe('Jan 1');
+    expect(result).toBe('Jan 1, 2025');
   });
 });
 

@@ -17,15 +17,11 @@ interface LineItemRowProps {
   isClientView: boolean;
   renderMode?: 'table' | 'card';
   isDraggable?: boolean;
-  categoryName?: string;
-  onCategoryChange?: (newCategoryId: string) => void;
-  categoryId?: string;
-  categoryOptions?: { id: string; name: string }[];
   showStatusColumn?: boolean;
 }
 
-export default function LineItemRow({ item, onUpdate, onDelete, isClientView, renderMode = 'table', isDraggable, categoryName, onCategoryChange, categoryId, categoryOptions, showStatusColumn }: LineItemRowProps) {
-  const baseColCount = (categoryName !== undefined ? 6 : 5) + (showStatusColumn ? 1 : 0);
+export default function LineItemRow({ item, onUpdate, onDelete, isClientView, renderMode = 'table', isDraggable, showStatusColumn }: LineItemRowProps) {
+  const baseColCount = 5 + (showStatusColumn ? 1 : 0);
   const colCount = baseColCount + (!isClientView ? 1 : 0);
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -155,7 +151,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
     }
   }, [isClientView]);
 
-  const handleStartEdit = () => {
+  const handleStartEdit = (field?: 'vendor' | 'estimated' | 'actual') => {
     if (isClientView) return;
     setFormData({
       vendor_name: item.vendor_name,
@@ -169,6 +165,10 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
     setIsEditing(true);
     if (item.vendor_phone || item.vendor_email) {
       setShowContactFields(true);
+    }
+    if (field) {
+      const refMap = { vendor: vendorInputRef, estimated: estimatedInputRef, actual: actualInputRef };
+      setTimeout(() => refMap[field].current?.focus(), 0);
     }
   };
 
@@ -214,15 +214,35 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
     setIsExpanded(!isExpanded);
   };
 
+  const getPaymentSubtitle = (): string => {
+    if (payments.length === 0) return 'No payments scheduled';
+    const now = new Date();
+    const weekFromNow = new Date(now);
+    weekFromNow.setDate(weekFromNow.getDate() + 7);
+    const dueThisWeek = payments.filter((p) => {
+      if (p.status === 'paid' || !p.due_date) return false;
+      const due = new Date(p.due_date);
+      return due >= now && due <= weekFromNow;
+    }).length;
+    if (dueThisWeek > 0) {
+      return `${payments.length} payment${payments.length !== 1 ? 's' : ''} \u00b7 ${dueThisWeek} due this week`;
+    }
+    const paidCount = payments.filter((p) => p.status === 'paid').length;
+    if (paidCount > 0) {
+      return `${payments.length} payment${payments.length !== 1 ? 's' : ''} \u00b7 ${paidCount === 1 ? 'deposit paid' : `${paidCount} paid`}`;
+    }
+    return `${payments.length} payment${payments.length !== 1 ? 's' : ''}`;
+  };
+
   const paymentBadge = payments.length > 0 ? (
     <button
       onClick={toggleExpand}
-      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
     >
+      {payments.length}
       <svg className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
       </svg>
-      {payments.length} payment{payments.length !== 1 ? 's' : ''}
     </button>
   ) : !isClientView ? (
     <button
@@ -349,17 +369,20 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                 </div>
               </div>
             )}
-            <button
-              type="button"
-              onClick={onDelete}
-              className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
-              aria-label="Delete"
-              title="Delete"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-slate-400">Enter to save · Esc to cancel</span>
+              <button
+                type="button"
+                onClick={onDelete}
+                className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+                aria-label="Delete"
+                title="Delete"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       );
@@ -368,7 +391,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
     return (
       <div>
         <div
-          className="p-4"
+          className="p-4 hover:bg-slate-50 transition-colors duration-100"
           onClick={isClientView ? undefined : () => handleStartEdit()}
         >
           <div className="flex items-center justify-between mb-2">
@@ -377,8 +400,8 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                 <span className={`text-sm font-medium text-slate-900 ${!isClientView ? 'cursor-pointer' : ''}`}>
                   {item.vendor_name}
                 </span>
-                {categoryName && (
-                  <p className="text-xs text-slate-400">{categoryName}</p>
+                {!isClientView && (
+                  <p className="text-xs text-slate-400">{getPaymentSubtitle()}</p>
                 )}
               </div>
               <BookingStatusBadge
@@ -392,7 +415,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
           <div className="flex items-center gap-4 text-xs text-slate-500">
             <span>Est: {formatCurrency(item.estimated_cost)}</span>
             <span>Actual: {formatCurrency(item.actual_cost)}</span>
-            <span>Paid: {formatCurrency(displayPaid)}</span>
+            <span className="text-slate-500">Paid: <span className={displayPaid > 0 ? 'text-slate-500' : ''}>{formatCurrency(displayPaid)}</span></span>
           </div>
           {!isClientView && (item.vendor_phone || item.vendor_email) && (
             <div className="flex items-center gap-3 text-xs text-slate-400 mt-1">
@@ -515,9 +538,6 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
               </select>
             </td>
           )}
-          {categoryName !== undefined && (
-            <td className="px-4 py-3 text-sm text-slate-500">{categoryName}</td>
-          )}
           <td className="px-4 py-3 text-right">
             <input
               ref={estimatedInputRef}
@@ -552,22 +572,25 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
               className="w-24 px-2 py-1 border border-slate-300 rounded text-sm text-right"
             />
           </td>
-          <td className="px-4 py-3 text-sm text-slate-900 text-right whitespace-nowrap">{formatCurrency(displayPaid)}</td>
+          <td className="px-4 py-3 text-sm text-slate-500 text-right whitespace-nowrap">{formatCurrency(displayPaid)}{displayPaid > 0 && <span className="text-xs text-slate-400 ml-1">paid</span>}</td>
           <td className="px-4 py-3 text-sm text-right whitespace-nowrap">
             <span className={getRemainingColor()}>{formatCurrency(remaining)}</span>
           </td>
           <td className="px-4 py-3 text-sm">
-            <button
-              type="button"
-              onClick={onDelete}
-              className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
-              aria-label="Delete"
-              title="Delete"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
+            <div className="flex flex-col items-end gap-1">
+              <button
+                type="button"
+                onClick={onDelete}
+                className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+                aria-label="Delete"
+                title="Delete"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+              <span className="text-[10px] text-slate-400 whitespace-nowrap">Enter to save · Esc to cancel</span>
+            </div>
           </td>
         </tr>
         {isExpanded && (
@@ -577,6 +600,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                 payments={payments}
                 lineItemId={item.id}
                 actualCost={item.actual_cost}
+                estimatedCost={item.estimated_cost}
                 legacyPaidToDate={item.paid_to_date}
                 onUpdate={onUpdate}
                 isClientView={isClientView}
@@ -588,22 +612,27 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
     );
   }
 
-  const clickableClass = !isClientView ? 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded' : '';
+  const clickableClass = !isClientView ? 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded underline decoration-dashed decoration-transparent hover:decoration-slate-400 underline-offset-2 transition-colors' : '';
 
   return (
     <Fragment>
-      <tr ref={setSortableRef} style={sortableStyle}>
+      <tr ref={setSortableRef} style={sortableStyle} className="hover:bg-slate-50 transition-colors duration-100">
         <td className="px-4 py-3 text-sm text-slate-900">
           <div className="flex items-center gap-2">
             {isDraggable && (
               <DragHandle listeners={sortableListeners} attributes={sortableAttributes} />
             )}
-            <span
-              onClick={isClientView ? undefined : () => handleStartEdit()}
-              className={clickableClass}
-            >
-              {item.vendor_name}
-            </span>
+            <div>
+              <span
+                onClick={isClientView ? undefined : () => handleStartEdit('vendor')}
+                className={clickableClass}
+              >
+                {item.vendor_name}
+              </span>
+              {!isClientView && (
+                <p className="text-xs text-slate-400">{getPaymentSubtitle()}</p>
+              )}
+            </div>
             {!showStatusColumn && (
               <BookingStatusBadge
                 status={item.booking_status || 'none'}
@@ -623,26 +652,9 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             />
           </td>
         )}
-        {categoryName !== undefined && (
-          <td className="px-4 py-3 text-sm text-slate-500">
-            {onCategoryChange && categoryOptions && !isClientView ? (
-              <select
-                value={categoryId || ''}
-                onChange={(e) => onCategoryChange(e.target.value)}
-                className="px-1 py-0.5 border border-slate-200 rounded text-sm bg-white"
-              >
-                {categoryOptions.map((cat) => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
-            ) : (
-              categoryName
-            )}
-          </td>
-        )}
         <td className="px-4 py-3 text-sm text-slate-900 text-right whitespace-nowrap">
           <span
-            onClick={isClientView ? undefined : () => handleStartEdit()}
+            onClick={isClientView ? undefined : () => handleStartEdit('estimated')}
             className={clickableClass}
           >
             {formatCurrency(item.estimated_cost)}
@@ -650,14 +662,14 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
         </td>
         <td className="px-4 py-3 text-sm text-slate-900 text-right whitespace-nowrap">
           <span
-            onClick={isClientView ? undefined : () => handleStartEdit()}
+            onClick={isClientView ? undefined : () => handleStartEdit('actual')}
             className={clickableClass}
           >
             {formatCurrency(item.actual_cost)}
           </span>
         </td>
-        <td className="px-4 py-3 text-sm text-slate-900 text-right whitespace-nowrap">
-          {formatCurrency(displayPaid)}
+        <td className="px-4 py-3 text-sm text-slate-500 text-right whitespace-nowrap">
+          {formatCurrency(displayPaid)}{displayPaid > 0 && <span className="text-xs text-slate-400 ml-1">paid</span>}
         </td>
         <td className="px-4 py-3 text-sm text-right whitespace-nowrap">
           <span className={getRemainingColor()}>{formatCurrency(remaining)}</span>
@@ -685,6 +697,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
               payments={payments}
               lineItemId={item.id}
               actualCost={item.actual_cost}
+              estimatedCost={item.estimated_cost}
               legacyPaidToDate={item.paid_to_date}
               onUpdate={onUpdate}
               isClientView={isClientView}

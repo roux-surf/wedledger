@@ -98,7 +98,7 @@ export function getPaymentUrgency(dueDate: string): 'overdue' | 'this_week' | 'u
 
 export function formatShortDate(dateString: string): string {
   const date = new Date(dateString + 'T00:00:00');
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 export interface CategoryWithSpend extends Category {
