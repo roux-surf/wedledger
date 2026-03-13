@@ -1,9 +1,66 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { CategoryWithSpend, formatCurrency, formatPercent, parseNumericInput, sanitizeNumericString } from '@/lib/types';
-import { useSupabaseClient } from '@/lib/supabase/client';
-import { useToast } from '@/components/ui/Toast';
+import { useState } from 'react';
+import { CategoryWithSpend, BookingStatus, LineItemWithPayments, formatCurrency } from '@/lib/types';
+import LineItemsModal from './LineItemsModal';
+
+const BOOKING_STATUS_RANK: Record<BookingStatus, number> = {
+  none: 0,
+  inquired: 1,
+  booked: 2,
+  contracted: 3,
+  completed: 4,
+};
+
+const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = {
+  none: 'none',
+  inquired: 'inquired',
+  booked: 'booked',
+  contracted: 'contracted',
+  completed: 'completed',
+};
+
+function getSubtitle(lineItems: LineItemWithPayments[]): string {
+  if (lineItems.length === 0) return 'No vendors yet';
+
+  let bestStatus: BookingStatus = 'none';
+  let bestCount = 0;
+  for (const item of lineItems) {
+    const status = item.booking_status || 'none';
+    if (BOOKING_STATUS_RANK[status] > BOOKING_STATUS_RANK[bestStatus]) {
+      bestStatus = status;
+      bestCount = 1;
+    } else if (status === bestStatus) {
+      bestCount++;
+    }
+  }
+
+  const vendorLabel = lineItems.length === 1 ? '1 vendor' : `${lineItems.length} vendors`;
+  if (bestStatus === 'none') return vendorLabel;
+  return `${vendorLabel} · ${bestCount} ${BOOKING_STATUS_LABELS[bestStatus]}`;
+}
+
+function getBarColor(ratio: number): string {
+  if (ratio > 1) return 'bg-red-500';
+  if (ratio >= 0.85) return 'bg-amber-500';
+  return 'bg-emerald-500';
+}
+
+function getDifferenceDisplay(target: number, actual: number) {
+  if (actual === 0 && target === 0) return { text: '—', color: 'text-slate-300' };
+  if (actual === 0) return { text: '—', color: 'text-slate-300' };
+
+  const diff = target - actual;
+  const ratio = target > 0 ? actual / target : (actual > 0 ? 2 : 0);
+
+  let color: string;
+  if (diff < 0) color = 'text-red-600';
+  else if (ratio >= 0.85) color = 'text-amber-600';
+  else color = 'text-green-600';
+
+  const sign = diff >= 0 ? '+' : '-';
+  return { text: `${sign}${formatCurrency(Math.abs(diff))}`, color };
+}
 
 interface CategoryRowProps {
   category: CategoryWithSpend;
@@ -11,10 +68,7 @@ interface CategoryRowProps {
   onUpdate: () => void;
   onDelete: () => void;
   isClientView: boolean;
-  onTabToNextRow?: () => void;
-  shouldStartEditing?: boolean;
-  onEditingChange?: (editing: boolean) => void;
-  renderMode?: 'table' | 'card';
+  renderMode?: 'row' | 'card';
 }
 
 export default function CategoryRow({
@@ -23,380 +77,138 @@ export default function CategoryRow({
   onUpdate,
   onDelete,
   isClientView,
-  onTabToNextRow,
-  shouldStartEditing,
-  onEditingChange,
-  renderMode = 'table',
+  renderMode = 'row',
 }: CategoryRowProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [targetAmount, setTargetAmount] = useState(category.target_amount.toString());
-  const [allocationPercent, setAllocationPercent] = useState('');
-  const [, setLoading] = useState(false);
-  const supabase = useSupabaseClient();
-  const { showSaved, showToast } = useToast();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
-  const targetInputRef = useRef<HTMLInputElement>(null);
-  const percentInputRef = useRef<HTMLInputElement>(null);
+  const lineItems = (category.line_items || []) as LineItemWithPayments[];
+  const subtitle = getSubtitle(lineItems);
+  const target = Number(category.target_amount);
+  const actual = category.actual_spend;
+  const ratio = target > 0 ? actual / target : (actual > 0 ? 2 : 0);
+  const barWidth = Math.min(ratio * 100, 100);
+  const diff = getDifferenceDisplay(target, actual);
 
-  // Calculate allocation percentage from target amount
-  const calculatePercent = (amount: number): string => {
-    if (totalBudget <= 0) return '0';
-    const percent = (amount / totalBudget) * 100;
-    return sanitizeNumericString(Math.round(percent * 10) / 10);
-  };
+  const handleRowClick = () => setModalOpen(true);
 
-  // Calculate target amount from allocation percentage
-  const calculateAmount = (percent: number): string => {
-    const amount = (percent / 100) * totalBudget;
-    return sanitizeNumericString(Math.round(amount * 100) / 100);
-  };
-
-  // Initialize allocation percent when entering edit mode or when category changes
-  useEffect(() => {
-    setTargetAmount(sanitizeNumericString(category.target_amount));
-    setAllocationPercent(calculatePercent(category.target_amount));
-  }, [category.target_amount, totalBudget]);
-
-  // Handle external trigger to start editing
-  useEffect(() => {
-    if (shouldStartEditing && !isClientView) {
-      handleStartEdit('target');
-      onEditingChange?.(true);
-    }
-  }, [shouldStartEditing]);
-
-  // Reset editing state when switching to client view
-  useEffect(() => {
-    if (isClientView && isEditing) {
-      setIsEditing(false);
-      onEditingChange?.(false);
-    }
-  }, [isClientView]);
-
-  // Current allocation percentage for display
-  const currentPercent = totalBudget > 0
-    ? ((category.target_amount / totalBudget) * 100)
-    : 0;
-
-  const difference = category.target_amount - category.actual_spend;
-  const isOver = difference < 0;
-  const isNear = !isOver && category.target_amount > 0 && category.actual_spend >= category.target_amount * 0.9;
-
-  const getDifferenceColor = () => {
-    if (isOver) return 'text-red-600';
-    if (isNear) return 'text-yellow-600';
-    return 'text-green-600';
-  };
-
-  const getRowBackground = () => {
-    if (isOver) return 'bg-red-50';
-    if (isNear) return 'bg-yellow-50';
-    return '';
-  };
-
-  const handleTargetAmountChange = (value: string) => {
-    const amount = parseNumericInput(value);
-    const clampedAmount = Math.max(0, amount);
-    setTargetAmount(sanitizeNumericString(clampedAmount));
-    setAllocationPercent(calculatePercent(clampedAmount));
-  };
-
-  const handleAllocationPercentChange = (value: string) => {
-    const percent = parseNumericInput(value);
-    const clampedPercent = Math.max(0, percent);
-    setAllocationPercent(sanitizeNumericString(clampedPercent));
-    setTargetAmount(calculateAmount(clampedPercent));
-  };
-
-  const handleSave = async (amountToSave?: number) => {
-    setLoading(true);
-    try {
-      const newTargetAmount = amountToSave !== undefined ? amountToSave : parseNumericInput(targetAmount);
-      const { error } = await supabase
-        .from('categories')
-        .update({ target_amount: newTargetAmount })
-        .eq('id', category.id);
-
-      if (error) throw error;
-      setIsEditing(false);
-      onEditingChange?.(false);
-      showSaved();
-      onUpdate();
-    } catch (err) {
-      console.warn('Failed to update category:', err);
-      showToast('Failed to update category', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setTargetAmount(sanitizeNumericString(category.target_amount));
-    setAllocationPercent(calculatePercent(category.target_amount));
-    setIsEditing(false);
-    onEditingChange?.(false);
-  };
-
-  const handleStartEdit = (focusTarget: 'target' | 'percent' = 'target') => {
-    if (isClientView) return;
-    setTargetAmount(sanitizeNumericString(category.target_amount));
-    setAllocationPercent(calculatePercent(category.target_amount));
-    setIsEditing(true);
-    onEditingChange?.(true);
-    setTimeout(() => {
-      if (focusTarget === 'target') {
-        targetInputRef.current?.focus();
-        targetInputRef.current?.select();
-      } else {
-        percentInputRef.current?.focus();
-        percentInputRef.current?.select();
-      }
-    }, 0);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent, source: 'target' | 'percent') => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      // Compute the correct amount based on which field was edited
-      if (source === 'percent') {
-        const percent = parseNumericInput(allocationPercent);
-        const amount = (Math.max(0, percent) / 100) * totalBudget;
-        handleSave(Math.round(amount * 100) / 100);
-      } else {
-        handleSave(Math.max(0, parseNumericInput(targetAmount)));
-      }
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      handleCancel();
-    } else if (e.key === 'Tab' && !e.shiftKey && source === 'percent') {
-      // Tab forward from percent field - save and move to next row
-      e.preventDefault();
-      const percent = parseNumericInput(allocationPercent);
-      const amount = (Math.max(0, percent) / 100) * totalBudget;
-      handleSave(Math.round(amount * 100) / 100);
-      onTabToNextRow?.();
-    }
-  };
-
-  const handleBlur = (e: React.FocusEvent, amountToSave: number) => {
-    // Check if focus moved to another editable input in the same row
-    const focusedElement = e.relatedTarget as HTMLElement;
-    const isTargetInput = focusedElement === targetInputRef.current;
-    const isPercentInput = focusedElement === percentInputRef.current;
-    if (isTargetInput || isPercentInput) {
-      return; // Don't save yet, focus moved to another editable field
-    }
-    handleSave(amountToSave);
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete();
   };
 
   if (renderMode === 'card') {
     return (
-      <div className={`${getRowBackground()}`}>
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-slate-900">{category.name}</span>
+      <>
+        <div
+          onClick={handleRowClick}
+          className="p-4 cursor-pointer hover:bg-slate-50 transition-colors active:bg-slate-100"
+        >
+          {/* Top: name + difference */}
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-slate-900">{category.name}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>
             </div>
-            <span className="text-xs text-slate-500">{formatPercent(currentPercent)} of budget</span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className={`text-sm font-medium tabular-nums ${diff.color}`}>{diff.text}</span>
+              <svg className="w-4 h-4 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
           </div>
-
-          {/* Editable fields for coordinator */}
-          {isEditing && !isClientView ? (
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-slate-500 uppercase mb-1">Budgeted</label>
-                  <div className="flex items-center gap-1">
-                    <span className="text-slate-500 text-xs">$</span>
-                    <input
-                      ref={targetInputRef}
-                      type="text"
-                      inputMode="decimal"
-                      value={targetAmount}
-                      onChange={(e) => setTargetAmount(e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(e, 'target')}
-                      onBlur={(e) => {
-                        const amount = Math.max(0, parseNumericInput(e.target.value));
-                        handleTargetAmountChange(e.target.value);
-                        handleBlur(e, amount);
-                      }}
-                      onFocus={(e) => e.target.select()}
-                      className="w-full px-2 py-1 border border-slate-300 rounded text-sm"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs text-slate-500 uppercase mb-1">Allocation</label>
-                  <div className="flex items-center gap-1">
-                    <input
-                      ref={percentInputRef}
-                      type="text"
-                      inputMode="decimal"
-                      value={allocationPercent}
-                      onChange={(e) => setAllocationPercent(e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(e, 'percent')}
-                      onBlur={(e) => {
-                        const percent = Math.max(0, parseNumericInput(e.target.value));
-                        const amount = (percent / 100) * totalBudget;
-                        const roundedAmount = Math.round(amount * 100) / 100;
-                        handleAllocationPercentChange(e.target.value);
-                        handleBlur(e, roundedAmount);
-                      }}
-                      onFocus={(e) => e.target.select()}
-                      className="w-full px-2 py-1 border border-slate-300 rounded text-sm"
-                    />
-                    <span className="text-slate-500 text-xs">%</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Committed</span>
-                <span className="font-medium text-slate-900">{formatCurrency(category.actual_spend)}</span>
-              </div>
+          {/* Progress bar */}
+          <div>
+            <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${getBarColor(ratio)}`}
+                style={{ width: `${barWidth}%` }}
+              />
             </div>
-          ) : (
-            /* Read-only data rows */
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Budgeted</span>
-                <span
-                  className={`font-medium text-slate-900 ${!isClientView ? 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded' : ''}`}
-                  onClick={isClientView ? undefined : (e) => { e.stopPropagation(); handleStartEdit('target'); }}
-                >
-                  {formatCurrency(category.target_amount)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Estimated</span>
-                <span className="font-medium text-slate-900">{formatCurrency(category.estimated_total)}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Committed</span>
-                <span className="font-medium text-slate-900">{formatCurrency(category.actual_spend)}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Paid</span>
-                <span className="font-medium text-slate-900">{formatCurrency(category.total_paid)}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Remaining</span>
-                <span className={`font-medium ${getDifferenceColor()}`}>
-                  {isOver ? '-' : ''}{formatCurrency(Math.abs(difference))}
-                </span>
-              </div>
+            <div className="flex justify-between mt-1">
+              <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(actual)}</span>
+              <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(target)}</span>
             </div>
-          )}
-
-          {/* Coordinator actions */}
-          {!isClientView && !isEditing && (
-            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={onDelete}
-                className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
-                aria-label="Delete"
-                title="Delete"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            </div>
-          )}
+          </div>
         </div>
-      </div>
+
+        <LineItemsModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          category={category}
+          totalBudget={totalBudget}
+          onUpdate={onUpdate}
+          isClientView={isClientView}
+        />
+      </>
     );
   }
 
+  // Desktop row
   return (
-    <tr className={`break-inside-avoid ${getRowBackground()}`}>
-      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900`}>
-        {category.name}
-      </td>
-      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right whitespace-nowrap`}>
-        {isEditing && !isClientView ? (
-          <div className="flex items-center gap-2 justify-end">
-            <span className="text-slate-500">$</span>
-            <input
-              ref={targetInputRef}
-              type="text"
-              inputMode="decimal"
-              value={targetAmount}
-              onChange={(e) => setTargetAmount(e.target.value)}
-              onKeyDown={(e) => handleKeyDown(e, 'target')}
-              onBlur={(e) => {
-                const amount = Math.max(0, parseNumericInput(e.target.value));
-                handleTargetAmountChange(e.target.value);
-                handleBlur(e, amount);
-              }}
-              onFocus={(e) => e.target.select()}
-              className="w-24 px-2 py-1 border border-slate-300 rounded text-sm"
+    <>
+      <div
+        onClick={handleRowClick}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className="flex items-center gap-4 px-4 py-3 border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors group"
+      >
+        {/* Zone 1 — Category info */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-slate-900">{category.name}</p>
+          <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>
+        </div>
+
+        {/* Zone 2 — Progress bar */}
+        <div className="w-36 shrink-0">
+          <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${getBarColor(ratio)}`}
+              style={{ width: `${barWidth}%` }}
             />
           </div>
-        ) : (
-          <span
-            onClick={isClientView ? undefined : () => handleStartEdit('target')}
-            className={isClientView ? '' : 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded'}
-          >
-            {formatCurrency(category.target_amount)}
-          </span>
-        )}
-      </td>
-      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right whitespace-nowrap`}>
-        {isEditing && !isClientView ? (
-          <div className="flex items-center gap-1 justify-end">
-            <input
-              ref={percentInputRef}
-              type="text"
-              inputMode="decimal"
-              value={allocationPercent}
-              onChange={(e) => setAllocationPercent(e.target.value)}
-              onKeyDown={(e) => handleKeyDown(e, 'percent')}
-              onBlur={(e) => {
-                const percent = Math.max(0, parseNumericInput(e.target.value));
-                const amount = (percent / 100) * totalBudget;
-                const roundedAmount = Math.round(amount * 100) / 100;
-                handleAllocationPercentChange(e.target.value);
-                handleBlur(e, roundedAmount);
-              }}
-              onFocus={(e) => e.target.select()}
-              className="w-16 px-2 py-1 border border-slate-300 rounded text-sm"
-            />
-            <span className="text-slate-500">%</span>
+          <div className="flex justify-between mt-1">
+            <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(actual)}</span>
+            <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(target)}</span>
           </div>
-        ) : (
-          <span
-            onClick={isClientView ? undefined : () => handleStartEdit('percent')}
-            className={isClientView ? 'text-slate-600' : 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded text-slate-600'}
-          >
-            {formatPercent(currentPercent)}
-          </span>
-        )}
-      </td>
-      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right whitespace-nowrap`}>{formatCurrency(category.estimated_total)}</td>
-      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right whitespace-nowrap`}>{formatCurrency(category.actual_spend)}</td>
-      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-slate-900 text-right whitespace-nowrap`}>{formatCurrency(category.total_paid)}</td>
-      <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-right whitespace-nowrap ${getDifferenceColor()}`}>
-        {isOver ? '-' : '+'}
-        {formatCurrency(Math.abs(difference))}
-      </td>
-      {!isClientView && (
-        <td className="px-4 py-3 text-sm">
-          <div className="flex items-center gap-2">
+        </div>
+
+        {/* Zone 3 — Difference */}
+        <div className="w-24 text-right shrink-0">
+          <span className={`text-sm font-medium tabular-nums ${diff.color}`}>{diff.text}</span>
+        </div>
+
+        {/* Zone 4 — Delete (hover) + Chevron */}
+        <div className="w-16 flex items-center justify-end gap-1 shrink-0">
+          {!isClientView && (
             <button
               type="button"
-              onClick={onDelete}
-              className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
-              aria-label="Delete"
+              onClick={handleDelete}
+              className={`p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-opacity ${
+                hovered ? 'opacity-100' : 'opacity-0'
+              }`}
+              aria-label="Delete category"
               title="Delete"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </button>
-          </div>
-        </td>
-      )}
-    </tr>
+          )}
+          <svg className="w-4 h-4 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+
+      <LineItemsModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        category={category}
+        totalBudget={totalBudget}
+        onUpdate={onUpdate}
+        isClientView={isClientView}
+      />
+    </>
   );
 }

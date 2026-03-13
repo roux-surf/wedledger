@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { CategoryWithSpend, LineItemWithPayments, BookingStatus, formatCurrency, parseNumericInput, sanitizeNumericString } from '@/lib/types';
+import { useState, useRef } from 'react';
+import { CategoryWithSpend, LineItemWithPayments, BookingStatus, formatCurrency, formatPercent, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import { useSupabaseClient } from '@/lib/supabase/client';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
@@ -13,6 +13,7 @@ interface LineItemsModalProps {
   isOpen: boolean;
   onClose: () => void;
   category: CategoryWithSpend;
+  totalBudget: number;
   onUpdate: () => void;
   isClientView: boolean;
 }
@@ -21,6 +22,7 @@ export default function LineItemsModal({
   isOpen,
   onClose,
   category,
+  totalBudget,
   onUpdate,
   isClientView,
 }: LineItemsModalProps) {
@@ -35,8 +37,53 @@ export default function LineItemsModal({
   const [loading, setLoading] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ id: string; name: string } | null>(null);
   const [deletingItem, setDeletingItem] = useState(false);
+  const [isEditingTarget, setIsEditingTarget] = useState(false);
+  const [targetValue, setTargetValue] = useState('');
+  const targetInputRef = useRef<HTMLInputElement>(null);
   const supabase = useSupabaseClient();
   const { showSaved, showToast } = useToast();
+
+  const allocationPercent = totalBudget > 0 ? (Number(category.target_amount) / totalBudget) * 100 : 0;
+
+  const handleTargetEdit = () => {
+    if (isClientView) return;
+    setTargetValue(sanitizeNumericString(category.target_amount));
+    setIsEditingTarget(true);
+    setTimeout(() => {
+      targetInputRef.current?.focus();
+      targetInputRef.current?.select();
+    }, 0);
+  };
+
+  const handleTargetSave = async () => {
+    const newTarget = Math.max(0, parseNumericInput(targetValue));
+    setIsEditingTarget(false);
+
+    if (newTarget === Number(category.target_amount)) return;
+
+    try {
+      const { error } = await supabase
+        .from('categories')
+        .update({ target_amount: newTarget })
+        .eq('id', category.id);
+      if (error) throw error;
+      showSaved();
+      onUpdate();
+    } catch (err) {
+      console.warn('Failed to update target:', err);
+      showToast('Failed to update target', 'error');
+    }
+  };
+
+  const handleTargetKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleTargetSave();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setIsEditingTarget(false);
+    }
+  };
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +180,32 @@ export default function LineItemsModal({
         <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4 text-center">
           <div>
             <p className="text-xs text-slate-500 uppercase">Target</p>
-            <p className="text-lg font-semibold text-slate-900">{formatCurrency(category.target_amount)}</p>
+            {isEditingTarget && !isClientView ? (
+              <div className="mt-0.5">
+                <div className="flex items-center justify-center gap-1">
+                  <span className="text-slate-500 text-lg font-semibold">$</span>
+                  <input
+                    ref={targetInputRef}
+                    type="text"
+                    inputMode="decimal"
+                    value={targetValue}
+                    onChange={(e) => setTargetValue(e.target.value)}
+                    onKeyDown={handleTargetKeyDown}
+                    onBlur={() => handleTargetSave()}
+                    onFocus={(e) => e.target.select()}
+                    className="w-24 px-2 py-0.5 border border-slate-300 rounded text-lg font-semibold text-center"
+                  />
+                </div>
+              </div>
+            ) : (
+              <p
+                onClick={!isClientView ? handleTargetEdit : undefined}
+                className={`text-lg font-semibold text-slate-900 ${!isClientView ? 'cursor-pointer hover:bg-slate-200/50 px-2 -mx-2 rounded' : ''}`}
+              >
+                {formatCurrency(category.target_amount)}
+              </p>
+            )}
+            <p className="text-xs text-slate-400 mt-0.5">{formatPercent(allocationPercent)} of budget</p>
           </div>
           <div>
             <p className="text-xs text-slate-500 uppercase">Estimated</p>

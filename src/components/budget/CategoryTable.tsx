@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { CategoryWithSpend, formatCurrency, formatPercent } from '@/lib/types';
+import { CategoryWithSpend, formatCurrency } from '@/lib/types';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useSupabaseClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
-import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import CategoryRow from './CategoryRow';
 import AddCategoryForm from './AddCategoryForm';
 
-type SortKey = 'name' | 'target_amount' | 'allocation' | 'estimated_total' | 'actual_spend' | 'total_paid' | 'difference';
+type SortKey = 'name' | 'target_amount' | 'actual_spend' | 'difference';
 
 interface SortConfig {
   key: SortKey;
@@ -30,7 +30,6 @@ function SortIndicator({ direction }: { direction: 'asc' | 'desc' | null }) {
       </svg>
     );
   }
-  // Unsorted hint: subtle double chevron
   return (
     <svg className="w-3.5 h-3.5 inline-block ml-1 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5 5 5M7 13l5 5 5-5" />
@@ -38,32 +37,31 @@ function SortIndicator({ direction }: { direction: 'asc' | 'desc' | null }) {
   );
 }
 
-function SortHeader({
+function SortButton({
   label,
   sortKey,
   sortConfig,
   onSort,
-  align = 'right',
 }: {
   label: string;
   sortKey: SortKey;
   sortConfig: SortConfig | null;
   onSort: (key: SortKey) => void;
-  align?: 'left' | 'right';
 }) {
   const isActive = sortConfig?.key === sortKey;
   const direction = isActive ? sortConfig!.direction : null;
 
   return (
-    <th
-      className={`px-4 py-3 text-xs font-medium uppercase tracking-wider select-none cursor-pointer hover:text-slate-700 hover:bg-slate-100 ${
-        align === 'right' ? 'text-right' : 'text-left'
-      } ${isActive ? 'text-slate-700' : 'text-slate-500'}`}
+    <button
+      type="button"
       onClick={() => onSort(sortKey)}
+      className={`text-xs font-medium uppercase tracking-wider select-none cursor-pointer hover:text-slate-700 ${
+        isActive ? 'text-slate-700' : 'text-slate-500'
+      }`}
     >
       {label}
       <SortIndicator direction={direction} />
-    </th>
+    </button>
   );
 }
 
@@ -82,7 +80,6 @@ export default function CategoryTable({
   onUpdate,
   isClientView,
 }: CategoryTableProps) {
-  const [editingRowIndex, setEditingRowIndex] = useState<number | null>(null);
   const [orderedCategories, setOrderedCategories] = useState(categories);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -90,7 +87,6 @@ export default function CategoryTable({
   const supabase = useSupabaseClient();
   const { showToast } = useToast();
 
-  // Sync ordered categories when props change
   useEffect(() => {
     setOrderedCategories(categories);
   }, [categories]);
@@ -116,17 +112,8 @@ export default function CategoryTable({
         case 'target_amount':
           cmp = a.target_amount - b.target_amount;
           break;
-        case 'allocation':
-          cmp = a.target_amount - b.target_amount;
-          break;
-        case 'estimated_total':
-          cmp = a.estimated_total - b.estimated_total;
-          break;
         case 'actual_spend':
           cmp = a.actual_spend - b.actual_spend;
-          break;
-        case 'total_paid':
-          cmp = a.total_paid - b.total_paid;
           break;
         case 'difference':
           cmp = (a.target_amount - a.actual_spend) - (b.target_amount - b.actual_spend);
@@ -158,139 +145,121 @@ export default function CategoryTable({
     }
   };
 
-  // Calculate total allocation percentage
   const totalAllocated = orderedCategories.reduce((sum, cat) => sum + Number(cat.target_amount), 0);
-  const totalAllocationPercent = totalBudget > 0 ? (totalAllocated / totalBudget) * 100 : 0;
+  const totalActualSpend = orderedCategories.reduce((sum, cat) => sum + cat.actual_spend, 0);
+  const totalDiff = totalAllocated - totalActualSpend;
+  const totalRatio = totalAllocated > 0 ? totalActualSpend / totalAllocated : (totalActualSpend > 0 ? 2 : 0);
+  const totalBarWidth = Math.min(totalRatio * 100, 100);
 
-  // Determine allocation status
-  const getAllocationStatus = () => {
-    if (totalAllocationPercent < 99) {
-      return { label: 'Under-allocated', color: 'text-yellow-600', bg: 'bg-yellow-50' };
-    } else if (totalAllocationPercent <= 101) {
-      return { label: 'Fully allocated', color: 'text-green-600', bg: 'bg-green-50' };
-    } else {
-      return { label: 'Over-allocated', color: 'text-red-600', bg: 'bg-red-50' };
-    }
+  const getTotalBarColor = () => {
+    if (totalRatio > 1) return 'bg-red-500';
+    if (totalRatio >= 0.85) return 'bg-amber-500';
+    return 'bg-emerald-500';
   };
 
-  const allocationStatus = getAllocationStatus();
-
-  const renderCategoryRow = (category: CategoryWithSpend, index: number, mode: 'table' | 'card') => (
-    <CategoryRow
-      key={category.id}
-      category={category}
-      totalBudget={totalBudget}
-      onUpdate={onUpdate}
-      onDelete={() => handleDeleteCategory(category.id)}
-      isClientView={isClientView}
-      shouldStartEditing={editingRowIndex === index}
-      onEditingChange={(editing) => {
-        if (editing) {
-          setEditingRowIndex(index);
-        } else if (editingRowIndex === index) {
-          setEditingRowIndex(null);
-        }
-      }}
-      onTabToNextRow={() => {
-        if (index < orderedCategories.length - 1) {
-          setEditingRowIndex(index + 1);
-        } else {
-          setEditingRowIndex(null);
-        }
-      }}
-      renderMode={mode === 'card' ? 'card' : 'table'}
-    />
-  );
+  const getTotalDiffColor = () => {
+    if (totalDiff < 0) return 'text-red-600';
+    if (totalRatio >= 0.85) return 'text-amber-600';
+    return 'text-green-600';
+  };
 
   return (
     <>
       <div className="bg-white border border-slate-200 rounded-lg overflow-hidden print:rounded-none print:border-slate-300">
-        {/* Desktop table */}
-        <table className="hidden md:table print:table w-full print:text-sm">
-          <thead className="bg-slate-50">
-            <tr className="border-b border-slate-200">
-              <SortHeader label="Category" sortKey="name" sortConfig={sortConfig} onSort={handleSort} align="left" />
-              <SortHeader label="Target" sortKey="target_amount" sortConfig={sortConfig} onSort={handleSort} />
-              <SortHeader label="Allocation" sortKey="allocation" sortConfig={sortConfig} onSort={handleSort} />
-              <SortHeader label="Estimated" sortKey="estimated_total" sortConfig={sortConfig} onSort={handleSort} />
-              <SortHeader label="Actual Spend" sortKey="actual_spend" sortConfig={sortConfig} onSort={handleSort} />
-              <SortHeader label="Paid" sortKey="total_paid" sortConfig={sortConfig} onSort={handleSort} />
-              <SortHeader label="Difference" sortKey="difference" sortConfig={sortConfig} onSort={handleSort} />
-              {!isClientView && (
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody className={`divide-y ${isClientView ? 'divide-slate-200' : 'divide-slate-100'}`}>
-            {sortedCategories.map((category, index) => renderCategoryRow(category, index, 'table'))}
-          </tbody>
-          {orderedCategories.length > 0 && (
-            <tfoot className="bg-slate-50 border-t border-slate-200">
-              <tr className="break-inside-avoid">
-                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900`}>Total</td>
-                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right whitespace-nowrap`}>
-                  {formatCurrency(totalAllocated)}
-                </td>
-                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm text-right whitespace-nowrap`}>
-                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-sm font-medium ${allocationStatus.bg} ${allocationStatus.color}`}>
-                    {formatPercent(totalAllocationPercent)}
-                    <span className="text-xs font-normal">({allocationStatus.label})</span>
-                  </span>
-                </td>
-                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right whitespace-nowrap`}>
-                  {formatCurrency(orderedCategories.reduce((sum, cat) => sum + cat.estimated_total, 0))}
-                </td>
-                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right whitespace-nowrap`}>
-                  {formatCurrency(orderedCategories.reduce((sum, cat) => sum + cat.actual_spend, 0))}
-                </td>
-                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'} text-sm font-medium text-slate-900 text-right whitespace-nowrap`}>
-                  {formatCurrency(orderedCategories.reduce((sum, cat) => sum + cat.total_paid, 0))}
-                </td>
-                <td className={`px-4 ${isClientView ? 'py-4' : 'py-3'}`}></td>
-                {!isClientView && <td className="px-4 py-3"></td>}
-              </tr>
-            </tfoot>
-          )}
-        </table>
+        {/* Sort header — desktop only */}
+        <div className="hidden md:flex items-center gap-4 px-4 py-2.5 border-b border-slate-200 bg-slate-50">
+          <div className="flex-1">
+            <SortButton label="Category" sortKey="name" sortConfig={sortConfig} onSort={handleSort} />
+          </div>
+          <div className="w-36 shrink-0 text-center">
+            <SortButton label="Progress" sortKey="actual_spend" sortConfig={sortConfig} onSort={handleSort} />
+          </div>
+          <div className="w-24 text-right shrink-0">
+            <SortButton label="Diff" sortKey="difference" sortConfig={sortConfig} onSort={handleSort} />
+          </div>
+          <div className="w-16 shrink-0" />
+        </div>
+
+        {/* Desktop rows */}
+        <div className="hidden md:block print:block">
+          {sortedCategories.map((category) => (
+            <CategoryRow
+              key={category.id}
+              category={category}
+              totalBudget={totalBudget}
+              onUpdate={onUpdate}
+              onDelete={() => handleDeleteCategory(category.id)}
+              isClientView={isClientView}
+              renderMode="row"
+            />
+          ))}
+        </div>
 
         {/* Mobile card list */}
-        <div className="md:hidden print:hidden divide-y divide-slate-200">
-          {orderedCategories.map((category, index) => renderCategoryRow(category, index, 'card'))}
-          {orderedCategories.length > 0 && (
-            <div className="p-4 bg-slate-50">
+        <div className="md:hidden print:hidden divide-y divide-slate-100">
+          {sortedCategories.map((category) => (
+            <CategoryRow
+              key={category.id}
+              category={category}
+              totalBudget={totalBudget}
+              onUpdate={onUpdate}
+              onDelete={() => handleDeleteCategory(category.id)}
+              isClientView={isClientView}
+              renderMode="card"
+            />
+          ))}
+        </div>
+
+        {/* Footer totals */}
+        {orderedCategories.length > 0 && (
+          <>
+            {/* Desktop footer */}
+            <div className="hidden md:flex items-center gap-4 px-4 py-3 border-t border-slate-200 bg-slate-50">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-900">Total</p>
+                <p className="text-xs text-slate-500 mt-0.5">{formatCurrency(totalAllocated)} allocated</p>
+              </div>
+              <div className="w-36 shrink-0">
+                <div className="h-1 bg-slate-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${getTotalBarColor()}`}
+                    style={{ width: `${totalBarWidth}%` }}
+                  />
+                </div>
+                <div className="flex justify-between mt-1">
+                  <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(totalActualSpend)}</span>
+                  <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(totalAllocated)}</span>
+                </div>
+              </div>
+              <div className="w-24 text-right shrink-0">
+                <span className={`text-sm font-medium tabular-nums ${getTotalDiffColor()}`}>
+                  {totalDiff >= 0 ? '+' : '-'}{formatCurrency(Math.abs(totalDiff))}
+                </span>
+              </div>
+              <div className="w-16 shrink-0" />
+            </div>
+
+            {/* Mobile footer */}
+            <div className="md:hidden p-4 bg-slate-50 border-t border-slate-200">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-slate-900">Total</span>
-                <span className="text-sm font-medium text-slate-900">{formatCurrency(totalAllocated)}</span>
-              </div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-slate-500 uppercase">Allocation</span>
-                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium ${allocationStatus.bg} ${allocationStatus.color}`}>
-                  {formatPercent(totalAllocationPercent)} ({allocationStatus.label})
+                <span className={`text-sm font-medium tabular-nums ${getTotalDiffColor()}`}>
+                  {totalDiff >= 0 ? '+' : '-'}{formatCurrency(Math.abs(totalDiff))}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500 uppercase">Estimated</span>
-                <span className="text-sm font-medium text-slate-900">
-                  {formatCurrency(orderedCategories.reduce((sum, cat) => sum + cat.estimated_total, 0))}
-                </span>
+              <div className="h-1 bg-slate-200 rounded-full overflow-hidden mb-1">
+                <div
+                  className={`h-full rounded-full transition-all ${getTotalBarColor()}`}
+                  style={{ width: `${totalBarWidth}%` }}
+                />
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500 uppercase">Actual Spend</span>
-                <span className="text-sm font-medium text-slate-900">
-                  {formatCurrency(orderedCategories.reduce((sum, cat) => sum + cat.actual_spend, 0))}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500 uppercase">Paid</span>
-                <span className="text-sm font-medium text-slate-900">
-                  {formatCurrency(orderedCategories.reduce((sum, cat) => sum + cat.total_paid, 0))}
-                </span>
+              <div className="flex justify-between">
+                <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(totalActualSpend)} spent</span>
+                <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(totalAllocated)} allocated</span>
               </div>
             </div>
-          )}
-        </div>
+          </>
+        )}
 
         {orderedCategories.length === 0 && (
           <div className="p-8 text-center text-slate-500">No categories yet.</div>

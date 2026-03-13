@@ -303,11 +303,11 @@ export default function ClientBudgetPage() {
 
   const getAllocationStatus = () => {
     if (totalAllocationPercent < 99) {
-      return { label: 'Under-allocated', color: 'text-yellow-600' };
+      return { label: 'Under-allocated', color: 'text-yellow-600', dot: 'bg-yellow-500' };
     } else if (totalAllocationPercent <= 101) {
-      return { label: 'Fully allocated', color: 'text-green-600' };
+      return { label: 'Fully allocated', color: 'text-green-600', dot: 'bg-green-500' };
     } else {
-      return { label: 'Over-allocated', color: 'text-red-600' };
+      return { label: 'Over-allocated', color: 'text-red-600', dot: 'bg-red-500' };
     }
   };
 
@@ -452,11 +452,23 @@ export default function ClientBudgetPage() {
         ) : (
           /* Coordinator View: Detailed Info */
           <div ref={clientInfoRef} className="bg-white border border-slate-200 rounded-lg p-6 mb-6">
+            {/* Layer 1 — Client info + status badge */}
             <div className="flex items-start justify-between flex-wrap gap-2">
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">{client.name}</h2>
                 <p className="text-slate-600 mt-1">
                   {client.city}, {client.state} &bull; {formatDate(client.wedding_date)} &bull; {client.guest_count} guests
+                  {budget.template_id && (() => {
+                    const level = getWeddingLevelById(budget.template_id);
+                    return level ? (
+                      <>
+                        {' '}&bull;{' '}
+                        <span className="bg-slate-100 text-slate-500 text-xs px-2 py-0.5 rounded-full inline-flex items-center">
+                          {level.displayName} template
+                        </span>
+                      </>
+                    ) : null;
+                  })()}
                 </p>
               </div>
               <span className={`px-3 py-1 text-sm font-medium rounded-full ${statusColors[budgetStatus]}`}>
@@ -464,70 +476,16 @@ export default function ClientBudgetPage() {
               </span>
             </div>
 
-            <div className="mt-6 pt-6 border-t border-slate-100">
-              {/* Mobile: stacked key metrics first */}
-              <div className="flex flex-col gap-4 md:hidden">
-                <div className="flex items-end justify-between">
-                  <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wider">Total Budget</p>
-                    {isEditingBudget ? (
-                      <div className="mt-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-slate-500 text-2xl font-bold">$</span>
-                          <input
-                            ref={budgetInputRef}
-                            type="text"
-                            inputMode="decimal"
-                            value={budgetValue}
-                            onChange={(e) => setBudgetValue(e.target.value)}
-                            onKeyDown={handleBudgetKeyDown}
-                            onBlur={(e) => {
-                              const value = parseNumericInput(e.target.value);
-                              setBudgetValue(sanitizeNumericString(Math.max(0, value)));
-                              handleBudgetBlur();
-                            }}
-                            className="w-32 px-2 py-1 border border-slate-300 rounded text-2xl font-bold"
-                          />
-                        </div>
-                        {budgetUpdateError && (
-                          <p className="text-red-600 text-xs mt-1">{budgetUpdateError}</p>
-                        )}
-                      </div>
-                    ) : (
-                      <p
-                        onClick={() => handleBudgetEdit()}
-                        className="text-3xl font-bold text-slate-900 mt-1 cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded"
-                      >
-                        {formatCurrency(Number(client.total_budget))}
-                      </p>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-slate-500 uppercase tracking-wider">Remaining</p>
-                    <p className={`text-2xl font-bold mt-1 ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {remaining >= 0 ? '+' : '-'}{formatCurrency(Math.abs(remaining))}
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-50">
-                  <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wider">Allocated</p>
-                    <p className="text-lg font-bold text-slate-900 mt-1">{formatCurrency(totalTarget)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wider">Total Spent</p>
-                    <p className="text-lg font-bold text-slate-900 mt-1">{formatCurrency(totalSpent)}</p>
-                  </div>
-                </div>
-              </div>
-              {/* Desktop: 4-column grid */}
-              <div className="hidden md:grid grid-cols-4 gap-6">
-                <div>
+            {/* Layer 2 — Metrics tiles */}
+            <div className="mt-6">
+              {/* Mobile: 2x2 grid */}
+              <div className="md:hidden bg-slate-100 rounded-lg overflow-hidden grid grid-cols-2 gap-px">
+                <div className="bg-white p-4">
                   <p className="text-xs text-slate-500 uppercase tracking-wider">Total Budget</p>
                   {isEditingBudget ? (
                     <div className="mt-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-slate-500 text-2xl font-bold">$</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-slate-500 text-xl font-bold">$</span>
                         <input
                           ref={budgetInputRef}
                           type="text"
@@ -540,7 +498,7 @@ export default function ClientBudgetPage() {
                             setBudgetValue(sanitizeNumericString(Math.max(0, value)));
                             handleBudgetBlur();
                           }}
-                          className="w-32 px-2 py-1 border border-slate-300 rounded text-2xl font-bold"
+                          className="w-28 px-2 py-1 border border-slate-300 rounded text-xl font-bold"
                         />
                       </div>
                       {budgetUpdateError && (
@@ -550,34 +508,110 @@ export default function ClientBudgetPage() {
                   ) : (
                     <p
                       onClick={() => handleBudgetEdit()}
-                      className="text-2xl font-bold text-slate-900 mt-1 cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded"
+                      className="text-xl font-bold text-slate-900 mt-1 cursor-pointer hover:bg-slate-50 px-1 -mx-1 rounded"
                     >
-                      {formatCurrency(Number(client.total_budget))}
+                      {formatCurrency(totalBudget)}
                     </p>
                   )}
                 </div>
-                <div>
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">Allocated to Categories</p>
-                  <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(totalTarget)}</p>
+                <div className="bg-white p-4">
+                  <p className="text-xs text-slate-500 uppercase tracking-wider">Allocated</p>
+                  <p className="text-xl font-bold text-slate-900 mt-1">
+                    {formatCurrency(totalTarget)}
+                    <span className="text-sm font-normal text-slate-400 ml-1.5">{formatPercent(totalAllocationPercent)}</span>
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className={`w-1.5 h-1.5 rounded-full ${allocationStatus.dot}`} />
+                    <span className={`text-xs ${allocationStatus.color}`}>{allocationStatus.label}</span>
+                  </div>
                 </div>
-                <div>
+                <div className="bg-white p-4">
                   <p className="text-xs text-slate-500 uppercase tracking-wider">Total Spent</p>
-                  <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(totalSpent)}</p>
+                  <p className="text-xl font-bold text-slate-900 mt-1">{formatCurrency(totalSpent)}</p>
                 </div>
-                <div>
+                <div className="bg-white p-4">
                   <p className="text-xs text-slate-500 uppercase tracking-wider">Remaining</p>
-                  <p className={`text-2xl font-bold mt-1 ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {remaining >= 0 ? '+' : '-'}{formatCurrency(Math.abs(remaining))}
+                  <p className={`text-xl font-bold mt-1 ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {remaining >= 0 ? '' : '-'}{formatCurrency(Math.abs(remaining))}
+                  </p>
+                </div>
+              </div>
+              {/* Desktop: segmented row */}
+              <div className="hidden md:grid grid-cols-4 gap-px bg-slate-100 rounded-lg overflow-hidden">
+                <div className="bg-white p-4">
+                  <p className="text-xs text-slate-500 uppercase tracking-wider">Total Budget</p>
+                  {isEditingBudget ? (
+                    <div className="mt-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-500 text-xl font-bold">$</span>
+                        <input
+                          ref={budgetInputRef}
+                          type="text"
+                          inputMode="decimal"
+                          value={budgetValue}
+                          onChange={(e) => setBudgetValue(e.target.value)}
+                          onKeyDown={handleBudgetKeyDown}
+                          onBlur={(e) => {
+                            const value = parseNumericInput(e.target.value);
+                            setBudgetValue(sanitizeNumericString(Math.max(0, value)));
+                            handleBudgetBlur();
+                          }}
+                          className="w-32 px-2 py-1 border border-slate-300 rounded text-xl font-bold"
+                        />
+                      </div>
+                      {budgetUpdateError && (
+                        <p className="text-red-600 text-xs mt-1">{budgetUpdateError}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p
+                      onClick={() => handleBudgetEdit()}
+                      className="text-xl font-bold text-slate-900 mt-1 cursor-pointer hover:bg-slate-50 px-1 -mx-1 rounded"
+                    >
+                      {formatCurrency(totalBudget)}
+                    </p>
+                  )}
+                </div>
+                <div className="bg-white p-4">
+                  <p className="text-xs text-slate-500 uppercase tracking-wider">Allocated</p>
+                  <p className="text-xl font-bold text-slate-900 mt-1">
+                    {formatCurrency(totalTarget)}
+                    <span className="text-sm font-normal text-slate-400 ml-1.5">{formatPercent(totalAllocationPercent)}</span>
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className={`w-1.5 h-1.5 rounded-full ${allocationStatus.dot}`} />
+                    <span className={`text-xs ${allocationStatus.color}`}>{allocationStatus.label}</span>
+                  </div>
+                </div>
+                <div className="bg-white p-4">
+                  <p className="text-xs text-slate-500 uppercase tracking-wider">Total Spent</p>
+                  <p className="text-xl font-bold text-slate-900 mt-1">{formatCurrency(totalSpent)}</p>
+                </div>
+                <div className="bg-white p-4">
+                  <p className="text-xs text-slate-500 uppercase tracking-wider">Remaining</p>
+                  <p className={`text-xl font-bold mt-1 ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {remaining >= 0 ? '' : '-'}{formatCurrency(Math.abs(remaining))}
                   </p>
                 </div>
               </div>
             </div>
-            {budget.template_id && (() => {
-              const level = getWeddingLevelById(budget.template_id);
-              return level ? (
-                <p className="text-xs text-slate-400 mt-4">Started from: {level.displayName} template</p>
-              ) : null;
-            })()}
+
+            {/* Layer 3 — Progress bar */}
+            <div className="mt-4">
+              <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    budgetStatus === 'green' ? 'bg-green-500' : budgetStatus === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}
+                  style={{ width: `${Math.min((totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0), 100)}%` }}
+                />
+              </div>
+              <div className="flex justify-between mt-1.5">
+                <span className="text-xs text-slate-400">{formatCurrency(totalSpent)} committed</span>
+                <span className="text-xs text-slate-400">{formatCurrency(Math.abs(remaining))} remaining</span>
+              </div>
+            </div>
+
           </div>
         )}
 
