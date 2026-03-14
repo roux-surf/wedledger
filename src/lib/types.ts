@@ -269,3 +269,37 @@ export const PLAN_CONFIG: Record<CoupleSubscriptionPlan, { label: string; price:
 export function isSubscriptionActive(subscription: CoupleSubscription): boolean {
   return subscription.status === 'active' && new Date(subscription.expires_at) > new Date();
 }
+
+// ============= PLANNER PROFILES =============
+
+export type PlannerSpecialty = 'luxury' | 'destination' | 'budget-friendly' | 'cultural' | 'outdoor' | 'intimate';
+
+export interface PlannerProfile {
+  id: string;
+  user_id: string;
+  bio: string | null;
+  experience_years: number;
+  specialties: PlannerSpecialty[];
+  city: string | null;
+  state: string | null;
+  consultation_rate_cents: number | null;
+  subscription_rate_cents: number | null;
+  accepting_clients: boolean;
+  weddings_completed: number;
+  profile_published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export const SPECIALTY_CONFIG: Record<PlannerSpecialty, { label: string; color: string }> = {
+  luxury: { label: 'Luxury', color: 'purple' },
+  destination: { label: 'Destination', color: 'blue' },
+  'budget-friendly': { label: 'Budget-Friendly', color: 'green' },
+  cultural: { label: 'Cultural', color: 'coral' },
+  outdoor: { label: 'Outdoor', color: 'teal' },
+  intimate: { label: 'Intimate', color: 'pink' },
+};
+
+export function formatRate(cents: number): string {
+  return `$${Math.floor(cents / 100)}`;
+}

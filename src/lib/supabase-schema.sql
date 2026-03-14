@@ -1,6 +1,6 @@
 -- =============================================
--- Migration 001: User Profiles & Couple Subscriptions
--- Foundation for two-sided platform (planners + couples)
+-- WedLedger Supabase Schema
+-- Full schema reference (non-migratory)
 -- =============================================
 
 -- =============================================
@@ -17,25 +17,8 @@ CREATE TABLE user_profiles (
   onboarding_completed BOOLEAN DEFAULT FALSE
 );
 
--- Indexes
 CREATE INDEX idx_user_profiles_user_id ON user_profiles(user_id);
 CREATE INDEX idx_user_profiles_role ON user_profiles(role);
-
--- Enable RLS
-ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
-
--- RLS Policies (no delete)
-CREATE POLICY "Users can view own profile" ON user_profiles
-  FOR SELECT USING ((auth.jwt()->>'sub') = user_id);
-
-CREATE POLICY "Authenticated users can view planners" ON user_profiles
-  FOR SELECT USING (role = 'planner');
-
-CREATE POLICY "Users can insert own profile" ON user_profiles
-  FOR INSERT WITH CHECK ((auth.jwt()->>'sub') = user_id);
-
-CREATE POLICY "Users can update own profile" ON user_profiles
-  FOR UPDATE USING ((auth.jwt()->>'sub') = user_id);
 
 -- =============================================
 -- COUPLE_SUBSCRIPTIONS TABLE
@@ -53,19 +36,30 @@ CREATE TABLE couple_subscriptions (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Indexes
 CREATE INDEX idx_couple_subscriptions_user_id ON couple_subscriptions(user_id);
 CREATE INDEX idx_couple_subscriptions_status ON couple_subscriptions(status);
 
--- Enable RLS
-ALTER TABLE couple_subscriptions ENABLE ROW LEVEL SECURITY;
+-- =============================================
+-- PLANNER_PROFILES TABLE
+-- =============================================
 
--- RLS Policies (no delete)
-CREATE POLICY "Users can view own subscription" ON couple_subscriptions
-  FOR SELECT USING ((auth.jwt()->>'sub') = user_id);
+CREATE TABLE planner_profiles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL UNIQUE REFERENCES user_profiles(user_id),
+  bio TEXT,
+  experience_years INTEGER DEFAULT 0,
+  specialties TEXT[],
+  city TEXT,
+  state TEXT,
+  consultation_rate_cents INTEGER,
+  subscription_rate_cents INTEGER,
+  accepting_clients BOOLEAN DEFAULT TRUE,
+  weddings_completed INTEGER DEFAULT 0,
+  profile_published BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 
-CREATE POLICY "Users can insert own subscription" ON couple_subscriptions
-  FOR INSERT WITH CHECK ((auth.jwt()->>'sub') = user_id);
-
-CREATE POLICY "Users can update own subscription" ON couple_subscriptions
-  FOR UPDATE USING ((auth.jwt()->>'sub') = user_id);
+CREATE INDEX idx_planner_profiles_user_id ON planner_profiles(user_id);
+CREATE INDEX idx_planner_profiles_city_state ON planner_profiles(city, state);
+CREATE INDEX idx_planner_profiles_published ON planner_profiles(profile_published) WHERE profile_published = true;
