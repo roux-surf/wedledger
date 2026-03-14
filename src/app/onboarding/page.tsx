@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { useSupabaseClient } from '@/lib/supabase/client';
 import { CoupleSubscriptionPlan, PLAN_CONFIG, UserRole } from '@/lib/types';
+import { useUserProfile } from '@/lib/UserProfileContext';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import PlanCard from '@/components/ui/PlanCard';
@@ -22,6 +23,7 @@ export default function OnboardingPage() {
   const router = useRouter();
   const { user } = useUser();
   const supabase = useSupabaseClient();
+  const { refetch } = useUserProfile();
 
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
@@ -62,6 +64,7 @@ export default function OnboardingPage() {
 
       if (existingProfile?.onboarding_completed) {
         // Already completed — just redirect
+        await refetch();
         router.push('/dashboard');
         return;
       }
@@ -164,6 +167,7 @@ export default function OnboardingPage() {
         }
       }
 
+      await refetch();
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');

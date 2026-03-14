@@ -19,5 +19,9 @@ export default async function Home() {
     redirect('/onboarding');
   }
 
+  if (profile.role === 'couple') {
+    redirect('/my-wedding');
+  }
+
   redirect('/dashboard');
 }

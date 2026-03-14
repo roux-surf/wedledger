@@ -19,7 +19,7 @@ export default function AppNav() {
         { href: '/marketplace', label: 'Marketplace', disabled: true },
       ]
     : [
-        { href: '/my-wedding', label: 'My Wedding', disabled: true },
+        { href: '/my-wedding', label: 'My Wedding' },
         { href: '/find-planner', label: 'Find a Planner', disabled: true },
       ];
 
