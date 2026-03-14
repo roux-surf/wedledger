@@ -3,11 +3,11 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import ClientList from '@/components/dashboard/ClientList';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import UpcomingPayments from '@/components/dashboard/UpcomingPayments';
 import UpcomingMilestones from '@/components/dashboard/UpcomingMilestones';
 import { Client, ClientWithBudgetStatus, PaymentAlert, MilestoneAlert, getBudgetStatus, getPaymentUrgency, getMilestoneUrgency } from '@/lib/types';
 import Button from '@/components/ui/Button';
+import { getUserProfile } from '@/lib/userProfile';
 
 export const dynamic = 'force-dynamic';
 
@@ -222,6 +222,13 @@ export default async function DashboardPage() {
     redirect('/sign-in');
   }
 
+  const supabase = await createClient();
+  const profile = await getUserProfile(supabase, userId);
+
+  if (!profile) {
+    redirect('/onboarding');
+  }
+
   const [clients, paymentAlerts, milestoneAlerts] = await Promise.all([
     getClientsWithBudgetStatus(userId),
     getUpcomingPayments(userId),
@@ -230,8 +237,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <DashboardHeader />
-
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <div>

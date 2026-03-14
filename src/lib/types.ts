@@ -230,3 +230,42 @@ export interface MilestoneTemplate {
   milestones: MilestoneTemplateItem[];
   created_at: string;
 }
+
+// ============= USER PROFILES & SUBSCRIPTIONS =============
+
+export type UserRole = 'planner' | 'couple';
+
+export interface UserProfile {
+  id: string;
+  user_id: string;
+  role: UserRole;
+  display_name: string;
+  email: string | null;
+  created_at: string;
+  onboarding_completed: boolean;
+}
+
+export type CoupleSubscriptionPlan = '12_month' | '18_month';
+
+export type CoupleSubscriptionStatus = 'active' | 'expired' | 'cancelled';
+
+export interface CoupleSubscription {
+  id: string;
+  user_id: string;
+  plan_type: CoupleSubscriptionPlan;
+  price_cents: number;
+  status: CoupleSubscriptionStatus;
+  starts_at: string;
+  expires_at: string;
+  stripe_subscription_id: string | null;
+  created_at: string;
+}
+
+export const PLAN_CONFIG: Record<CoupleSubscriptionPlan, { label: string; price: number; priceCents: number; months: number }> = {
+  '12_month': { label: '12 Months', price: 100, priceCents: 10000, months: 12 },
+  '18_month': { label: '18 Months', price: 150, priceCents: 15000, months: 18 },
+};
+
+export function isSubscriptionActive(subscription: CoupleSubscription): boolean {
+  return subscription.status === 'active' && new Date(subscription.expires_at) > new Date();
+}
