@@ -303,3 +303,32 @@ export const SPECIALTY_CONFIG: Record<PlannerSpecialty, { label: string; color: 
 export function formatRate(cents: number): string {
   return `$${Math.floor(cents / 100)}`;
 }
+
+// ============= ENGAGEMENTS =============
+
+export type EngagementType = 'consultation' | 'subscription';
+
+export type EngagementStatus = 'pending' | 'accepted' | 'declined' | 'active' | 'completed' | 'cancelled';
+
+export interface Engagement {
+  id: string;
+  planner_user_id: string;
+  couple_user_id: string;
+  client_id: string | null;
+  type: EngagementType;
+  status: EngagementStatus;
+  rate_cents: number;
+  message: string | null;
+  planner_notes: string | null;
+  scheduled_at: string | null;
+  started_at: string | null;
+  ended_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EngagementWithDetails extends Engagement {
+  planner_name: string;
+  couple_name: string;
+  planner_profile: PlannerProfile;
+}

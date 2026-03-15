@@ -63,3 +63,28 @@ CREATE TABLE planner_profiles (
 CREATE INDEX idx_planner_profiles_user_id ON planner_profiles(user_id);
 CREATE INDEX idx_planner_profiles_city_state ON planner_profiles(city, state);
 CREATE INDEX idx_planner_profiles_published ON planner_profiles(profile_published) WHERE profile_published = true;
+
+-- =============================================
+-- ENGAGEMENTS TABLE
+-- =============================================
+
+CREATE TABLE engagements (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  planner_user_id TEXT NOT NULL REFERENCES user_profiles(user_id),
+  couple_user_id TEXT NOT NULL REFERENCES user_profiles(user_id),
+  client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
+  type TEXT NOT NULL CHECK (type IN ('consultation', 'subscription')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined', 'active', 'completed', 'cancelled')),
+  rate_cents INTEGER NOT NULL,
+  message TEXT,
+  planner_notes TEXT,
+  scheduled_at TIMESTAMPTZ,
+  started_at TIMESTAMPTZ,
+  ended_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_engagements_planner ON engagements(planner_user_id, status);
+CREATE INDEX idx_engagements_couple ON engagements(couple_user_id, status);
+CREATE INDEX idx_engagements_client ON engagements(client_id);

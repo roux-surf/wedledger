@@ -31,6 +31,15 @@ CREATE POLICY "Users can view own profile" ON user_profiles
 CREATE POLICY "Authenticated users can view planners" ON user_profiles
   FOR SELECT USING (role = 'planner');
 
+CREATE POLICY "Users can view engaged counterparts" ON user_profiles
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM engagements
+      WHERE (engagements.planner_user_id = (auth.jwt()->>'sub') AND engagements.couple_user_id = user_profiles.user_id)
+         OR (engagements.couple_user_id = (auth.jwt()->>'sub') AND engagements.planner_user_id = user_profiles.user_id)
+    )
+  );
+
 CREATE POLICY "Users can insert own profile" ON user_profiles
   FOR INSERT WITH CHECK ((auth.jwt()->>'sub') = user_id);
 

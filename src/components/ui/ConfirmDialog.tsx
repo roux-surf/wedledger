@@ -10,7 +10,9 @@ interface ConfirmDialogProps {
   title: string;
   message: string;
   confirmLabel?: string;
+  confirmVariant?: 'primary' | 'danger';
   loading?: boolean;
+  loadingLabel?: string;
 }
 
 export default function ConfirmDialog({
@@ -20,7 +22,9 @@ export default function ConfirmDialog({
   title,
   message,
   confirmLabel = 'Delete',
+  confirmVariant = 'danger',
   loading = false,
+  loadingLabel,
 }: ConfirmDialogProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
@@ -29,8 +33,8 @@ export default function ConfirmDialog({
         <Button variant="secondary" size="sm" onClick={onClose} disabled={loading}>
           Cancel
         </Button>
-        <Button variant="danger" size="sm" onClick={onConfirm} disabled={loading}>
-          {loading ? 'Deleting...' : confirmLabel}
+        <Button variant={confirmVariant} size="sm" onClick={onConfirm} disabled={loading}>
+          {loading ? (loadingLabel ?? 'Processing...') : confirmLabel}
         </Button>
       </div>
     </Modal>

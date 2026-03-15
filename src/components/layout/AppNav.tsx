@@ -6,7 +6,7 @@ import { UserButton } from '@clerk/nextjs';
 import { useUserProfile } from '@/lib/UserProfileContext';
 
 export default function AppNav() {
-  const { profile } = useUserProfile();
+  const { profile, pendingEngagementCount } = useUserProfile();
   const pathname = usePathname();
 
   if (!profile) return null;
@@ -17,10 +17,11 @@ export default function AppNav() {
     ? [
         { href: '/dashboard', label: 'Dashboard' },
         { href: '/planner/profile', label: 'My Profile' },
-        { href: '/marketplace', label: 'Marketplace' },
+        { href: '/planner/inbox', label: 'Inbox', badge: pendingEngagementCount },
       ]
     : [
         { href: '/my-wedding', label: 'My Wedding' },
+        { href: '/my-wedding/planners', label: 'My Planners' },
         { href: '/find-planner', label: 'Find a Planner' },
       ];
 
@@ -36,13 +37,18 @@ export default function AppNav() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                className={`relative px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                   pathname === link.href || pathname.startsWith(link.href + '/')
                     ? 'bg-slate-100 text-slate-900'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                 }`}
               >
                 {link.label}
+                {'badge' in link && typeof link.badge === 'number' && link.badge > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center text-[10px] font-bold text-white bg-red-500 rounded-full">
+                    {link.badge > 9 ? '9+' : link.badge}
+                  </span>
+                )}
               </Link>
             ))}
           </nav>
