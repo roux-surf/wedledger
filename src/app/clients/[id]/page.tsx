@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useUser } from '@clerk/nextjs';
 import { useSupabaseClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate, formatPercent, getBudgetStatus, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import { getWeddingLevelById } from '@/lib/budgetTemplates';
@@ -19,9 +20,11 @@ export default function ClientBudgetPage() {
   const router = useRouter();
   const clientId = params.id as string;
 
+  const { user } = useUser();
   const { client, budget, categories, milestones, loading, fetchData } = useClientBudget(clientId);
 
   const [isClientView, setIsClientView] = useState(false);
+  const [isReadOnly, setIsReadOnly] = useState(false);
 
   // Budget editing state
   const [isEditingBudget, setIsEditingBudget] = useState(false);
@@ -45,6 +48,33 @@ export default function ClientBudgetPage() {
     fetchData();
   }, [fetchData]);
 
+  // Determine read-only access for marketplace clients
+  const checkAccess = useCallback(async () => {
+    if (!user || !client) return;
+
+    // Owner (planner who created the client) has full access
+    if (client.user_id === user.id) {
+      setIsReadOnly(false);
+      return;
+    }
+
+    // Not the owner — this is a marketplace client. Check engagement type.
+    const { data } = await supabase
+      .from('engagements')
+      .select('type')
+      .eq('planner_user_id', user.id)
+      .eq('couple_user_id', client.user_id)
+      .in('status', ['accepted', 'active'])
+      .limit(1)
+      .single();
+
+    setIsReadOnly(!data || data.type === 'consultation');
+  }, [user, client, supabase]);
+
+  useEffect(() => {
+    checkAccess();
+  }, [checkAccess]);
+
   // Track scroll to show/hide sticky header
   useEffect(() => {
     const handleScroll = () => {
@@ -59,17 +89,17 @@ export default function ClientBudgetPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Reset budget editing state when switching to client view
+  // Reset budget editing state when switching to client view or read-only
   useEffect(() => {
-    if (isClientView && isEditingBudget) {
+    if ((isClientView || isReadOnly) && isEditingBudget) {
       setIsEditingBudget(false);
       setBudgetUpdateError(null);
     }
-  }, [isClientView]);
+  }, [isClientView, isReadOnly]);
 
   // Handle budget update
   const handleBudgetEdit = () => {
-    if (isClientView) return;
+    if (isClientView || isReadOnly) return;
     setBudgetValue(sanitizeNumericString(client?.total_budget || 0));
     setBudgetUpdateError(null);
     setIsEditingBudget(true);
@@ -216,34 +246,36 @@ export default function ClientBudgetPage() {
             </Link>
             <h1 className="text-xl font-bold text-slate-900">{client.name}</h1>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
-              <button
-                onClick={() => setIsClientView(false)}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  !isClientView ? 'bg-white shadow text-slate-900' : 'text-slate-600'
-                }`}
-              >
-                Coordinator View
-              </button>
-              <button
-                onClick={() => setIsClientView(true)}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  isClientView ? 'bg-white shadow text-slate-900' : 'text-slate-600'
-                }`}
-              >
-                Client View
-              </button>
+          {!isReadOnly && (
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
+                <button
+                  onClick={() => setIsClientView(false)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    !isClientView ? 'bg-white shadow text-slate-900' : 'text-slate-600'
+                  }`}
+                >
+                  Coordinator View
+                </button>
+                <button
+                  onClick={() => setIsClientView(true)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    isClientView ? 'bg-white shadow text-slate-900' : 'text-slate-600'
+                  }`}
+                >
+                  Client View
+                </button>
+              </div>
+              {!isClientView && (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                >
+                  Delete Wedding
+                </button>
+              )}
             </div>
-            {!isClientView && (
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
-              >
-                Delete Wedding
-              </button>
-            )}
-          </div>
+          )}
         </div>
       </header>
 
@@ -291,6 +323,14 @@ export default function ClientBudgetPage() {
       </div>
 
       <main className={`max-w-6xl mx-auto px-4 print:px-0 print:max-w-none ${isClientView ? 'py-10 print:py-6' : 'py-8 print:py-6'}`}>
+        {isReadOnly && (
+          <div className="flex items-center gap-2 p-3 mb-6 bg-blue-50 border border-blue-200 rounded-lg print:hidden">
+            <svg className="w-4 h-4 text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
+            <p className="text-sm text-blue-700">You have view-only access to this wedding (consultation)</p>
+          </div>
+        )}
         {isClientView ? (
           <ClientDashboard
             categories={categories}
@@ -342,7 +382,7 @@ export default function ClientBudgetPage() {
               <div className="md:hidden bg-slate-100 rounded-lg overflow-hidden grid grid-cols-2 gap-px">
                 <div className="bg-white p-4">
                   <p className="text-xs text-slate-500 uppercase tracking-wider">Total Budget</p>
-                  {isEditingBudget ? (
+                  {isEditingBudget && !isReadOnly ? (
                     <div className="mt-1">
                       <div className="flex items-center gap-1">
                         <span className="text-slate-500 text-xl font-bold">$</span>
@@ -367,8 +407,8 @@ export default function ClientBudgetPage() {
                     </div>
                   ) : (
                     <p
-                      onClick={() => handleBudgetEdit()}
-                      className="text-xl font-bold text-slate-900 mt-1 cursor-pointer hover:bg-slate-50 px-1 -mx-1 rounded"
+                      onClick={isReadOnly ? undefined : () => handleBudgetEdit()}
+                      className={`text-xl font-bold text-slate-900 mt-1 ${isReadOnly ? '' : 'cursor-pointer hover:bg-slate-50'} px-1 -mx-1 rounded`}
                     >
                       {formatCurrency(totalBudget)}
                     </p>
@@ -400,7 +440,7 @@ export default function ClientBudgetPage() {
               <div className="hidden md:grid grid-cols-4 gap-px bg-slate-100 rounded-lg overflow-hidden">
                 <div className="bg-white p-4">
                   <p className="text-xs text-slate-500 uppercase tracking-wider">Total Budget</p>
-                  {isEditingBudget ? (
+                  {isEditingBudget && !isReadOnly ? (
                     <div className="mt-1">
                       <div className="flex items-center gap-2">
                         <span className="text-slate-500 text-xl font-bold">$</span>
@@ -425,8 +465,8 @@ export default function ClientBudgetPage() {
                     </div>
                   ) : (
                     <p
-                      onClick={() => handleBudgetEdit()}
-                      className="text-xl font-bold text-slate-900 mt-1 cursor-pointer hover:bg-slate-50 px-1 -mx-1 rounded"
+                      onClick={isReadOnly ? undefined : () => handleBudgetEdit()}
+                      className={`text-xl font-bold text-slate-900 mt-1 ${isReadOnly ? '' : 'cursor-pointer hover:bg-slate-50'} px-1 -mx-1 rounded`}
                     >
                       {formatCurrency(totalBudget)}
                     </p>
@@ -484,7 +524,7 @@ export default function ClientBudgetPage() {
               budgetId={budget.id}
               totalBudget={Number(client.total_budget)}
               onUpdate={fetchData}
-              isClientView={false}
+              isClientView={isReadOnly}
             />
           </div>
         )}
@@ -495,12 +535,12 @@ export default function ClientBudgetPage() {
           categories={categories}
           clientId={clientId}
           weddingDate={client.wedding_date}
-          isClientView={isClientView}
+          isClientView={isClientView || isReadOnly}
           onUpdate={fetchData}
         />
 
-        {/* AI Summary - Only in Coordinator View */}
-        {!isClientView && (
+        {/* AI Summary - Only in Coordinator View, hidden for read-only */}
+        {!isClientView && !isReadOnly && (
           <div className="mb-6">
             <BudgetSummary
               clientId={clientId}
