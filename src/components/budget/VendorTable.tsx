@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useRef } from 'react';
-import { CategoryWithSpend, BookingStatus, formatCurrency, parseNumericInput, sanitizeNumericString } from '@/lib/types';
+import { CategoryWithSpend, BookingStatus, formatCurrency, parseNumericInput, sanitizeNumericString, getPaymentUrgency } from '@/lib/types';
 import { useSupabaseClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -13,9 +13,68 @@ interface VendorTableProps {
   isClientView: boolean;
 }
 
+function PaymentSummaryBanner({ categories }: { categories: CategoryWithSpend[] }) {
+  const stats = useMemo(() => {
+    let overdueCount = 0;
+    let dueThisWeekCount = 0;
+    let totalRemaining = 0;
+    let hasPayments = false;
+
+    for (const cat of categories) {
+      for (const item of cat.line_items || []) {
+        for (const payment of item.payments || []) {
+          hasPayments = true;
+          if (payment.status === 'paid') continue;
+          totalRemaining += Number(payment.amount) || 0;
+          if (payment.due_date) {
+            const urgency = getPaymentUrgency(payment.due_date);
+            if (urgency === 'overdue') overdueCount++;
+            else if (urgency === 'this_week') dueThisWeekCount++;
+          }
+        }
+      }
+    }
+
+    return { overdueCount, dueThisWeekCount, totalRemaining, hasPayments };
+  }, [categories]);
+
+  if (!stats.hasPayments) return null;
+
+  const allClear = stats.overdueCount === 0 && stats.dueThisWeekCount === 0;
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-2.5 bg-slate-50 border-b border-slate-200 text-sm">
+      {stats.overdueCount > 0 && (
+        <span className="flex items-center gap-1.5 text-red-700">
+          <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+          {stats.overdueCount} overdue
+        </span>
+      )}
+      {stats.dueThisWeekCount > 0 && (
+        <span className="flex items-center gap-1.5 text-amber-700">
+          <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+          {stats.dueThisWeekCount} due this week
+        </span>
+      )}
+      {stats.totalRemaining > 0 && (
+        <span className="text-slate-600">
+          {formatCurrency(stats.totalRemaining)} remaining to pay
+        </span>
+      )}
+      {allClear && (
+        <span className="flex items-center gap-1.5 text-green-700">
+          <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+          All payments on track
+        </span>
+      )}
+    </div>
+  );
+}
+
 export default function VendorTable({ categories, onUpdate, isClientView }: VendorTableProps) {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   const [addState, setAddState] = useState<{ categoryId: string; vendorName: string; estimated: string; actual: string }>({
     categoryId: '', vendorName: '', estimated: '', actual: '',
   });
@@ -42,6 +101,15 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
       { estimated: 0, actual: 0, paid: 0 }
     );
   }, [categories]);
+
+  const toggleCategory = (categoryId: string) => {
+    setCollapsedCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) next.delete(categoryId);
+      else next.add(categoryId);
+      return next;
+    });
+  };
 
   const handleDeleteLineItem = (itemId: string, vendorName: string) => {
     setDeleteTarget({ id: itemId, name: vendorName });
@@ -127,6 +195,9 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
   return (
     <>
       <div className="bg-white border border-slate-200 rounded-lg overflow-hidden print:rounded-none print:border-slate-300">
+        {/* Payment Summary Banner */}
+        <PaymentSummaryBanner categories={categories} />
+
         {/* Desktop table */}
         <table className="hidden md:table print:table w-full print:text-sm">
           <thead className="bg-slate-50">
@@ -159,111 +230,120 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
           {categories.map((cat) => {
             const items = cat.line_items || [];
             const isAddingHere = addState.categoryId === cat.id;
+            const isCollapsed = collapsedCategories.has(cat.id);
+            const catSpent = items.reduce((sum, v) => sum + (Number(v.actual_cost) || 0), 0);
             return (
               <tbody key={cat.id} className="divide-y divide-slate-100">
                 {/* Category group header */}
                 <tr className="bg-slate-50 border-b border-slate-200">
-                  <td colSpan={colCount} className="px-4 py-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">{cat.name}</span>
-                      <span className="text-xs text-slate-400">{formatCurrency(cat.target_amount)} budget</span>
-                    </div>
+                  <td colSpan={colCount} className="px-0 py-0">
+                    <button
+                      type="button"
+                      onClick={() => toggleCategory(cat.id)}
+                      className="flex items-center justify-between w-full px-4 py-2 text-left hover:bg-slate-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-2 border-l-2 border-l-slate-300 pl-2">
+                        <svg className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isCollapsed ? '' : 'rotate-90'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">{cat.name}</span>
+                        <span className="text-xs text-slate-400">({items.length} vendor{items.length !== 1 ? 's' : ''})</span>
+                      </div>
+                      <span className="text-xs text-slate-500 tabular-nums">{formatCurrency(catSpent)} spent / {formatCurrency(cat.target_amount)} budget</span>
+                    </button>
                   </td>
                 </tr>
-                {/* Vendor rows */}
-                {items.length === 0 && isClientView && (
-                  <tr>
-                    <td colSpan={colCount} className="px-4 py-3 text-center text-xs text-slate-400">
-                      No vendors yet
-                    </td>
-                  </tr>
-                )}
-                {items.length === 0 && !isClientView && (
-                  <tr>
-                    <td colSpan={colCount} className="px-4 py-3 text-center text-xs text-slate-400">
-                      No vendors yet
-                    </td>
-                  </tr>
-                )}
-                {items.map((item) => (
-                  <LineItemRow
-                    key={item.id}
-                    item={item}
-                    onUpdate={onUpdate}
-                    onDelete={() => handleDeleteLineItem(item.id, item.vendor_name)}
-                    isClientView={isClientView}
-                    renderMode="table"
-                    showStatusColumn
-                  />
-                ))}
-                {/* Per-category add vendor row */}
-                {!isClientView && (
-                  isAddingHere || items.length === 0 ? (
-                    <tr className="bg-slate-50/30">
-                      <td className="px-4 py-2">
-                        <input
-                          ref={(el) => { vendorInputRefs.current[cat.id] = el; }}
-                          type="text"
-                          autoComplete="off"
-                          value={isAddingHere ? addState.vendorName : ''}
-                          onChange={(e) => {
-                            if (!isAddingHere) startAdding(cat.id);
-                            setAddState((prev) => ({ ...prev, categoryId: cat.id, vendorName: e.target.value }));
-                          }}
-                          onFocus={() => { if (!isAddingHere) startAdding(cat.id); }}
-                          onKeyDown={(e) => handleAddKeyDown(e, cat.id)}
-                          className="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
-                          placeholder="+ Add vendor..."
-                        />
-                      </td>
-                      <td className="px-4 py-2"></td>
-                      <td className="px-4 py-2 text-right">
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          autoComplete="off"
-                          value={isAddingHere ? addState.estimated : ''}
-                          onChange={(e) => setAddState((prev) => ({ ...prev, categoryId: cat.id, estimated: e.target.value }))}
-                          onFocus={() => { if (!isAddingHere) startAdding(cat.id); }}
-                          onBlur={(e) => { if (isAddingHere) handleNumericBlur(e.target.value, 'estimated'); }}
-                          onKeyDown={(e) => handleAddKeyDown(e, cat.id)}
-                          className="w-24 px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400 text-right"
-                          placeholder="0"
-                        />
-                      </td>
-                      <td className="px-4 py-2 text-right">
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          autoComplete="off"
-                          value={isAddingHere ? addState.actual : ''}
-                          onChange={(e) => setAddState((prev) => ({ ...prev, categoryId: cat.id, actual: e.target.value }))}
-                          onFocus={() => { if (!isAddingHere) startAdding(cat.id); }}
-                          onBlur={(e) => { if (isAddingHere) handleNumericBlur(e.target.value, 'actual'); }}
-                          onKeyDown={(e) => handleAddKeyDown(e, cat.id)}
-                          className="w-24 px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400 text-right"
-                          placeholder="0"
-                        />
-                      </td>
-                      <td className="px-4 py-2 text-sm text-slate-400 text-right">-</td>
-                      <td className="px-4 py-2 text-right">
-                        <span className="text-xs text-slate-400">Enter to add</span>
-                      </td>
-                      <td className="px-4 py-2"></td>
-                    </tr>
-                  ) : (
-                    <tr>
-                      <td colSpan={colCount} className="px-4 py-1.5">
-                        <button
-                          type="button"
-                          onClick={() => startAdding(cat.id)}
-                          className="text-sm text-slate-400 hover:text-slate-600"
-                        >
-                          + Add vendor...
-                        </button>
-                      </td>
-                    </tr>
-                  )
+                {/* Vendor rows (collapsible) */}
+                {!isCollapsed && (
+                  <>
+                    {items.length === 0 && (
+                      <tr>
+                        <td colSpan={colCount} className="px-4 py-3 text-center text-xs text-slate-400">
+                          No vendors yet
+                        </td>
+                      </tr>
+                    )}
+                    {items.map((item) => (
+                      <LineItemRow
+                        key={item.id}
+                        item={item}
+                        onUpdate={onUpdate}
+                        onDelete={() => handleDeleteLineItem(item.id, item.vendor_name)}
+                        isClientView={isClientView}
+                        renderMode="table"
+                        showStatusColumn
+                      />
+                    ))}
+                    {/* Per-category add vendor row */}
+                    {!isClientView && (
+                      isAddingHere || items.length === 0 ? (
+                        <tr className="bg-slate-50/30">
+                          <td className="px-4 py-2">
+                            <input
+                              ref={(el) => { vendorInputRefs.current[cat.id] = el; }}
+                              type="text"
+                              autoComplete="off"
+                              value={isAddingHere ? addState.vendorName : ''}
+                              onChange={(e) => {
+                                if (!isAddingHere) startAdding(cat.id);
+                                setAddState((prev) => ({ ...prev, categoryId: cat.id, vendorName: e.target.value }));
+                              }}
+                              onFocus={() => { if (!isAddingHere) startAdding(cat.id); }}
+                              onKeyDown={(e) => handleAddKeyDown(e, cat.id)}
+                              className="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+                              placeholder="+ Add vendor..."
+                            />
+                          </td>
+                          <td className="px-4 py-2"></td>
+                          <td className="px-4 py-2 text-right">
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              autoComplete="off"
+                              value={isAddingHere ? addState.estimated : ''}
+                              onChange={(e) => setAddState((prev) => ({ ...prev, categoryId: cat.id, estimated: e.target.value }))}
+                              onFocus={() => { if (!isAddingHere) startAdding(cat.id); }}
+                              onBlur={(e) => { if (isAddingHere) handleNumericBlur(e.target.value, 'estimated'); }}
+                              onKeyDown={(e) => handleAddKeyDown(e, cat.id)}
+                              className="w-24 px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400 text-right"
+                              placeholder="0"
+                            />
+                          </td>
+                          <td className="px-4 py-2 text-right">
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              autoComplete="off"
+                              value={isAddingHere ? addState.actual : ''}
+                              onChange={(e) => setAddState((prev) => ({ ...prev, categoryId: cat.id, actual: e.target.value }))}
+                              onFocus={() => { if (!isAddingHere) startAdding(cat.id); }}
+                              onBlur={(e) => { if (isAddingHere) handleNumericBlur(e.target.value, 'actual'); }}
+                              onKeyDown={(e) => handleAddKeyDown(e, cat.id)}
+                              className="w-24 px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400 text-right"
+                              placeholder="0"
+                            />
+                          </td>
+                          <td className="px-4 py-2 text-sm text-slate-400 text-right">-</td>
+                          <td className="px-4 py-2 text-right">
+                            <span className="text-xs text-slate-400">Enter to add</span>
+                          </td>
+                          <td className="px-4 py-2"></td>
+                        </tr>
+                      ) : (
+                        <tr>
+                          <td colSpan={colCount} className="px-4 py-1.5">
+                            <button
+                              type="button"
+                              onClick={() => startAdding(cat.id)}
+                              className="text-sm text-slate-400 hover:text-slate-600"
+                            >
+                              + Add vendor...
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    )}
+                  </>
                 )}
               </tbody>
             );
@@ -288,96 +368,105 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
           {categories.map((cat) => {
             const items = cat.line_items || [];
             const isAddingHere = addState.categoryId === cat.id;
+            const isCollapsed = collapsedCategories.has(cat.id);
+            const catSpent = items.reduce((sum, v) => sum + (Number(v.actual_cost) || 0), 0);
             return (
               <div key={cat.id}>
                 {/* Category group header */}
-                <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">{cat.name}</span>
-                    <span className="text-xs text-slate-400">{formatCurrency(cat.target_amount)} budget</span>
+                <button
+                  type="button"
+                  onClick={() => toggleCategory(cat.id)}
+                  className="flex items-center justify-between w-full bg-slate-50 px-4 py-2 border-b border-slate-200 text-left hover:bg-slate-100 transition-colors"
+                >
+                  <div className="flex items-center gap-2 border-l-2 border-l-slate-300 pl-2">
+                    <svg className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isCollapsed ? '' : 'rotate-90'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                    <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">{cat.name}</span>
+                    <span className="text-xs text-slate-400">({items.length})</span>
                   </div>
-                </div>
-                {/* Vendor cards */}
-                <div className="divide-y divide-slate-100">
-                  {items.length === 0 && isClientView && (
-                    <div className="px-4 py-3 text-center text-xs text-slate-400">No vendors yet</div>
-                  )}
-                  {items.length === 0 && !isClientView && (
-                    <div className="px-4 py-3 text-center text-xs text-slate-400">No vendors yet</div>
-                  )}
-                  {items.map((item) => (
-                    <LineItemRow
-                      key={item.id}
-                      item={item}
-                      onUpdate={onUpdate}
-                      onDelete={() => handleDeleteLineItem(item.id, item.vendor_name)}
-                      isClientView={isClientView}
-                      renderMode="card"
-                    />
-                  ))}
-                  {/* Per-category add vendor card */}
-                  {!isClientView && (
-                    isAddingHere || items.length === 0 ? (
-                      <div className="p-3 bg-slate-50/50">
-                        <div className="space-y-2">
-                          <input
-                            ref={(el) => { vendorInputRefs.current[cat.id] = el; }}
-                            type="text"
-                            autoComplete="off"
-                            value={isAddingHere ? addState.vendorName : ''}
-                            onChange={(e) => {
-                              if (!isAddingHere) startAdding(cat.id);
-                              setAddState((prev) => ({ ...prev, categoryId: cat.id, vendorName: e.target.value }));
-                            }}
-                            onFocus={() => { if (!isAddingHere) startAdding(cat.id); }}
-                            onKeyDown={(e) => handleAddKeyDown(e, cat.id)}
-                            className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
-                            placeholder="+ Add vendor..."
-                          />
-                          {isAddingHere && addState.vendorName.trim() && (
-                            <>
-                              <div className="grid grid-cols-2 gap-2">
-                                <input
-                                  type="text"
-                                  inputMode="decimal"
-                                  autoComplete="off"
-                                  value={addState.estimated}
-                                  onChange={(e) => setAddState((prev) => ({ ...prev, estimated: e.target.value }))}
-                                  onBlur={(e) => handleNumericBlur(e.target.value, 'estimated')}
-                                  onKeyDown={(e) => handleAddKeyDown(e, cat.id)}
-                                  className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
-                                  placeholder="Estimated $"
-                                />
-                                <input
-                                  type="text"
-                                  inputMode="decimal"
-                                  autoComplete="off"
-                                  value={addState.actual}
-                                  onChange={(e) => setAddState((prev) => ({ ...prev, actual: e.target.value }))}
-                                  onBlur={(e) => handleNumericBlur(e.target.value, 'actual')}
-                                  onKeyDown={(e) => handleAddKeyDown(e, cat.id)}
-                                  className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
-                                  placeholder="Actual $"
-                                />
-                              </div>
-                              <p className="text-xs text-slate-400">Press Enter to add, Escape to clear</p>
-                            </>
-                          )}
+                  <span className="text-xs text-slate-500 tabular-nums">{formatCurrency(catSpent)} / {formatCurrency(cat.target_amount)}</span>
+                </button>
+                {/* Vendor cards (collapsible) */}
+                {!isCollapsed && (
+                  <div className="divide-y divide-slate-100">
+                    {items.length === 0 && (
+                      <div className="px-4 py-3 text-center text-xs text-slate-400">No vendors yet</div>
+                    )}
+                    {items.map((item) => (
+                      <LineItemRow
+                        key={item.id}
+                        item={item}
+                        onUpdate={onUpdate}
+                        onDelete={() => handleDeleteLineItem(item.id, item.vendor_name)}
+                        isClientView={isClientView}
+                        renderMode="card"
+                      />
+                    ))}
+                    {/* Per-category add vendor card */}
+                    {!isClientView && (
+                      isAddingHere || items.length === 0 ? (
+                        <div className="p-3 bg-slate-50/50">
+                          <div className="space-y-2">
+                            <input
+                              ref={(el) => { vendorInputRefs.current[cat.id] = el; }}
+                              type="text"
+                              autoComplete="off"
+                              value={isAddingHere ? addState.vendorName : ''}
+                              onChange={(e) => {
+                                if (!isAddingHere) startAdding(cat.id);
+                                setAddState((prev) => ({ ...prev, categoryId: cat.id, vendorName: e.target.value }));
+                              }}
+                              onFocus={() => { if (!isAddingHere) startAdding(cat.id); }}
+                              onKeyDown={(e) => handleAddKeyDown(e, cat.id)}
+                              className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+                              placeholder="+ Add vendor..."
+                            />
+                            {isAddingHere && addState.vendorName.trim() && (
+                              <>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <input
+                                    type="text"
+                                    inputMode="decimal"
+                                    autoComplete="off"
+                                    value={addState.estimated}
+                                    onChange={(e) => setAddState((prev) => ({ ...prev, estimated: e.target.value }))}
+                                    onBlur={(e) => handleNumericBlur(e.target.value, 'estimated')}
+                                    onKeyDown={(e) => handleAddKeyDown(e, cat.id)}
+                                    className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+                                    placeholder="Estimated $"
+                                  />
+                                  <input
+                                    type="text"
+                                    inputMode="decimal"
+                                    autoComplete="off"
+                                    value={addState.actual}
+                                    onChange={(e) => setAddState((prev) => ({ ...prev, actual: e.target.value }))}
+                                    onBlur={(e) => handleNumericBlur(e.target.value, 'actual')}
+                                    onKeyDown={(e) => handleAddKeyDown(e, cat.id)}
+                                    className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+                                    placeholder="Actual $"
+                                  />
+                                </div>
+                                <p className="text-xs text-slate-400">Press Enter to add, Escape to clear</p>
+                              </>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="px-4 py-2">
-                        <button
-                          type="button"
-                          onClick={() => startAdding(cat.id)}
-                          className="text-sm text-slate-400 hover:text-slate-600"
-                        >
-                          + Add vendor...
-                        </button>
-                      </div>
-                    )
-                  )}
-                </div>
+                      ) : (
+                        <div className="px-4 py-2">
+                          <button
+                            type="button"
+                            onClick={() => startAdding(cat.id)}
+                            className="text-sm text-slate-400 hover:text-slate-600"
+                          >
+                            + Add vendor...
+                          </button>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -386,10 +475,19 @@ export default function VendorTable({ categories, onUpdate, isClientView }: Vend
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-medium text-slate-900">Total</span>
               </div>
-              <div className="flex items-center gap-4 text-xs text-slate-500">
-                <span>Est: {formatCurrency(totals.estimated)}</span>
-                <span>Actual: {formatCurrency(totals.actual)}</span>
-                <span>Paid: {formatCurrency(totals.paid)}</span>
+              <div className="grid grid-cols-3 gap-2 text-xs text-slate-500">
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase">Estimated</p>
+                  <p className="tabular-nums">{formatCurrency(totals.estimated)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase">Actual</p>
+                  <p className="tabular-nums">{formatCurrency(totals.actual)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase">Paid</p>
+                  <p className="tabular-nums">{formatCurrency(totals.paid)}</p>
+                </div>
               </div>
             </div>
           )}

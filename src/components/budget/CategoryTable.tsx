@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { CategoryWithSpend, formatCurrency } from '@/lib/types';
+import { CategoryWithSpend, formatCurrency, formatPercent } from '@/lib/types';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useSupabaseClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
@@ -42,11 +42,13 @@ function SortButton({
   sortKey,
   sortConfig,
   onSort,
+  align = 'left',
 }: {
   label: string;
   sortKey: SortKey;
   sortConfig: SortConfig | null;
   onSort: (key: SortKey) => void;
+  align?: 'left' | 'right';
 }) {
   const isActive = sortConfig?.key === sortKey;
   const direction = isActive ? sortConfig!.direction : null;
@@ -56,8 +58,8 @@ function SortButton({
       type="button"
       onClick={() => onSort(sortKey)}
       className={`text-xs font-medium uppercase tracking-wider select-none cursor-pointer hover:text-slate-700 ${
-        isActive ? 'text-slate-700' : 'text-slate-500'
-      }`}
+        align === 'right' ? 'text-right' : 'text-left'
+      } ${isActive ? 'text-slate-700' : 'text-slate-500'}`}
     >
       {label}
       <SortIndicator direction={direction} />
@@ -147,7 +149,7 @@ export default function CategoryTable({
 
   const totalAllocated = orderedCategories.reduce((sum, cat) => sum + Number(cat.target_amount), 0);
   const totalActualSpend = orderedCategories.reduce((sum, cat) => sum + cat.actual_spend, 0);
-  const totalDiff = totalActualSpend - totalAllocated;
+  const totalRemaining = totalAllocated - totalActualSpend;
   const totalRatio = totalAllocated > 0 ? totalActualSpend / totalAllocated : (totalActualSpend > 0 ? 2 : 0);
   const totalBarWidth = Math.min(totalRatio * 100, 100);
 
@@ -157,8 +159,8 @@ export default function CategoryTable({
     return 'bg-emerald-500';
   };
 
-  const getTotalDiffColor = () => {
-    if (totalDiff > 0) return 'text-red-600';
+  const getTotalRemainingColor = () => {
+    if (totalRemaining < 0) return 'text-red-600';
     if (totalRatio >= 0.85) return 'text-amber-600';
     return 'text-green-600';
   };
@@ -168,16 +170,22 @@ export default function CategoryTable({
       <div className="bg-white border border-slate-200 rounded-lg overflow-hidden print:rounded-none print:border-slate-300">
         {/* Sort header — desktop only */}
         <div className="hidden md:flex items-center gap-4 px-4 py-2.5 border-b border-slate-200 bg-slate-50">
-          <div className="flex-1">
+          <div className="w-48 shrink-0">
             <SortButton label="Category" sortKey="name" sortConfig={sortConfig} onSort={handleSort} />
           </div>
-          <div className="w-36 shrink-0 text-center">
-            <SortButton label="Progress" sortKey="actual_spend" sortConfig={sortConfig} onSort={handleSort} />
+          <div className="w-24 shrink-0 text-right">
+            <SortButton label="Target" sortKey="target_amount" sortConfig={sortConfig} onSort={handleSort} align="right" />
           </div>
-          <div className="w-24 text-right shrink-0">
-            <SortButton label="Diff" sortKey="difference" sortConfig={sortConfig} onSort={handleSort} />
+          <div className="w-24 shrink-0 text-right">
+            <SortButton label="Spent" sortKey="actual_spend" sortConfig={sortConfig} onSort={handleSort} align="right" />
           </div>
-          <div className="w-16 shrink-0" />
+          <div className="flex-1 min-w-[10rem]">
+            <span className="text-xs font-medium uppercase tracking-wider text-slate-500">Progress</span>
+          </div>
+          <div className="w-28 shrink-0 text-right">
+            <SortButton label="Remaining" sortKey="difference" sortConfig={sortConfig} onSort={handleSort} align="right" />
+          </div>
+          <div className="w-8 shrink-0" />
         </div>
 
         {/* Desktop rows */}
@@ -215,39 +223,41 @@ export default function CategoryTable({
           <>
             {/* Desktop footer */}
             <div className="hidden md:flex items-center gap-4 px-4 py-3 border-t border-slate-200 bg-slate-50">
-              <div className="flex-1 min-w-0">
+              <div className="w-48 shrink-0 min-w-0">
                 <p className="text-sm font-medium text-slate-900">Total</p>
-                <p className="text-xs text-slate-500 mt-0.5">{formatCurrency(totalAllocated)} allocated</p>
               </div>
-              <div className="w-36 shrink-0">
+              <div className="w-24 shrink-0 text-right">
+                <span className="text-sm text-slate-500 tabular-nums">{formatCurrency(totalAllocated)}</span>
+              </div>
+              <div className="w-24 shrink-0 text-right">
+                <span className="text-sm font-medium text-slate-900 tabular-nums">{formatCurrency(totalActualSpend)}</span>
+              </div>
+              <div className="flex-1 min-w-[10rem]">
                 <div className="print:hidden">
-                  <div className="h-1 bg-slate-200 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all ${getTotalBarColor()}`}
                       style={{ width: `${totalBarWidth}%` }}
                     />
                   </div>
-                  <div className="flex justify-between mt-1">
-                    <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(totalActualSpend)}</span>
-                    <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(totalAllocated)}</span>
-                  </div>
+                  <p className="text-xs text-slate-400 tabular-nums mt-0.5">{formatPercent(totalRatio * 100)}</p>
                 </div>
                 <span className="hidden print:inline text-xs text-slate-600 tabular-nums">{formatCurrency(totalActualSpend)} / {formatCurrency(totalAllocated)}</span>
               </div>
-              <div className="w-24 text-right shrink-0">
-                <span className={`text-sm font-medium tabular-nums ${getTotalDiffColor()}`}>
-                  {totalDiff >= 0 ? '+' : '-'}{formatCurrency(Math.abs(totalDiff))}
+              <div className="w-28 shrink-0 text-right">
+                <span className={`text-sm font-medium tabular-nums ${getTotalRemainingColor()}`}>
+                  {totalRemaining < 0 ? `-${formatCurrency(Math.abs(totalRemaining))}` : formatCurrency(totalRemaining)}
                 </span>
               </div>
-              <div className="w-16 shrink-0" />
+              <div className="w-8 shrink-0" />
             </div>
 
             {/* Mobile footer */}
             <div className="md:hidden p-4 bg-slate-50 border-t border-slate-200">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-slate-900">Total</span>
-                <span className={`text-sm font-medium tabular-nums ${getTotalDiffColor()}`}>
-                  {totalDiff >= 0 ? '+' : '-'}{formatCurrency(Math.abs(totalDiff))}
+                <span className={`text-sm font-medium tabular-nums ${getTotalRemainingColor()}`}>
+                  {totalRemaining < 0 ? `-${formatCurrency(Math.abs(totalRemaining))}` : `${formatCurrency(totalRemaining)} left`}
                 </span>
               </div>
               <div className="h-1 bg-slate-200 rounded-full overflow-hidden mb-1">
@@ -264,19 +274,31 @@ export default function CategoryTable({
           </>
         )}
 
+        {/* Inline add form — desktop */}
+        {!isClientView && orderedCategories.length > 0 && (
+          <div className="hidden md:block px-4 py-3 border-t border-slate-100 bg-slate-50/50">
+            <AddCategoryForm budgetId={budgetId} onCategoryAdded={onUpdate} />
+          </div>
+        )}
+
+        {/* Inline add form — mobile */}
+        {!isClientView && orderedCategories.length > 0 && (
+          <div className="md:hidden px-4 py-3 border-t border-slate-100 bg-slate-50/50">
+            <AddCategoryForm budgetId={budgetId} onCategoryAdded={onUpdate} />
+          </div>
+        )}
+
         {orderedCategories.length === 0 && (
-          <div className="m-4 p-8 text-center text-sm text-slate-500 border-2 border-dashed border-slate-200 rounded-lg">
-            No categories yet. Add one below to start building your budget.
+          <div className="m-4">
+            <div className="p-8 text-center text-sm text-slate-500 border-2 border-dashed border-slate-200 rounded-lg mb-4">
+              No categories yet. Add one below to start building your budget.
+            </div>
+            {!isClientView && (
+              <AddCategoryForm budgetId={budgetId} onCategoryAdded={onUpdate} />
+            )}
           </div>
         )}
       </div>
-
-      {!isClientView && (
-        <div className="mt-4 p-4 bg-white border border-slate-200 rounded-lg">
-          <h3 className="text-sm font-medium text-slate-900 mb-3">Add Category</h3>
-          <AddCategoryForm budgetId={budgetId} onCategoryAdded={onUpdate} />
-        </div>
-      )}
 
       <ConfirmDialog
         isOpen={!!deleteTarget}

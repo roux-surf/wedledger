@@ -396,14 +396,9 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
         >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div>
-                <span className={`text-sm font-medium text-slate-900 ${!isClientView ? 'cursor-pointer' : ''}`}>
-                  {item.vendor_name}
-                </span>
-                {!isClientView && (
-                  <p className="text-xs text-slate-400">{getPaymentSubtitle()}</p>
-                )}
-              </div>
+              <span className={`text-sm font-medium text-slate-900 ${!isClientView ? 'cursor-pointer' : ''}`}>
+                {item.vendor_name}
+              </span>
               <BookingStatusBadge
                 status={item.booking_status || 'none'}
                 editable={false}
@@ -412,10 +407,19 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             </div>
             <span className={`text-sm ${getRemainingColor() || 'text-slate-600'}`}>{formatCurrency(remaining)} remaining</span>
           </div>
-          <div className="flex items-center gap-4 text-xs text-slate-500">
-            <span>Est: {formatCurrency(item.estimated_cost)}</span>
-            <span>Actual: {formatCurrency(item.actual_cost)}</span>
-            <span className="text-slate-500">Paid: <span className={displayPaid > 0 ? 'text-slate-500' : ''}>{formatCurrency(displayPaid)}</span></span>
+          <div className="grid grid-cols-3 gap-2 text-xs mt-1">
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase tracking-wider">Estimated</p>
+              <p className="text-slate-600 tabular-nums">{formatCurrency(item.estimated_cost)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase tracking-wider">Actual</p>
+              <p className="text-slate-600 tabular-nums">{formatCurrency(item.actual_cost)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase tracking-wider">Paid</p>
+              <p className="text-slate-600 tabular-nums">{formatCurrency(displayPaid)}</p>
+            </div>
           </div>
           {!isClientView && (item.vendor_phone || item.vendor_email) && (
             <div className="flex items-center gap-3 text-xs text-slate-400 mt-1">
@@ -424,7 +428,8 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             </div>
           )}
           {!isClientView && (
-            <div className="mt-2">
+            <div className="flex items-center gap-2 mt-1.5">
+              <p className="text-xs text-slate-400 flex-1">{getPaymentSubtitle()}</p>
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onDelete(); }}

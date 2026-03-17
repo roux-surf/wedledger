@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CategoryWithSpend, BookingStatus, LineItemWithPayments, formatCurrency } from '@/lib/types';
+import { CategoryWithSpend, BookingStatus, LineItemWithPayments, formatCurrency, formatPercent } from '@/lib/types';
 import LineItemsModal from './LineItemsModal';
 
 const BOOKING_STATUS_RANK: Record<BookingStatus, number> = {
@@ -46,20 +46,19 @@ function getBarColor(ratio: number): string {
   return 'bg-emerald-500';
 }
 
-function getDifferenceDisplay(target: number, actual: number) {
+function getRemainingDisplay(target: number, actual: number) {
+  const remaining = target - actual;
   if (actual === 0 && target === 0) return { text: '—', color: 'text-slate-300' };
-  if (actual === 0) return { text: '—', color: 'text-slate-300' };
 
-  const diff = actual - target;
-  const ratio = target > 0 ? actual / target : (actual > 0 ? 2 : 0);
+  if (remaining < 0) return { text: `-${formatCurrency(Math.abs(remaining))}`, color: 'text-red-600' };
+  if (remaining === 0) return { text: formatCurrency(0), color: 'text-green-600' };
 
+  const ratio = target > 0 ? actual / target : 0;
   let color: string;
-  if (diff > 0) color = 'text-red-600';
-  else if (ratio >= 0.85) color = 'text-amber-600';
+  if (ratio >= 0.85) color = 'text-amber-600';
   else color = 'text-green-600';
 
-  const sign = diff > 0 ? '+' : diff < 0 ? '-' : '';
-  return { text: `${sign}${formatCurrency(Math.abs(diff))}`, color };
+  return { text: formatCurrency(remaining), color };
 }
 
 interface CategoryRowProps {
@@ -86,9 +85,10 @@ export default function CategoryRow({
   const subtitle = getSubtitle(lineItems);
   const target = Number(category.target_amount);
   const actual = category.actual_spend;
+  const paid = category.total_paid;
   const ratio = target > 0 ? actual / target : (actual > 0 ? 2 : 0);
   const barWidth = Math.min(ratio * 100, 100);
-  const diff = getDifferenceDisplay(target, actual);
+  const remaining = getRemainingDisplay(target, actual);
 
   const handleRowClick = () => setModalOpen(true);
 
@@ -104,19 +104,37 @@ export default function CategoryRow({
           onClick={handleRowClick}
           className="p-4 cursor-pointer hover:bg-slate-50 transition-colors duration-100 active:bg-slate-100"
         >
-          {/* Top: name + difference */}
-          <div className="flex items-start justify-between gap-3 mb-2">
+          {/* Top: name + chevron */}
+          <div className="flex items-start justify-between gap-3 mb-3">
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-slate-900">{category.name}</p>
               <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <span className={`text-sm font-medium tabular-nums ${diff.color}`}>{diff.text}</span>
-              <svg className="w-4 h-4 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+            <svg className="w-4 h-4 text-slate-300 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+
+          {/* 2x2 number grid */}
+          <div className="grid grid-cols-4 gap-2 mb-3">
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase tracking-wider">Target</p>
+              <p className="text-sm text-slate-500 tabular-nums">{formatCurrency(target)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase tracking-wider">Spent</p>
+              <p className="text-sm font-medium text-slate-900 tabular-nums">{formatCurrency(actual)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase tracking-wider">Paid</p>
+              <p className="text-sm text-slate-500 tabular-nums">{formatCurrency(paid)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase tracking-wider">Remaining</p>
+              <p className={`text-sm font-medium tabular-nums ${remaining.color}`}>{remaining.text}</p>
             </div>
           </div>
+
           {/* Progress bar */}
           <div>
             <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
@@ -126,7 +144,7 @@ export default function CategoryRow({
               />
             </div>
             <div className="flex justify-between mt-1">
-              <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(actual)}</span>
+              <span className="text-xs text-slate-400 tabular-nums">{formatPercent(ratio * 100)} spent</span>
               <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(target)}</span>
             </div>
           </div>
@@ -153,41 +171,48 @@ export default function CategoryRow({
         onMouseLeave={() => setHovered(false)}
         className="flex items-center gap-4 px-4 py-3 border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors duration-100 group"
       >
-        {/* Zone 1 — Category info */}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-slate-900">{category.name}</p>
-          <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>
+        {/* Zone 1 — Category name */}
+        <div className="w-48 min-w-0 shrink-0">
+          <p className="text-sm font-medium text-slate-900 truncate">{category.name}</p>
+          <p className="text-xs text-slate-500 mt-0.5 truncate">{subtitle}</p>
         </div>
 
-        {/* Zone 2 — Progress bar */}
-        <div className="w-36 shrink-0">
+        {/* Zone 2 — Target */}
+        <div className="w-24 text-right shrink-0">
+          <span className="text-sm text-slate-500 tabular-nums">{formatCurrency(target)}</span>
+        </div>
+
+        {/* Zone 3 — Spent */}
+        <div className="w-24 text-right shrink-0">
+          <span className="text-sm font-medium text-slate-900 tabular-nums">{formatCurrency(actual)}</span>
+        </div>
+
+        {/* Zone 4 — Progress bar */}
+        <div className="flex-1 min-w-[10rem]">
           <div className="print:hidden">
-            <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${getBarColor(ratio)}`}
                 style={{ width: `${barWidth}%` }}
               />
             </div>
-            <div className="flex justify-between mt-1">
-              <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(actual)}</span>
-              <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(target)}</span>
-            </div>
+            <p className="text-xs text-slate-400 tabular-nums mt-0.5">{formatPercent(ratio * 100)}</p>
           </div>
           <span className="hidden print:inline text-xs text-slate-600 tabular-nums">{formatCurrency(actual)} / {formatCurrency(target)}</span>
         </div>
 
-        {/* Zone 3 — Difference */}
-        <div className="w-24 text-right shrink-0">
-          <span className={`text-sm font-medium tabular-nums ${diff.color}`}>{diff.text}</span>
+        {/* Zone 5 — Remaining */}
+        <div className="w-28 text-right shrink-0">
+          <span className={`text-sm font-medium tabular-nums ${remaining.color}`}>{remaining.text}</span>
         </div>
 
-        {/* Zone 4 — Delete (hover) + Chevron */}
-        <div className="w-16 flex items-center justify-end gap-1 shrink-0">
+        {/* Zone 6 — Actions */}
+        <div className="w-8 flex items-center justify-end shrink-0 relative">
           {!isClientView && (
             <button
               type="button"
               onClick={handleDelete}
-              className={`p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-opacity ${
+              className={`absolute right-6 p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-opacity ${
                 hovered ? 'opacity-100' : 'opacity-0'
               }`}
               aria-label="Delete category"
