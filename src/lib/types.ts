@@ -115,6 +115,11 @@ export interface ClientWithBudgetStatus extends Client {
   milestones_completed: number;
 }
 
+export interface MarketplaceClient extends ClientWithBudgetStatus {
+  engagement_type: EngagementType;
+  couple_name: string;
+}
+
 export type BudgetStatus = 'green' | 'yellow' | 'red';
 
 export function getBudgetStatus(totalBudget: number, totalSpent: number): BudgetStatus {
@@ -331,4 +336,12 @@ export interface EngagementWithDetails extends Engagement {
   planner_name: string;
   couple_name: string;
   planner_profile: PlannerProfile;
+}
+
+export interface EngagementUpdate {
+  id: string;
+  engagement_id: string;
+  author_user_id: string;
+  content: string;
+  created_at: string;
 }
