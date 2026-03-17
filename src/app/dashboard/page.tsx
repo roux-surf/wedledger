@@ -3,9 +3,10 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import ClientList from '@/components/dashboard/ClientList';
+import MarketplaceClientList from '@/components/dashboard/MarketplaceClientList';
 import UpcomingPayments from '@/components/dashboard/UpcomingPayments';
 import UpcomingMilestones from '@/components/dashboard/UpcomingMilestones';
-import { Client, ClientWithBudgetStatus, PaymentAlert, MilestoneAlert, getBudgetStatus, getPaymentUrgency, getMilestoneUrgency } from '@/lib/types';
+import { Client, ClientWithBudgetStatus, MarketplaceClient, PaymentAlert, MilestoneAlert, getBudgetStatus, getPaymentUrgency, getMilestoneUrgency, EngagementType } from '@/lib/types';
 import Button from '@/components/ui/Button';
 import { getUserProfile } from '@/lib/userProfile';
 
@@ -81,6 +82,132 @@ async function getClientsWithBudgetStatus(userId: string): Promise<ClientWithBud
   );
 
   return clientsWithStatus;
+}
+
+async function getMarketplaceClients(userId: string): Promise<MarketplaceClient[]> {
+  const supabase = await createClient();
+
+  // Fetch accepted/active engagements (don't require client_id to be set)
+  const { data: engagements, error: engError } = await supabase
+    .from('engagements')
+    .select('id, client_id, couple_user_id, type')
+    .eq('planner_user_id', userId)
+    .in('status', ['accepted', 'active']);
+
+  if (engError || !engagements || engagements.length === 0) {
+    return [];
+  }
+
+  const coupleUserIds = [...new Set(engagements.map((e) => e.couple_user_id as string))];
+
+  // Fetch couple display names
+  const { data: profiles } = await supabase
+    .from('user_profiles')
+    .select('user_id, display_name')
+    .in('user_id', coupleUserIds);
+
+  const nameMap = new Map((profiles ?? []).map((p: { user_id: string; display_name: string }) => [p.user_id, p.display_name]));
+
+  // Look up client records for each couple via user_id (works even if client_id isn't set on engagement)
+  const { data: coupleClients } = await supabase
+    .from('clients')
+    .select('*')
+    .in('user_id', coupleUserIds)
+    .order('wedding_date', { ascending: true });
+
+  if (!coupleClients || coupleClients.length === 0) {
+    return [];
+  }
+
+  // Map couple_user_id -> client record
+  const clientByCouple = new Map(coupleClients.map((c) => [c.user_id as string, c]));
+
+  // Build a map from couple_user_id -> engagement info
+  const engagementByCouple = new Map(
+    engagements.map((e) => [
+      e.couple_user_id as string,
+      { id: e.id as string, type: e.type as EngagementType, client_id: e.client_id as string | null },
+    ])
+  );
+
+  // Backfill: if any engagement is missing client_id, set it now
+  for (const eng of engagements) {
+    if (!eng.client_id) {
+      const client = clientByCouple.get(eng.couple_user_id as string);
+      if (client) {
+        await supabase
+          .from('engagements')
+          .update({ client_id: client.id })
+          .eq('id', eng.id);
+      }
+    }
+  }
+
+  // Filter to engagements that have a matching client record
+  const clients = coupleUserIds
+    .map((coupleId) => {
+      const client = clientByCouple.get(coupleId);
+      const eng = engagementByCouple.get(coupleId);
+      if (!client || !eng) return null;
+      return { client, eng };
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null);
+
+  const marketplaceClients: MarketplaceClient[] = await Promise.all(
+    clients.map(async ({ client, eng }) => {
+      const { data: budget } = await supabase
+        .from('budgets')
+        .select('id')
+        .eq('client_id', client.id)
+        .single();
+
+      let totalSpent = 0;
+
+      if (budget) {
+        const { data: categories } = await supabase
+          .from('categories')
+          .select('id')
+          .eq('budget_id', budget.id);
+
+        if (categories && categories.length > 0) {
+          const categoryIds = categories.map((c) => c.id);
+          const { data: lineItems } = await supabase
+            .from('line_items')
+            .select('actual_cost')
+            .in('category_id', categoryIds);
+
+          if (lineItems) {
+            totalSpent = lineItems.reduce(
+              (sum, item) => sum + (Number(item.actual_cost) || 0),
+              0
+            );
+          }
+        }
+      }
+
+      const { data: allMilestones } = await supabase
+        .from('milestones')
+        .select('status')
+        .eq('client_id', client.id);
+
+      const milestonesTotal = allMilestones?.length || 0;
+      const milestonesCompleted = allMilestones?.filter((m) => m.status === 'completed').length || 0;
+
+      const coupleUserId = client.user_id as string;
+
+      return {
+        ...client,
+        total_spent: totalSpent,
+        budget_status: getBudgetStatus(Number(client.total_budget), totalSpent),
+        milestones_total: milestonesTotal,
+        milestones_completed: milestonesCompleted,
+        engagement_type: eng.type,
+        couple_name: nameMap.get(coupleUserId) ?? 'Unknown',
+      };
+    })
+  );
+
+  return marketplaceClients;
 }
 
 async function getUpcomingPayments(userId: string): Promise<PaymentAlert[]> {
@@ -229,10 +356,13 @@ export default async function DashboardPage() {
     redirect('/onboarding');
   }
 
-  const [clients, paymentAlerts, milestoneAlerts] = await Promise.all([
+  const isPlannerRole = profile.role === 'planner';
+
+  const [clients, paymentAlerts, milestoneAlerts, marketplaceClients] = await Promise.all([
     getClientsWithBudgetStatus(userId),
     getUpcomingPayments(userId),
     getUpcomingMilestones(userId),
+    isPlannerRole ? getMarketplaceClients(userId) : Promise.resolve([]),
   ]);
 
   return (
@@ -243,6 +373,11 @@ export default async function DashboardPage() {
             <h2 className="text-2xl font-bold text-slate-900">Clients</h2>
             <p className="text-slate-600 mt-1">
               {clients.length} client{clients.length !== 1 ? 's' : ''}
+              {marketplaceClients.length > 0 && (
+                <span className="text-purple-600">
+                  {' '}+ {marketplaceClients.length} marketplace
+                </span>
+              )}
             </p>
           </div>
           <Link href="/clients/new">
@@ -253,7 +388,7 @@ export default async function DashboardPage() {
         <UpcomingPayments alerts={paymentAlerts} />
         <UpcomingMilestones alerts={milestoneAlerts} />
 
-        {clients.length === 0 ? (
+        {clients.length === 0 && marketplaceClients.length === 0 ? (
           <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
             <p className="text-slate-600 mb-4">No clients yet. Create your first client to get started.</p>
             <Link href="/clients/new">
@@ -261,7 +396,23 @@ export default async function DashboardPage() {
             </Link>
           </div>
         ) : (
-          <ClientList clients={clients} />
+          <>
+            {clients.length > 0 && (
+              <div>
+                {marketplaceClients.length > 0 && (
+                  <h3 className="text-lg font-semibold text-slate-900 mb-3">My Clients</h3>
+                )}
+                <ClientList clients={clients} />
+              </div>
+            )}
+
+            {marketplaceClients.length > 0 && (
+              <div className="mt-8">
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">Marketplace Clients</h3>
+                <MarketplaceClientList clients={marketplaceClients} />
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>
