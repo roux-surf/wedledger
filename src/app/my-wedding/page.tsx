@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { useSupabaseClient } from '@/lib/supabase/client';
 import { useUserProfile } from '@/lib/UserProfileContext';
@@ -212,7 +213,15 @@ export default function MyWeddingPage() {
         <div ref={headerRef} className="bg-white border border-slate-200 rounded-lg p-6 mb-6">
           <div className="flex items-start justify-between flex-wrap gap-2">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">{client.name}</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-slate-900">{client.name}</h1>
+                <Link
+                  href="/my-wedding/setup"
+                  className="text-sm text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  Edit
+                </Link>
+              </div>
               <p className="text-slate-600 mt-1">
                 {formatDate(client.wedding_date)} &bull; {client.city}, {client.state} &bull; {client.guest_count} guests
               </p>

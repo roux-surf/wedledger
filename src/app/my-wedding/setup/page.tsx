@@ -21,6 +21,7 @@ export default function WeddingSetupPage() {
 
   const [clientId, setClientId] = useState<string | null>(null);
   const [budgetId, setBudgetId] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -53,10 +54,7 @@ export default function WeddingSetupPage() {
 
     // Check if already set up (non-placeholder values)
     const isPlaceholder = client.city === 'TBD' && client.state === 'TBD' && client.guest_count === 0;
-    if (!isPlaceholder) {
-      router.replace('/my-wedding');
-      return;
-    }
+    setIsEditing(!isPlaceholder);
 
     setFormData({
       name: client.name,
@@ -190,10 +188,12 @@ export default function WeddingSetupPage() {
       <main className="max-w-2xl mx-auto px-4 py-12">
         <div className="text-center mb-10">
           <h1 className="text-3xl font-bold text-slate-900">
-            Let&apos;s plan your wedding
+            {isEditing ? 'Edit wedding details' : "Let\u2019s plan your wedding"}
           </h1>
           <p className="text-lg text-slate-600 mt-2">
-            Tell us a bit about your big day so we can set everything up for you.
+            {isEditing
+              ? 'Update your wedding information below.'
+              : 'Tell us a bit about your big day so we can set everything up for you.'}
           </p>
         </div>
 
@@ -298,7 +298,7 @@ export default function WeddingSetupPage() {
                 placeholder="e.g., 50000"
               />
 
-              <div>
+              {!isEditing && <div>
                 <p className="text-sm font-medium text-slate-700 mb-1">
                   Start from a budget template{' '}
                   <span className="text-slate-400 font-normal">(optional)</span>
@@ -341,14 +341,14 @@ export default function WeddingSetupPage() {
                     </span>
                   </button>
                 </div>
-              </div>
+              </div>}
             </div>
           </section>
 
           {/* Submit */}
           <div className="text-center">
             <Button type="submit" size="lg" disabled={saving} className="px-12">
-              {saving ? 'Setting up...' : 'Start planning'}
+              {saving ? 'Saving...' : isEditing ? 'Save changes' : 'Start planning'}
             </Button>
           </div>
         </form>
