@@ -14,6 +14,7 @@ import {
   formatRate,
   formatDate,
 } from '@/lib/types';
+import UpdateFeed from '@/components/engagement/UpdateFeed';
 
 type InboxTab = 'pending' | 'active' | 'history';
 
@@ -53,6 +54,9 @@ export default function PlannerInboxPage() {
 
   // Subscription accept confirmation
   const [acceptingSubId, setAcceptingSubId] = useState<string | null>(null);
+
+  // Expand/collapse for update feed
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Decline confirmation
   const [decliningId, setDecliningId] = useState<string | null>(null);
@@ -126,16 +130,47 @@ export default function PlannerInboxPage() {
     }
   };
 
+  const linkEngagementClient = async (engagementId: string, coupleUserId: string) => {
+    const { data: coupleClient, error: lookupError } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('user_id', coupleUserId)
+      .limit(1)
+      .single();
+
+    if (lookupError || !coupleClient) {
+      console.error('Could not find client record for couple:', coupleUserId, lookupError);
+      return;
+    }
+
+    const { error: linkError } = await supabase
+      .from('engagements')
+      .update({ client_id: coupleClient.id })
+      .eq('id', engagementId);
+
+    if (linkError) {
+      console.error('Failed to link client_id on engagement:', linkError);
+    }
+  };
+
   const handleAcceptSubscription = async () => {
     if (!acceptingSubId) return;
     setSubmitting(true);
     try {
+      const engagement = engagements.find((e) => e.id === acceptingSubId);
+      if (!engagement) throw new Error('Engagement not found');
+
+      // Step 1: Update status
       const { error } = await supabase
         .from('engagements')
         .update({ status: 'active', started_at: new Date().toISOString() })
         .eq('id', acceptingSubId);
 
       if (error) throw error;
+
+      // Step 2: Link client_id (now that status is 'active', RLS allows the lookup)
+      await linkEngagementClient(acceptingSubId, engagement.couple_user_id);
+
       showToast('Subscription accepted!');
       setAcceptingSubId(null);
       await loadEngagements();
@@ -157,6 +192,10 @@ export default function PlannerInboxPage() {
         scheduledAt = new Date(`${confirmDate}T${time}`).toISOString();
       }
 
+      const engagement = engagements.find((e) => e.id === acceptingId);
+      if (!engagement) throw new Error('Engagement not found');
+
+      // Step 1: Update status
       const { error } = await supabase
         .from('engagements')
         .update({
@@ -167,6 +206,10 @@ export default function PlannerInboxPage() {
         .eq('id', acceptingId);
 
       if (error) throw error;
+
+      // Step 2: Link client_id (now that status is 'accepted', RLS allows the lookup)
+      await linkEngagementClient(acceptingId, engagement.couple_user_id);
+
       showToast('Consultation accepted!');
       setAcceptingId(null);
       await loadEngagements();
@@ -320,6 +363,9 @@ export default function PlannerInboxPage() {
                 engagement={engagement}
                 tab={activeTab}
                 submitting={submitting}
+                expanded={expandedId === engagement.id}
+                onToggleExpand={() => setExpandedId(expandedId === engagement.id ? null : engagement.id)}
+                plannerName={profile?.display_name ?? 'Planner'}
                 onAccept={() => handleAcceptClick(engagement)}
                 onDecline={() => setDecliningId(engagement.id)}
                 onMarkComplete={() => handleMarkComplete(engagement.id)}
@@ -462,6 +508,9 @@ interface EngagementCardProps {
   engagement: EngagementWithCouple;
   tab: InboxTab;
   submitting: boolean;
+  expanded: boolean;
+  onToggleExpand: () => void;
+  plannerName: string;
   onAccept: () => void;
   onDecline: () => void;
   onMarkComplete: () => void;
@@ -472,6 +521,9 @@ function EngagementCard({
   engagement,
   tab,
   submitting,
+  expanded,
+  onToggleExpand,
+  plannerName,
   onAccept,
   onDecline,
   onMarkComplete,
@@ -479,112 +531,149 @@ function EngagementCard({
 }: EngagementCardProps) {
   const type = TYPE_BADGE[engagement.type];
   const status = STATUS_BADGE[engagement.status];
+  const isActive = tab === 'active';
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg p-5">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div>
-          <p className="font-medium text-slate-900">{engagement.couple_name}</p>
-          <div className="flex flex-wrap items-center gap-2 mt-1">
-            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${type.classes}`}>
-              {type.label}
-            </span>
-            {tab === 'history' && (
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${status.classes}`}>
-                {status.label}
+    <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+      <div
+        className={`p-5 ${isActive ? 'cursor-pointer hover:bg-slate-50 transition-colors' : ''}`}
+        onClick={isActive ? onToggleExpand : undefined}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div>
+            <p className="font-medium text-slate-900">{engagement.couple_name}</p>
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${type.classes}`}>
+                {type.label}
               </span>
+              {tab === 'history' && (
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${status.classes}`}>
+                  {status.label}
+                </span>
+              )}
+              <span className="text-xs text-slate-400">
+                {formatRate(engagement.rate_cents)}{engagement.type === 'consultation' ? '/hr' : '/mo'}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs text-slate-400">{formatDate(engagement.created_at)}</span>
+            {isActive && (
+              <svg
+                className={`w-4 h-4 text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             )}
-            <span className="text-xs text-slate-400">
-              {formatRate(engagement.rate_cents)}{engagement.type === 'consultation' ? '/hr' : '/mo'}
-            </span>
           </div>
         </div>
-        <span className="text-xs text-slate-400 shrink-0">{formatDate(engagement.created_at)}</span>
+
+        {/* Message */}
+        {engagement.message && (
+          <div className="mb-3">
+            <p className="text-sm text-slate-600 whitespace-pre-line">{engagement.message}</p>
+          </div>
+        )}
+
+        {/* Scheduled time */}
+        {engagement.scheduled_at && (
+          <p className="text-sm text-slate-500 mb-3">
+            {tab === 'pending' ? 'Preferred time: ' : 'Scheduled: '}
+            <span className="font-medium text-slate-700">
+              {new Date(engagement.scheduled_at).toLocaleString('en-US', {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              })}
+            </span>
+          </p>
+        )}
+
+        {/* Start date for active */}
+        {isActive && engagement.started_at && (
+          <p className="text-sm text-slate-500 mb-3">
+            Started: <span className="font-medium text-slate-700">{formatDate(engagement.started_at)}</span>
+          </p>
+        )}
+
+        {/* History dates */}
+        {tab === 'history' && engagement.ended_at && (
+          <p className="text-sm text-slate-500 mb-3">
+            Ended: <span className="font-medium text-slate-700">{formatDate(engagement.ended_at)}</span>
+          </p>
+        )}
+
+        {/* View Wedding link */}
+        {tab !== 'history' && engagement.client_id && (
+          <p className="text-xs mb-3">
+            <a
+              href={`/clients/${engagement.client_id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="text-purple-600 hover:text-purple-800 underline"
+            >
+              View Wedding
+            </a>
+          </p>
+        )}
+
+        {/* Actions */}
+        {tab === 'pending' && (
+          <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+            <button
+              onClick={onAccept}
+              disabled={submitting}
+              className="px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Accept
+            </button>
+            <button
+              onClick={onDecline}
+              disabled={submitting}
+              className="px-3 py-1.5 text-sm font-medium text-red-700 bg-white border border-red-300 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Decline
+            </button>
+          </div>
+        )}
+
+        {isActive && engagement.type === 'consultation' && (
+          <div className="flex items-center gap-2 pt-2 border-t border-slate-100" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={onMarkComplete}
+              disabled={submitting}
+              className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Mark Complete
+            </button>
+          </div>
+        )}
+
+        {isActive && engagement.type === 'subscription' && (
+          <div className="flex items-center gap-2 pt-2 border-t border-slate-100" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={onEndSubscription}
+              disabled={submitting}
+              className="px-3 py-1.5 text-sm font-medium text-red-700 bg-white border border-red-300 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              End Subscription
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Message */}
-      {engagement.message && (
-        <div className="mb-3">
-          <p className="text-sm text-slate-600 whitespace-pre-line">{engagement.message}</p>
-        </div>
-      )}
-
-      {/* Scheduled time */}
-      {engagement.scheduled_at && (
-        <p className="text-sm text-slate-500 mb-3">
-          {tab === 'pending' ? 'Preferred time: ' : 'Scheduled: '}
-          <span className="font-medium text-slate-700">
-            {new Date(engagement.scheduled_at).toLocaleString('en-US', {
-              dateStyle: 'medium',
-              timeStyle: 'short',
-            })}
-          </span>
-        </p>
-      )}
-
-      {/* Start date for active */}
-      {tab === 'active' && engagement.started_at && (
-        <p className="text-sm text-slate-500 mb-3">
-          Started: <span className="font-medium text-slate-700">{formatDate(engagement.started_at)}</span>
-        </p>
-      )}
-
-      {/* History dates */}
-      {tab === 'history' && engagement.ended_at && (
-        <p className="text-sm text-slate-500 mb-3">
-          Ended: <span className="font-medium text-slate-700">{formatDate(engagement.ended_at)}</span>
-        </p>
-      )}
-
-      {/* View Wedding link (disabled for Phase 5) */}
-      {tab !== 'history' && (
-        <p className="text-xs text-slate-400 mb-3">
-          <span className="cursor-not-allowed" title="Coming in Phase 5">View Wedding (coming soon)</span>
-        </p>
-      )}
-
-      {/* Actions */}
-      {tab === 'pending' && (
-        <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-          <button
-            onClick={onAccept}
-            disabled={submitting}
-            className="px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Accept
-          </button>
-          <button
-            onClick={onDecline}
-            disabled={submitting}
-            className="px-3 py-1.5 text-sm font-medium text-red-700 bg-white border border-red-300 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Decline
-          </button>
-        </div>
-      )}
-
-      {tab === 'active' && engagement.type === 'consultation' && (
-        <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-          <button
-            onClick={onMarkComplete}
-            disabled={submitting}
-            className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Mark Complete
-          </button>
-        </div>
-      )}
-
-      {tab === 'active' && engagement.type === 'subscription' && (
-        <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-          <button
-            onClick={onEndSubscription}
-            disabled={submitting}
-            className="px-3 py-1.5 text-sm font-medium text-red-700 bg-white border border-red-300 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            End Subscription
-          </button>
+      {/* Update feed (expanded for active engagements) */}
+      {isActive && expanded && (
+        <div className="px-5 pb-5 border-t border-slate-100 pt-4">
+          <UpdateFeed
+            engagementId={engagement.id}
+            plannerUserId={engagement.planner_user_id}
+            coupleUserId={engagement.couple_user_id}
+            plannerName={plannerName}
+            coupleName={engagement.couple_name}
+          />
         </div>
       )}
     </div>

@@ -10,6 +10,7 @@ import {
   formatRate,
   formatDate,
 } from '@/lib/types';
+import UpdateFeed from '@/components/engagement/UpdateFeed';
 
 const STATUS_BADGE: Record<EngagementStatus, { label: string; classes: string }> = {
   pending: { label: 'Pending', classes: 'bg-amber-100 text-amber-800' },
@@ -184,8 +185,17 @@ export default function MyPlannersPage() {
                           <p className="text-sm text-slate-700 whitespace-pre-line">{engagement.planner_notes}</p>
                         </div>
                       )}
-                      {!engagement.message && !engagement.planner_notes && (
+                      {!engagement.message && !engagement.planner_notes && (engagement.status !== 'accepted' && engagement.status !== 'active') && (
                         <p className="text-sm text-slate-400">No details to show.</p>
+                      )}
+                      {(engagement.status === 'accepted' || engagement.status === 'active') && (
+                        <UpdateFeed
+                          engagementId={engagement.id}
+                          plannerUserId={engagement.planner_user_id}
+                          coupleUserId={engagement.couple_user_id}
+                          plannerName={engagement.planner_name}
+                          coupleName={engagement.couple_name}
+                        />
                       )}
                     </div>
                   )}

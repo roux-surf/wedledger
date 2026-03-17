@@ -49,6 +49,9 @@ export default function PlannerDetailPage() {
   // Existing engagements
   const [existingEngagements, setExistingEngagements] = useState<Engagement[]>([]);
 
+  // Wedding setup check
+  const [weddingSetUp, setWeddingSetUp] = useState<boolean | null>(null);
+
   const loadPlanner = useCallback(async () => {
     const { data, error } = await supabase
       .from('planner_profiles')
@@ -84,9 +87,25 @@ export default function PlannerDetailPage() {
     }
   }, [supabase, user, planner]);
 
+  const checkWeddingSetup = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('clients')
+      .select('city')
+      .eq('user_id', user.id)
+      .limit(1)
+      .single();
+
+    setWeddingSetUp(data ? data.city !== 'TBD' : false);
+  }, [supabase, user]);
+
   useEffect(() => {
     loadPlanner();
   }, [loadPlanner]);
+
+  useEffect(() => {
+    checkWeddingSetup();
+  }, [checkWeddingSetup]);
 
   useEffect(() => {
     loadExistingEngagements();
@@ -135,6 +154,7 @@ export default function PlannerDetailPage() {
 
   const handleSubmit = async () => {
     if (!user || !planner || !modalType) return;
+    if (!weddingSetUp) return;
     if (message.length < 20) return;
 
     setSubmitting(true);
@@ -271,6 +291,23 @@ export default function PlannerDetailPage() {
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Services</h2>
 
           <div className="space-y-4">
+            {weddingSetUp === false && (
+              <div className="flex items-center gap-3 p-4 bg-slate-100 border border-slate-200 rounded-lg">
+                <svg className="w-5 h-5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                </svg>
+                <div>
+                  <p className="text-sm font-medium text-slate-700">Complete your wedding setup to request a planner</p>
+                  <Link
+                    href="/my-wedding/setup"
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    Go to Wedding Setup &rarr;
+                  </Link>
+                </div>
+              </div>
+            )}
+
             {planner.consultation_rate_cents != null && (
               <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
                 <div>
@@ -281,14 +318,14 @@ export default function PlannerDetailPage() {
                   <span className={`px-4 py-2 text-sm font-medium border rounded-md ${getEngagementStatusClasses(existingConsultation.status)}`}>
                     {getEngagementStatusLabel(existingConsultation)}
                   </span>
-                ) : (
+                ) : weddingSetUp ? (
                   <button
                     onClick={() => openModal('consultation')}
                     className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
                   >
                     Book a Consultation
                   </button>
-                )}
+                ) : null}
               </div>
             )}
 
@@ -302,14 +339,14 @@ export default function PlannerDetailPage() {
                   <span className={`px-4 py-2 text-sm font-medium border rounded-md ${getEngagementStatusClasses(existingSubscription.status)}`}>
                     {getEngagementStatusLabel(existingSubscription)}
                   </span>
-                ) : (
+                ) : weddingSetUp ? (
                   <button
                     onClick={() => openModal('subscription')}
                     className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
                   >
                     Subscribe
                   </button>
-                )}
+                ) : null}
               </div>
             )}
 
