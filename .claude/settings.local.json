@@ -15,7 +15,13 @@
       "WebSearch",
       "Bash(dir \"C:\\\\Users\\\\wengl\\\\OneDrive\\\\Documents\\\\Vibe Coding\\\\projects\\\\wedledger\" /s /b)",
       "Bash(npx eslint:*)",
-      "Bash(npx vitest:*)"
+      "Bash(npx vitest:*)",
+      "Bash(cd:*)",
+      "WebFetch(domain:clerk.com)",
+      "Bash(start:*)",
+      "Bash(grep:*)",
+      "Bash(npx jest:*)",
+      "WebFetch(domain:www.eventperch.com)"
     ]
   }
 }
