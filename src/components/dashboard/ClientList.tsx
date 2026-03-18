@@ -3,16 +3,17 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSupabaseClient } from '@/lib/supabase/client';
-import { ClientWithBudgetStatus } from '@/lib/types';
+import { ClientWithBudgetStatus, MilestoneAlert } from '@/lib/types';
 import ClientCard from './ClientCard';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/components/ui/Toast';
 
 interface ClientListProps {
   clients: ClientWithBudgetStatus[];
+  milestonesByClient: Record<string, MilestoneAlert[]>;
 }
 
-export default function ClientList({ clients }: ClientListProps) {
+export default function ClientList({ clients, milestonesByClient }: ClientListProps) {
   const router = useRouter();
   const supabase = useSupabaseClient();
   const { showToast } = useToast();
@@ -43,7 +44,7 @@ export default function ClientList({ clients }: ClientListProps) {
     <>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {clients.map((client) => (
-          <ClientCard key={client.id} client={client} onDelete={handleDeleteRequest} />
+          <ClientCard key={client.id} client={client} onDelete={handleDeleteRequest} milestones={milestonesByClient[client.id] || []} />
         ))}
       </div>
       <ConfirmDialog

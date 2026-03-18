@@ -5,7 +5,6 @@ import Link from 'next/link';
 import ClientList from '@/components/dashboard/ClientList';
 import MarketplaceClientList from '@/components/dashboard/MarketplaceClientList';
 import UpcomingPayments from '@/components/dashboard/UpcomingPayments';
-import UpcomingMilestones from '@/components/dashboard/UpcomingMilestones';
 import { Client, ClientWithBudgetStatus, MarketplaceClient, PaymentAlert, MilestoneAlert, getBudgetStatus, getPaymentUrgency, getMilestoneUrgency, EngagementType } from '@/lib/types';
 import Button from '@/components/ui/Button';
 import { getUserProfile } from '@/lib/userProfile';
@@ -304,7 +303,7 @@ async function getUpcomingPayments(userId: string): Promise<PaymentAlert[]> {
   return alerts;
 }
 
-async function getUpcomingMilestones(userId: string): Promise<MilestoneAlert[]> {
+async function getUpcomingMilestones(userId: string, extraClientIds: string[] = []): Promise<MilestoneAlert[]> {
   const supabase = await createClient();
 
   const { data: clients } = await supabase
@@ -312,10 +311,22 @@ async function getUpcomingMilestones(userId: string): Promise<MilestoneAlert[]> 
     .select('id, name')
     .eq('user_id', userId);
 
-  if (!clients || clients.length === 0) return [];
+  const clientMap = new Map((clients ?? []).map((c) => [c.id, c.name]));
+  const clientIds = [...new Set([...(clients ?? []).map((c) => c.id), ...extraClientIds])];
 
-  const clientMap = new Map(clients.map((c) => [c.id, c.name]));
-  const clientIds = clients.map((c) => c.id);
+  if (clientIds.length === 0) return [];
+
+  // Fetch names for any extra client IDs not already in the map
+  const missingIds = extraClientIds.filter((id) => !clientMap.has(id));
+  if (missingIds.length > 0) {
+    const { data: extraClients } = await supabase
+      .from('clients')
+      .select('id, name')
+      .in('id', missingIds);
+    for (const c of extraClients ?? []) {
+      clientMap.set(c.id, c.name);
+    }
+  }
 
   const thirtyDaysFromNow = new Date();
   thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
@@ -358,12 +369,30 @@ export default async function DashboardPage() {
 
   const isPlannerRole = profile.role === 'planner';
 
-  const [clients, paymentAlerts, milestoneAlerts, marketplaceClients] = await Promise.all([
+  const [clients, paymentAlerts, marketplaceClients] = await Promise.all([
     getClientsWithBudgetStatus(userId),
     getUpcomingPayments(userId),
-    getUpcomingMilestones(userId),
     isPlannerRole ? getMarketplaceClients(userId) : Promise.resolve([]),
   ]);
+
+  // Fetch milestones including marketplace client IDs
+  const marketplaceClientIds = marketplaceClients.map((mc) => mc.id);
+  const milestoneAlerts = await getUpcomingMilestones(userId, marketplaceClientIds);
+
+  // Group milestones by client_id, sorted by urgency then date, max 3 per client
+  const urgencyOrder = { overdue: 0, this_week: 1, upcoming: 2 };
+  const milestonesByClient: Record<string, MilestoneAlert[]> = {};
+  for (const alert of milestoneAlerts) {
+    if (!milestonesByClient[alert.client_id]) {
+      milestonesByClient[alert.client_id] = [];
+    }
+    milestonesByClient[alert.client_id].push(alert);
+  }
+  for (const clientId of Object.keys(milestonesByClient)) {
+    milestonesByClient[clientId] = milestonesByClient[clientId]
+      .sort((a, b) => urgencyOrder[a.urgency] - urgencyOrder[b.urgency] || a.target_date.localeCompare(b.target_date))
+      .slice(0, 3);
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -385,9 +414,6 @@ export default async function DashboardPage() {
           </Link>
         </div>
 
-        <UpcomingPayments alerts={paymentAlerts} />
-        <UpcomingMilestones alerts={milestoneAlerts} />
-
         {clients.length === 0 && marketplaceClients.length === 0 ? (
           <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
             <p className="text-slate-600 mb-4">No clients yet. Create your first client to get started.</p>
@@ -402,18 +428,20 @@ export default async function DashboardPage() {
                 {marketplaceClients.length > 0 && (
                   <h3 className="text-lg font-semibold text-slate-900 mb-3">My Clients</h3>
                 )}
-                <ClientList clients={clients} />
+                <ClientList clients={clients} milestonesByClient={milestonesByClient} />
               </div>
             )}
 
             {marketplaceClients.length > 0 && (
               <div className="mt-8">
                 <h3 className="text-lg font-semibold text-slate-900 mb-3">Marketplace Clients</h3>
-                <MarketplaceClientList clients={marketplaceClients} />
+                <MarketplaceClientList clients={marketplaceClients} milestonesByClient={milestonesByClient} />
               </div>
             )}
           </>
         )}
+
+        <UpcomingPayments alerts={paymentAlerts} />
       </main>
     </div>
   );

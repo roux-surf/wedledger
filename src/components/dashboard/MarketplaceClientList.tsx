@@ -1,23 +1,30 @@
 'use client';
 
 import Link from 'next/link';
-import { MarketplaceClient, formatCurrency, formatDate } from '@/lib/types';
+import { MarketplaceClient, MilestoneAlert, formatCurrency, formatDate, formatShortDate } from '@/lib/types';
 
 interface MarketplaceClientListProps {
   clients: MarketplaceClient[];
+  milestonesByClient: Record<string, MilestoneAlert[]>;
 }
 
-export default function MarketplaceClientList({ clients }: MarketplaceClientListProps) {
+export default function MarketplaceClientList({ clients, milestonesByClient }: MarketplaceClientListProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {clients.map((client) => (
-        <MarketplaceClientCard key={client.id} client={client} />
+        <MarketplaceClientCard key={client.id} client={client} milestones={milestonesByClient[client.id] || []} />
       ))}
     </div>
   );
 }
 
-function MarketplaceClientCard({ client }: { client: MarketplaceClient }) {
+const urgencyDotColors = {
+  overdue: 'bg-red-500',
+  this_week: 'bg-amber-500',
+  upcoming: 'bg-slate-400',
+};
+
+function MarketplaceClientCard({ client, milestones }: { client: MarketplaceClient; milestones: MilestoneAlert[] }) {
   const statusColors = {
     green: 'bg-green-100 text-green-800 border-green-200',
     yellow: 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -110,6 +117,17 @@ function MarketplaceClientCard({ client }: { client: MarketplaceClient }) {
               </div>
             )}
           </div>
+          {milestones.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-slate-100 space-y-1.5">
+              {milestones.map((m) => (
+                <div key={m.milestone_id} className="flex items-center gap-2 text-sm">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${urgencyDotColors[m.urgency]}`} />
+                  <span className="truncate text-slate-700">{m.title}</span>
+                  <span className="ml-auto text-xs text-slate-400 shrink-0">{formatShortDate(m.target_date)}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </Link>
