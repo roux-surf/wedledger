@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { useSupabaseClient } from '@/lib/supabase/client';
@@ -23,7 +23,19 @@ export default function OnboardingPage() {
   const router = useRouter();
   const { user } = useUser();
   const supabase = useSupabaseClient();
-  const { refetch } = useUserProfile();
+  const { profile, loading: profileLoading, refetch } = useUserProfile();
+
+  // If user already has a completed profile, redirect them away from onboarding
+  useEffect(() => {
+    if (profileLoading) return;
+    if (profile?.onboarding_completed) {
+      if (profile.role === 'couple') {
+        router.replace('/my-wedding');
+      } else {
+        router.replace('/dashboard');
+      }
+    }
+  }, [profile, profileLoading, router]);
 
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
@@ -174,6 +186,15 @@ export default function OnboardingPage() {
       setLoading(false);
     }
   };
+
+  // Don't render onboarding UI while checking profile or if already onboarded
+  if (profileLoading || profile?.onboarding_completed) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <p className="text-slate-400">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
