@@ -47,7 +47,7 @@ export default function MilestoneList({
 
   if (milestones.length === 0) {
     return (
-      <p className="text-sm text-slate-500 text-center py-8">
+      <p className="text-sm text-warm-gray text-center py-8">
         No milestones yet. Add milestones to start tracking your timeline.
       </p>
     );
@@ -57,7 +57,7 @@ export default function MilestoneList({
     <div className="space-y-6">
       {groups.map((group) => (
         <div key={group.label}>
-          <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 px-1">
+          <h4 className="text-xs font-semibold text-warm-gray-light uppercase tracking-wider mb-2 px-1">
             {group.label}
           </h4>
           <div className="space-y-2">

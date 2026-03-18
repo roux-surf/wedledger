@@ -168,16 +168,16 @@ export default function ClientBudgetPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-600">Loading...</p>
+      <div className="min-h-screen bg-ivory flex items-center justify-center">
+        <p className="text-warm-gray">Loading...</p>
       </div>
     );
   }
 
   if (!client || !budget) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-600">Client not found.</p>
+      <div className="min-h-screen bg-ivory flex items-center justify-center">
+        <p className="text-warm-gray">Client not found.</p>
       </div>
     );
   }
@@ -193,20 +193,20 @@ export default function ClientBudgetPage() {
 
   const getAllocationStatus = () => {
     if (totalAllocationPercent < 99) {
-      return { label: 'Under-allocated', color: 'text-yellow-600', dot: 'bg-yellow-500' };
+      return { label: 'Under-allocated', color: 'text-champagne-dark', dot: 'bg-champagne' };
     } else if (totalAllocationPercent <= 101) {
-      return { label: 'Fully allocated', color: 'text-green-600', dot: 'bg-green-500' };
+      return { label: 'Fully allocated', color: 'text-sage', dot: 'bg-sage' };
     } else {
-      return { label: 'Over-allocated', color: 'text-red-600', dot: 'bg-red-500' };
+      return { label: 'Over-allocated', color: 'text-rose', dot: 'bg-rose' };
     }
   };
 
   const allocationStatus = getAllocationStatus();
 
   const statusColors = {
-    green: 'bg-green-100 text-green-800',
-    yellow: 'bg-yellow-100 text-yellow-800',
-    red: 'bg-red-100 text-red-800',
+    green: 'bg-sage-light text-sage-dark',
+    yellow: 'bg-champagne-light text-champagne-dark',
+    red: 'bg-rose-light text-rose-dark',
   };
 
   const statusLabels = {
@@ -237,22 +237,22 @@ export default function ClientBudgetPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 print:bg-white print:min-h-0">
-      <header className="bg-white border-b border-slate-200 print:hidden">
+    <div className="min-h-screen bg-ivory print:bg-white print:min-h-0">
+      <header className="bg-cream border-b border-stone print:hidden">
         <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-slate-600 hover:text-slate-900">
+            <Link href="/dashboard" className="text-warm-gray hover:text-charcoal">
               &larr; Back
             </Link>
-            <h1 className="text-xl font-bold text-slate-900">{client.name}</h1>
+            <h1 className="text-2xl font-heading font-semibold tracking-tight text-charcoal">{client.name}</h1>
           </div>
           {!isReadOnly && (
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
+              <div className="flex items-center gap-2 bg-stone-lighter rounded-lg p-1">
                 <button
                   onClick={() => setIsClientView(false)}
                   className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                    !isClientView ? 'bg-white shadow text-slate-900' : 'text-slate-600'
+                    !isClientView ? 'bg-white shadow text-charcoal' : 'text-warm-gray'
                   }`}
                 >
                   Coordinator View
@@ -260,7 +260,7 @@ export default function ClientBudgetPage() {
                 <button
                   onClick={() => setIsClientView(true)}
                   className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                    isClientView ? 'bg-white shadow text-slate-900' : 'text-slate-600'
+                    isClientView ? 'bg-white shadow text-charcoal' : 'text-warm-gray'
                   }`}
                 >
                   Client View
@@ -269,7 +269,7 @@ export default function ClientBudgetPage() {
               {!isClientView && (
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                  className="px-3 py-1.5 text-sm font-medium text-rose hover:text-rose-dark hover:bg-rose-light rounded-md transition-colors"
                 >
                   Delete Wedding
                 </button>
@@ -283,40 +283,40 @@ export default function ClientBudgetPage() {
       <div
         className={`fixed top-0 left-0 right-0 z-40 transition-transform duration-200 print:hidden ${
           showStickyHeader ? 'translate-y-0' : '-translate-y-full'
-        } bg-white border-b border-slate-200 shadow-sm`}
+        } bg-cream border-b border-stone shadow-sm`}
       >
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-6">
-            <span className="font-semibold truncate text-slate-900">{client.name}</span>
+            <span className="font-semibold truncate text-charcoal">{client.name}</span>
             {/* Desktop sticky metrics */}
             <div className="hidden md:flex items-center gap-6 text-sm">
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-500">Budget:</span>
-                <span className="font-medium text-slate-900">{formatCurrency(totalBudget)}</span>
+                <span className="text-warm-gray">Budget:</span>
+                <span className="font-medium text-charcoal">{formatCurrency(totalBudget)}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-500">{isClientView ? 'Committed:' : 'Spent:'}</span>
-                <span className="font-medium text-slate-900">{formatCurrency(totalSpent)}</span>
+                <span className="text-warm-gray">{isClientView ? 'Committed:' : 'Spent:'}</span>
+                <span className="font-medium text-charcoal">{formatCurrency(totalSpent)}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-500">{remaining >= 0 ? 'Remaining:' : 'Over budget:'}</span>
-                <span className={`font-medium ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <span className="text-warm-gray">{remaining >= 0 ? 'Remaining:' : 'Over budget:'}</span>
+                <span className={`font-medium ${remaining >= 0 ? 'text-sage' : 'text-rose'}`}>
                   {formatCurrency(Math.abs(remaining))}
                 </span>
               </div>
               {!isClientView && (
                 <div className="flex items-center gap-1.5">
-                  <span className="text-slate-500">Allocated:</span>
-                  <span className="font-medium text-slate-900">{formatPercent(totalAllocationPercent)}</span>
+                  <span className="text-warm-gray">Allocated:</span>
+                  <span className="font-medium text-charcoal">{formatPercent(totalAllocationPercent)}</span>
                   <span className={`text-xs ${allocationStatus.color}`}>({allocationStatus.label})</span>
                 </div>
               )}
             </div>
             {/* Mobile sticky metrics */}
             <div className="flex md:hidden items-center gap-2 text-sm">
-              <span className="font-medium text-slate-900">{formatCurrency(totalSpent)}</span>
-              <span className="text-slate-500">/</span>
-              <span className="text-slate-500">{formatCurrency(totalBudget)}</span>
+              <span className="font-medium text-charcoal">{formatCurrency(totalSpent)}</span>
+              <span className="text-warm-gray">/</span>
+              <span className="text-warm-gray">{formatCurrency(totalBudget)}</span>
             </div>
           </div>
         </div>
@@ -324,11 +324,11 @@ export default function ClientBudgetPage() {
 
       <main className={`max-w-6xl mx-auto px-4 print:px-0 print:max-w-none ${isClientView ? 'py-10 print:py-6' : 'py-8 print:py-6'}`}>
         {isReadOnly && (
-          <div className="flex items-center gap-2 p-3 mb-6 bg-blue-50 border border-blue-200 rounded-lg print:hidden">
-            <svg className="w-4 h-4 text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <div className="flex items-center gap-2 p-3 mb-6 bg-sage-light border border-sage rounded-lg print:hidden">
+            <svg className="w-4 h-4 text-sage shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
             </svg>
-            <p className="text-sm text-blue-700">You have view-only access to this wedding (consultation)</p>
+            <p className="text-sm text-sage-dark">You have view-only access to this wedding (consultation)</p>
           </div>
         )}
         {isClientView ? (
@@ -351,19 +351,19 @@ export default function ClientBudgetPage() {
           />
         ) : (
           /* Coordinator View: Detailed Info */
-          <div ref={clientInfoRef} className="bg-white border border-slate-200 rounded-lg p-6 mb-6">
+          <div ref={clientInfoRef} className="bg-cream border border-stone rounded-lg p-6 mb-6">
             {/* Layer 1 — Client info + status badge */}
             <div className="flex items-start justify-between flex-wrap gap-2">
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">{client.name}</h2>
-                <p className="text-slate-600 mt-1">
+                <h2 className="text-3xl font-heading font-semibold tracking-tight text-charcoal">{client.name}</h2>
+                <p className="text-warm-gray mt-1">
                   {client.city}, {client.state} &bull; {formatDate(client.wedding_date)} &bull; {client.guest_count} guests
                   {budget.template_id && (() => {
                     const level = getWeddingLevelById(budget.template_id);
                     return level ? (
                       <>
                         {' '}&bull;{' '}
-                        <span className="bg-slate-100 text-slate-500 text-xs px-2 py-0.5 rounded-full inline-flex items-center">
+                        <span className="bg-stone-lighter text-warm-gray text-xs px-2 py-0.5 rounded-full inline-flex items-center">
                           {level.displayName} template
                         </span>
                       </>
@@ -379,13 +379,13 @@ export default function ClientBudgetPage() {
             {/* Layer 2 — Metrics tiles */}
             <div className="mt-6">
               {/* Mobile: 2x2 grid */}
-              <div className="md:hidden bg-slate-100 rounded-lg overflow-hidden grid grid-cols-2 gap-px">
-                <div className="bg-white p-4">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">Total Budget</p>
+              <div className="md:hidden bg-stone-lighter rounded-lg overflow-hidden grid grid-cols-2 gap-px">
+                <div className="bg-cream p-4">
+                  <p className="text-xs text-warm-gray uppercase tracking-wider">Total Budget</p>
                   {isEditingBudget && !isReadOnly ? (
                     <div className="mt-1">
                       <div className="flex items-center gap-1">
-                        <span className="text-slate-500 text-xl font-bold">$</span>
+                        <span className="text-warm-gray text-xl font-bold">$</span>
                         <input
                           ref={budgetInputRef}
                           type="text"
@@ -398,52 +398,52 @@ export default function ClientBudgetPage() {
                             setBudgetValue(sanitizeNumericString(Math.max(0, value)));
                             handleBudgetBlur();
                           }}
-                          className="w-28 px-2 py-1 border border-slate-300 rounded text-xl font-bold"
+                          className="w-28 px-2 py-1 border border-stone rounded text-xl font-bold"
                         />
                       </div>
                       {budgetUpdateError && (
-                        <p className="text-red-600 text-xs mt-1">{budgetUpdateError}</p>
+                        <p className="text-rose text-xs mt-1">{budgetUpdateError}</p>
                       )}
                     </div>
                   ) : (
                     <p
                       onClick={isReadOnly ? undefined : () => handleBudgetEdit()}
-                      className={`text-xl font-bold text-slate-900 mt-1 ${isReadOnly ? '' : 'cursor-pointer hover:bg-slate-50'} px-1 -mx-1 rounded`}
+                      className={`text-xl font-bold text-charcoal mt-1 ${isReadOnly ? '' : 'cursor-pointer hover:bg-ivory'} px-1 -mx-1 rounded`}
                     >
                       {formatCurrency(totalBudget)}
                     </p>
                   )}
                 </div>
-                <div className="bg-white p-4">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">Allocated</p>
-                  <p className="text-xl font-bold text-slate-900 mt-1">
+                <div className="bg-cream p-4">
+                  <p className="text-xs text-warm-gray uppercase tracking-wider">Allocated</p>
+                  <p className="text-xl font-bold text-charcoal mt-1">
                     {formatCurrency(totalTarget)}
-                    <span className="text-sm font-normal text-slate-400 ml-1.5">{formatPercent(totalAllocationPercent)}</span>
+                    <span className="text-sm font-normal text-warm-gray-light ml-1.5">{formatPercent(totalAllocationPercent)}</span>
                   </p>
                   <div className="flex items-center gap-1.5 mt-1">
                     <span className={`w-1.5 h-1.5 rounded-full ${allocationStatus.dot}`} />
                     <span className={`text-xs ${allocationStatus.color}`}>{allocationStatus.label}</span>
                   </div>
                 </div>
-                <div className="bg-white p-4">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">Total Spent</p>
-                  <p className="text-xl font-bold text-slate-900 mt-1">{formatCurrency(totalSpent)}</p>
+                <div className="bg-cream p-4">
+                  <p className="text-xs text-warm-gray uppercase tracking-wider">Total Spent</p>
+                  <p className="text-xl font-bold text-charcoal mt-1">{formatCurrency(totalSpent)}</p>
                 </div>
-                <div className="bg-white p-4">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">Remaining</p>
-                  <p className={`text-xl font-bold mt-1 ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <div className="bg-cream p-4">
+                  <p className="text-xs text-warm-gray uppercase tracking-wider">Remaining</p>
+                  <p className={`text-xl font-bold mt-1 ${remaining >= 0 ? 'text-sage' : 'text-rose'}`}>
                     {remaining >= 0 ? '' : '-'}{formatCurrency(Math.abs(remaining))}
                   </p>
                 </div>
               </div>
               {/* Desktop: segmented row */}
-              <div className="hidden md:grid grid-cols-4 gap-px bg-slate-100 rounded-lg overflow-hidden">
-                <div className="bg-white p-4">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">Total Budget</p>
+              <div className="hidden md:grid grid-cols-4 gap-px bg-stone-lighter rounded-lg overflow-hidden">
+                <div className="bg-cream p-4">
+                  <p className="text-xs text-warm-gray uppercase tracking-wider">Total Budget</p>
                   {isEditingBudget && !isReadOnly ? (
                     <div className="mt-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-slate-500 text-xl font-bold">$</span>
+                        <span className="text-warm-gray text-xl font-bold">$</span>
                         <input
                           ref={budgetInputRef}
                           type="text"
@@ -456,40 +456,40 @@ export default function ClientBudgetPage() {
                             setBudgetValue(sanitizeNumericString(Math.max(0, value)));
                             handleBudgetBlur();
                           }}
-                          className="w-32 px-2 py-1 border border-slate-300 rounded text-xl font-bold"
+                          className="w-32 px-2 py-1 border border-stone rounded text-xl font-bold"
                         />
                       </div>
                       {budgetUpdateError && (
-                        <p className="text-red-600 text-xs mt-1">{budgetUpdateError}</p>
+                        <p className="text-rose text-xs mt-1">{budgetUpdateError}</p>
                       )}
                     </div>
                   ) : (
                     <p
                       onClick={isReadOnly ? undefined : () => handleBudgetEdit()}
-                      className={`text-xl font-bold text-slate-900 mt-1 ${isReadOnly ? '' : 'cursor-pointer hover:bg-slate-50'} px-1 -mx-1 rounded`}
+                      className={`text-xl font-bold text-charcoal mt-1 ${isReadOnly ? '' : 'cursor-pointer hover:bg-ivory'} px-1 -mx-1 rounded`}
                     >
                       {formatCurrency(totalBudget)}
                     </p>
                   )}
                 </div>
-                <div className="bg-white p-4">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">Allocated</p>
-                  <p className="text-xl font-bold text-slate-900 mt-1">
+                <div className="bg-cream p-4">
+                  <p className="text-xs text-warm-gray uppercase tracking-wider">Allocated</p>
+                  <p className="text-xl font-bold text-charcoal mt-1">
                     {formatCurrency(totalTarget)}
-                    <span className="text-sm font-normal text-slate-400 ml-1.5">{formatPercent(totalAllocationPercent)}</span>
+                    <span className="text-sm font-normal text-warm-gray-light ml-1.5">{formatPercent(totalAllocationPercent)}</span>
                   </p>
                   <div className="flex items-center gap-1.5 mt-1">
                     <span className={`w-1.5 h-1.5 rounded-full ${allocationStatus.dot}`} />
                     <span className={`text-xs ${allocationStatus.color}`}>{allocationStatus.label}</span>
                   </div>
                 </div>
-                <div className="bg-white p-4">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">Total Spent</p>
-                  <p className="text-xl font-bold text-slate-900 mt-1">{formatCurrency(totalSpent)}</p>
+                <div className="bg-cream p-4">
+                  <p className="text-xs text-warm-gray uppercase tracking-wider">Total Spent</p>
+                  <p className="text-xl font-bold text-charcoal mt-1">{formatCurrency(totalSpent)}</p>
                 </div>
-                <div className="bg-white p-4">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">Remaining</p>
-                  <p className={`text-xl font-bold mt-1 ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <div className="bg-cream p-4">
+                  <p className="text-xs text-warm-gray uppercase tracking-wider">Remaining</p>
+                  <p className={`text-xl font-bold mt-1 ${remaining >= 0 ? 'text-sage' : 'text-rose'}`}>
                     {remaining >= 0 ? '' : '-'}{formatCurrency(Math.abs(remaining))}
                   </p>
                 </div>
@@ -498,17 +498,17 @@ export default function ClientBudgetPage() {
 
             {/* Layer 3 — Progress bar */}
             <div className="mt-4">
-              <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-stone-lighter rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all ${
-                    budgetStatus === 'green' ? 'bg-green-500' : budgetStatus === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
+                    budgetStatus === 'green' ? 'bg-sage' : budgetStatus === 'yellow' ? 'bg-champagne' : 'bg-rose'
                   }`}
                   style={{ width: `${Math.min((totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0), 100)}%` }}
                 />
               </div>
               <div className="flex justify-between mt-1.5">
-                <span className="text-xs text-slate-400">{formatCurrency(totalSpent)} committed</span>
-                <span className="text-xs text-slate-400">{remaining >= 0 ? `${formatCurrency(remaining)} remaining` : `${formatCurrency(Math.abs(remaining))} over budget`}</span>
+                <span className="text-xs text-warm-gray-light">{formatCurrency(totalSpent)} committed</span>
+                <span className="text-xs text-warm-gray-light">{remaining >= 0 ? `${formatCurrency(remaining)} remaining` : `${formatCurrency(Math.abs(remaining))} over budget`}</span>
               </div>
             </div>
 
@@ -518,7 +518,7 @@ export default function ClientBudgetPage() {
         {/* Categories Table - Coordinator View only (Client view handled by ClientDashboard) */}
         {!isClientView && (
           <div className="mb-6">
-            <h3 className="font-semibold text-slate-900 text-lg mb-4">Budget</h3>
+            <h3 className="font-semibold text-charcoal text-lg mb-4">Budget</h3>
             <BudgetTabs
               categories={categories}
               budgetId={budget.id}

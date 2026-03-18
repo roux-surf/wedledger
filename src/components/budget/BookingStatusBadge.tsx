@@ -76,7 +76,7 @@ export default function BookingStatusBadge({ status, editable = false, onChange 
   const dropdown = isOpen && position && createPortal(
     <div
       ref={dropdownRef}
-      className="fixed z-[9999] bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[140px]"
+      className="fixed z-[9999] bg-white border border-stone rounded-lg shadow-lg py-1 min-w-[140px]"
       style={{ top: position.top, left: position.left }}
     >
       {(Object.entries(BOOKING_STATUS_CONFIG) as [BookingStatus, typeof config][]).map(([key, cfg]) => (
@@ -88,7 +88,7 @@ export default function BookingStatusBadge({ status, editable = false, onChange 
             onChange?.(key);
             setIsOpen(false);
           }}
-          className={`w-full text-left px-3 py-1.5 text-sm hover:bg-slate-50 flex items-center gap-2 ${status === key ? 'font-medium' : ''}`}
+          className={`w-full text-left px-3 py-1.5 text-sm hover:bg-stone-lighter flex items-center gap-2 ${status === key ? 'font-medium' : ''}`}
         >
           <span className={`inline-block w-2 h-2 rounded-full ${cfg.bg.replace('bg-', 'bg-').replace('100', '400')}`}
             style={{ backgroundColor: key === 'none' ? '#94a3b8' : key === 'inquired' ? '#3b82f6' : key === 'booked' ? '#f59e0b' : key === 'contracted' ? '#a855f7' : '#22c55e' }}

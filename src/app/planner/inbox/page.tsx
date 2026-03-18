@@ -23,17 +23,17 @@ interface EngagementWithCouple extends Engagement {
 }
 
 const STATUS_BADGE: Record<EngagementStatus, { label: string; classes: string }> = {
-  pending: { label: 'Pending', classes: 'bg-amber-100 text-amber-800' },
-  accepted: { label: 'Accepted', classes: 'bg-blue-100 text-blue-800' },
-  active: { label: 'Active', classes: 'bg-green-100 text-green-800' },
-  completed: { label: 'Completed', classes: 'bg-slate-100 text-slate-600' },
-  declined: { label: 'Declined', classes: 'bg-red-100 text-red-800' },
-  cancelled: { label: 'Cancelled', classes: 'bg-slate-100 text-slate-600' },
+  pending: { label: 'Pending', classes: 'bg-champagne-light text-champagne-dark' },
+  accepted: { label: 'Accepted', classes: 'bg-sage-light text-sage-dark' },
+  active: { label: 'Active', classes: 'bg-sage-light text-sage-dark' },
+  completed: { label: 'Completed', classes: 'bg-stone-lighter text-warm-gray' },
+  declined: { label: 'Declined', classes: 'bg-rose-light text-rose-dark' },
+  cancelled: { label: 'Cancelled', classes: 'bg-stone-lighter text-warm-gray' },
 };
 
 const TYPE_BADGE: Record<EngagementType, { label: string; classes: string }> = {
-  consultation: { label: 'Consultation', classes: 'bg-purple-100 text-purple-800' },
-  subscription: { label: 'Subscription', classes: 'bg-teal-100 text-teal-800' },
+  consultation: { label: 'Consultation', classes: 'bg-champagne-light text-champagne-dark' },
+  subscription: { label: 'Subscription', classes: 'bg-sage-light text-sage-dark' },
 };
 
 export default function PlannerInboxPage() {
@@ -280,16 +280,16 @@ export default function PlannerInboxPage() {
 
   if (!profile || profile.role !== 'planner') {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-400">This page is for planners.</p>
+      <div className="min-h-screen bg-ivory flex items-center justify-center">
+        <p className="text-warm-gray-light">This page is for planners.</p>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-400">Loading...</p>
+      <div className="min-h-screen bg-ivory flex items-center justify-center">
+        <p className="text-warm-gray-light">Loading...</p>
       </div>
     );
   }
@@ -299,21 +299,21 @@ export default function PlannerInboxPage() {
   const decliningEngagement = decliningId ? engagements.find((e) => e.id === decliningId) : null;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-ivory">
       <main className="max-w-2xl mx-auto px-4 py-10">
-        <h1 className="text-2xl font-bold text-slate-900 mb-6">Inbox</h1>
+        <h1 className="text-2xl font-bold text-charcoal mb-6">Inbox</h1>
 
         {/* Tab bar */}
-        <div className="flex border-b border-slate-200 mb-6">
+        <div className="flex border-b border-stone mb-6">
           <button
             onClick={() => setActiveTab('pending')}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'pending' ? 'text-slate-900 border-slate-900' : 'text-slate-500 border-transparent hover:text-slate-700'
+              activeTab === 'pending' ? 'text-charcoal border-charcoal' : 'text-warm-gray border-transparent hover:text-charcoal'
             }`}
           >
             Pending
             {pendingEngagementCount > 0 && (
-              <span className="ml-1.5 px-1.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 rounded-full">
+              <span className="ml-1.5 px-1.5 py-0.5 text-xs font-medium bg-champagne-light text-champagne-dark rounded-full">
                 {pendingEngagementCount}
               </span>
             )}
@@ -321,12 +321,12 @@ export default function PlannerInboxPage() {
           <button
             onClick={() => setActiveTab('active')}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'active' ? 'text-slate-900 border-slate-900' : 'text-slate-500 border-transparent hover:text-slate-700'
+              activeTab === 'active' ? 'text-charcoal border-charcoal' : 'text-warm-gray border-transparent hover:text-charcoal'
             }`}
           >
             Active
             {activeEngagements.length > 0 && (
-              <span className="ml-1.5 px-1.5 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full">
+              <span className="ml-1.5 px-1.5 py-0.5 text-xs font-medium bg-sage-light text-sage-dark rounded-full">
                 {activeEngagements.length}
               </span>
             )}
@@ -334,12 +334,12 @@ export default function PlannerInboxPage() {
           <button
             onClick={() => setActiveTab('history')}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'history' ? 'text-slate-900 border-slate-900' : 'text-slate-500 border-transparent hover:text-slate-700'
+              activeTab === 'history' ? 'text-charcoal border-charcoal' : 'text-warm-gray border-transparent hover:text-charcoal'
             }`}
           >
             History
             {historyEngagements.length > 0 && (
-              <span className="ml-1.5 px-1.5 py-0.5 text-xs font-medium bg-slate-100 text-slate-600 rounded-full">
+              <span className="ml-1.5 px-1.5 py-0.5 text-xs font-medium bg-stone-lighter text-warm-gray rounded-full">
                 {historyEngagements.length}
               </span>
             )}
@@ -348,8 +348,8 @@ export default function PlannerInboxPage() {
 
         {/* Tab content */}
         {tabEngagements.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-lg p-8 text-center">
-            <p className="text-slate-400">
+          <div className="bg-cream border border-stone rounded-lg p-8 text-center">
+            <p className="text-warm-gray-light">
               {activeTab === 'pending' && 'No pending requests.'}
               {activeTab === 'active' && 'No active engagements.'}
               {activeTab === 'history' && 'No past engagements yet.'}
@@ -383,14 +383,14 @@ export default function PlannerInboxPage() {
         title={`Accept consultation with ${acceptingEngagement?.couple_name ?? ''}`}
       >
         <div className="space-y-4">
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-warm-gray">
             Confirm or adjust the consultation date and time.
           </p>
 
           {acceptingEngagement?.scheduled_at && (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-warm-gray">
               Couple&apos;s preferred time:{' '}
-              <span className="font-medium text-slate-700">
+              <span className="font-medium text-charcoal">
                 {new Date(acceptingEngagement.scheduled_at).toLocaleString('en-US', {
                   dateStyle: 'medium',
                   timeStyle: 'short',
@@ -400,7 +400,7 @@ export default function PlannerInboxPage() {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-charcoal mb-1">
               Confirmed date & time
             </label>
             <div className="flex gap-3">
@@ -409,12 +409,12 @@ export default function PlannerInboxPage() {
                 value={confirmDate}
                 onChange={(e) => setConfirmDate(e.target.value)}
                 min={new Date().toISOString().split('T')[0]}
-                className="flex-1 px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent"
+                className="flex-1 px-3 py-2 border border-stone rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sage focus:border-transparent"
               />
               <select
                 value={confirmTime}
                 onChange={(e) => setConfirmTime(e.target.value)}
-                className="px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent"
+                className="px-3 py-2 border border-stone rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sage focus:border-transparent"
               >
                 <option value="">Time</option>
                 <option value="09:00">9:00 AM</option>
@@ -441,14 +441,14 @@ export default function PlannerInboxPage() {
           <div className="flex justify-end gap-3 pt-2">
             <button
               onClick={() => setAcceptingId(null)}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-charcoal bg-white border border-stone rounded-md hover:bg-stone-lighter transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleAcceptConsultation}
               disabled={submitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-white bg-sage rounded-md hover:bg-sage-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? 'Accepting...' : 'Accept Consultation'}
             </button>
@@ -476,7 +476,7 @@ export default function PlannerInboxPage() {
         title="Decline request"
       >
         <div className="space-y-4">
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-warm-gray">
             Are you sure you want to decline the {decliningEngagement?.type} request from{' '}
             <span className="font-medium">{decliningEngagement?.couple_name}</span>?
             This cannot be undone.
@@ -484,14 +484,14 @@ export default function PlannerInboxPage() {
           <div className="flex justify-end gap-3 pt-2">
             <button
               onClick={() => setDecliningId(null)}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-charcoal bg-white border border-stone rounded-md hover:bg-stone-lighter transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleDecline}
               disabled={submitting}
-              className="px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-rose-dark bg-white border border-rose-light rounded-md hover:bg-rose-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? 'Declining...' : 'Decline'}
             </button>
@@ -534,15 +534,15 @@ function EngagementCard({
   const isActive = tab === 'active';
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+    <div className="bg-cream border border-stone rounded-lg overflow-hidden">
       <div
-        className={`p-5 ${isActive ? 'cursor-pointer hover:bg-slate-50 transition-colors' : ''}`}
+        className={`p-5 ${isActive ? 'cursor-pointer hover:bg-stone-lighter transition-colors' : ''}`}
         onClick={isActive ? onToggleExpand : undefined}
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div>
-            <p className="font-medium text-slate-900">{engagement.couple_name}</p>
+            <p className="font-medium text-charcoal">{engagement.couple_name}</p>
             <div className="flex flex-wrap items-center gap-2 mt-1">
               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${type.classes}`}>
                 {type.label}
@@ -552,16 +552,16 @@ function EngagementCard({
                   {status.label}
                 </span>
               )}
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-warm-gray-light">
                 {formatRate(engagement.rate_cents)}{engagement.type === 'consultation' ? '/hr' : '/mo'}
               </span>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs text-slate-400">{formatDate(engagement.created_at)}</span>
+            <span className="text-xs text-warm-gray-light">{formatDate(engagement.created_at)}</span>
             {isActive && (
               <svg
-                className={`w-4 h-4 text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`}
+                className={`w-4 h-4 text-warm-gray-light transition-transform ${expanded ? 'rotate-180' : ''}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -575,15 +575,15 @@ function EngagementCard({
         {/* Message */}
         {engagement.message && (
           <div className="mb-3">
-            <p className="text-sm text-slate-600 whitespace-pre-line">{engagement.message}</p>
+            <p className="text-sm text-warm-gray whitespace-pre-line">{engagement.message}</p>
           </div>
         )}
 
         {/* Scheduled time */}
         {engagement.scheduled_at && (
-          <p className="text-sm text-slate-500 mb-3">
+          <p className="text-sm text-warm-gray mb-3">
             {tab === 'pending' ? 'Preferred time: ' : 'Scheduled: '}
-            <span className="font-medium text-slate-700">
+            <span className="font-medium text-charcoal">
               {new Date(engagement.scheduled_at).toLocaleString('en-US', {
                 dateStyle: 'medium',
                 timeStyle: 'short',
@@ -594,15 +594,15 @@ function EngagementCard({
 
         {/* Start date for active */}
         {isActive && engagement.started_at && (
-          <p className="text-sm text-slate-500 mb-3">
-            Started: <span className="font-medium text-slate-700">{formatDate(engagement.started_at)}</span>
+          <p className="text-sm text-warm-gray mb-3">
+            Started: <span className="font-medium text-charcoal">{formatDate(engagement.started_at)}</span>
           </p>
         )}
 
         {/* History dates */}
         {tab === 'history' && engagement.ended_at && (
-          <p className="text-sm text-slate-500 mb-3">
-            Ended: <span className="font-medium text-slate-700">{formatDate(engagement.ended_at)}</span>
+          <p className="text-sm text-warm-gray mb-3">
+            Ended: <span className="font-medium text-charcoal">{formatDate(engagement.ended_at)}</span>
           </p>
         )}
 
@@ -612,7 +612,7 @@ function EngagementCard({
             <a
               href={`/clients/${engagement.client_id}`}
               onClick={(e) => e.stopPropagation()}
-              className="text-purple-600 hover:text-purple-800 underline"
+              className="text-sage hover:text-sage-dark underline"
             >
               View Wedding
             </a>
@@ -621,18 +621,18 @@ function EngagementCard({
 
         {/* Actions */}
         {tab === 'pending' && (
-          <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+          <div className="flex items-center gap-2 pt-2 border-t border-stone-lighter">
             <button
               onClick={onAccept}
               disabled={submitting}
-              className="px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-sm font-medium text-white bg-sage rounded-md hover:bg-sage-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Accept
             </button>
             <button
               onClick={onDecline}
               disabled={submitting}
-              className="px-3 py-1.5 text-sm font-medium text-red-700 bg-white border border-red-300 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-sm font-medium text-rose-dark bg-white border border-rose-light rounded-md hover:bg-rose-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Decline
             </button>
@@ -640,11 +640,11 @@ function EngagementCard({
         )}
 
         {isActive && engagement.type === 'consultation' && (
-          <div className="flex items-center gap-2 pt-2 border-t border-slate-100" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-2 pt-2 border-t border-stone-lighter" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={onMarkComplete}
               disabled={submitting}
-              className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-sm font-medium text-charcoal bg-white border border-stone rounded-md hover:bg-stone-lighter transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Mark Complete
             </button>
@@ -652,11 +652,11 @@ function EngagementCard({
         )}
 
         {isActive && engagement.type === 'subscription' && (
-          <div className="flex items-center gap-2 pt-2 border-t border-slate-100" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-2 pt-2 border-t border-stone-lighter" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={onEndSubscription}
               disabled={submitting}
-              className="px-3 py-1.5 text-sm font-medium text-red-700 bg-white border border-red-300 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-sm font-medium text-rose-dark bg-white border border-rose-light rounded-md hover:bg-rose-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               End Subscription
             </button>
@@ -666,7 +666,7 @@ function EngagementCard({
 
       {/* Update feed (expanded for active engagements) */}
       {isActive && expanded && (
-        <div className="px-5 pb-5 border-t border-slate-100 pt-4">
+        <div className="px-5 pb-5 border-t border-stone-lighter pt-4">
           <UpdateFeed
             engagementId={engagement.id}
             plannerUserId={engagement.planner_user_id}

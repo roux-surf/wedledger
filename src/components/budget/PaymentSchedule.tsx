@@ -124,7 +124,7 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, esti
   const showTemplateSelector = !isClientView && payments.length === 0 && templateCost > 0;
 
   return (
-    <div className="bg-slate-50 border-t border-slate-200">
+    <div className="bg-stone-lighter border-t border-stone">
       {/* Payment template selector */}
       {showTemplateSelector && (
         <PaymentTemplateSelector
@@ -137,22 +137,22 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, esti
 
       {/* Payment mismatch warnings */}
       {payments.length > 0 && (actualCost || 0) > 0 && totalScheduled > (actualCost || 0) && (
-        <div className="px-4 py-2 border-b border-amber-200 bg-amber-50 text-xs text-amber-700">
+        <div className="px-4 py-2 border-b border-champagne bg-champagne-light text-xs text-champagne-dark">
           Scheduled payments exceed actual cost by {formatCurrency(totalScheduled - (actualCost || 0))}
         </div>
       )}
       {payments.length > 0 && (actualCost || 0) > 0 && totalScheduled < (actualCost || 0) && totalScheduled > 0 && (
-        <div className="px-4 py-2 border-b border-slate-200 bg-slate-50 text-xs text-slate-500">
+        <div className="px-4 py-2 border-b border-stone bg-stone-lighter text-xs text-warm-gray">
           Scheduled payments are {formatCurrency((actualCost || 0) - totalScheduled)} less than actual cost
         </div>
       )}
 
       {/* Summary bar */}
       {payments.length > 0 && (
-        <div className="px-4 py-2 border-b border-slate-200 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-          <span>Scheduled: <span className="font-medium text-slate-700">{formatCurrency(totalScheduled)}</span></span>
-          <span>Paid: <span className="font-medium text-green-700">{formatCurrency(totalPaid)}</span></span>
-          <span>Remaining: <span className="font-medium text-slate-700">{formatCurrency(remaining)}</span></span>
+        <div className="px-4 py-2 border-b border-stone flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-warm-gray">
+          <span>Scheduled: <span className="font-medium text-charcoal">{formatCurrency(totalScheduled)}</span></span>
+          <span>Paid: <span className="font-medium text-sage-dark">{formatCurrency(totalPaid)}</span></span>
+          <span>Remaining: <span className="font-medium text-charcoal">{formatCurrency(remaining)}</span></span>
           {!isClientView && hasMultiplePending && (
             <div className="ml-auto flex items-center gap-2">
               {selectedIds.size > 0 && (
@@ -160,7 +160,7 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, esti
                   type="button"
                   onClick={handleMarkSelectedPaid}
                   disabled={bulkLoading}
-                  className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-colors disabled:opacity-50"
+                  className="px-2 py-0.5 rounded text-xs font-medium bg-sage-light text-sage-dark hover:bg-sage-light/80 transition-colors disabled:opacity-50"
                 >
                   Mark {selectedIds.size} Paid
                 </button>
@@ -169,7 +169,7 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, esti
                 type="button"
                 onClick={handleMarkAllPaid}
                 disabled={bulkLoading}
-                className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-colors disabled:opacity-50"
+                className="px-2 py-0.5 rounded text-xs font-medium bg-sage-light text-sage-dark hover:bg-sage-light/80 transition-colors disabled:opacity-50"
               >
                 Mark All Paid
               </button>
@@ -180,7 +180,7 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, esti
 
       {/* Legacy notice */}
       {hasLegacyData && (
-        <div className="px-4 py-2 text-xs text-amber-700 bg-amber-50 border-b border-amber-100">
+        <div className="px-4 py-2 text-xs text-champagne-dark bg-champagne-light border-b border-champagne">
           Legacy paid amount: {formatCurrency(legacyPaidToDate)}. Add payment records below to track individual payments.
         </div>
       )}
@@ -192,17 +192,17 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, esti
           <div className="hidden md:block">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-200">
+                <tr className="border-b border-stone">
                   {!isClientView && hasMultiplePending && (
                     <th className="px-2 py-1.5 w-8"></th>
                   )}
-                  <th className="px-4 py-1.5 text-left text-xs font-medium text-slate-500 uppercase">Payment</th>
-                  <th className="px-4 py-1.5 text-left text-xs font-medium text-slate-500 uppercase">Amount</th>
-                  <th className="px-4 py-1.5 text-left text-xs font-medium text-slate-500 uppercase">Due Date</th>
-                  <th className="px-4 py-1.5 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
+                  <th className="px-4 py-1.5 text-left text-xs font-medium text-warm-gray uppercase">Payment</th>
+                  <th className="px-4 py-1.5 text-left text-xs font-medium text-warm-gray uppercase">Amount</th>
+                  <th className="px-4 py-1.5 text-left text-xs font-medium text-warm-gray uppercase">Due Date</th>
+                  <th className="px-4 py-1.5 text-left text-xs font-medium text-warm-gray uppercase">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-stone-lighter">
                 {payments.map((payment) => (
                   <PaymentRow
                     key={payment.id}
@@ -245,7 +245,7 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, esti
 
       {/* Add payment form */}
       {!isClientView && (
-        <div className="px-4 py-3 border-t border-slate-200">
+        <div className="px-4 py-3 border-t border-stone">
           <AddPaymentForm lineItemId={lineItemId} actualCost={actualCost} totalScheduled={totalScheduled} onPaymentAdded={onUpdate} />
         </div>
       )}

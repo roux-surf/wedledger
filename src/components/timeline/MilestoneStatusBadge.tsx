@@ -3,9 +3,9 @@
 import { MilestoneStatus } from '@/lib/types';
 
 const STATUS_STYLES: Record<MilestoneStatus, { bg: string; label: string }> = {
-  not_started: { bg: 'bg-slate-100 text-slate-600', label: 'Not Started' },
-  in_progress: { bg: 'bg-blue-100 text-blue-700', label: 'In Progress' },
-  completed: { bg: 'bg-green-100 text-green-700', label: 'Completed' },
+  not_started: { bg: 'bg-stone-lighter text-warm-gray', label: 'Not Started' },
+  in_progress: { bg: 'bg-champagne-light text-champagne-dark', label: 'In Progress' },
+  completed: { bg: 'bg-sage-light text-sage-dark', label: 'Completed' },
 };
 
 interface MilestoneStatusBadgeProps {

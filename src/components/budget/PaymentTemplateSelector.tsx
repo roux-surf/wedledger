@@ -91,8 +91,8 @@ export default function PaymentTemplateSelector({ lineItemId, actualCost, weddin
   if (actualCost <= 0) return null;
 
   return (
-    <div className="px-4 py-3 bg-blue-50/50 border-b border-blue-100">
-      <p className="text-xs font-medium text-slate-600 mb-2">Quick payment setup for {formatCurrency(actualCost)}</p>
+    <div className="px-4 py-3 bg-stone-lighter/50 border-b border-stone">
+      <p className="text-xs font-medium text-warm-gray mb-2">Quick payment setup for {formatCurrency(actualCost)}</p>
       <div className="flex flex-wrap gap-2">
         {TEMPLATES.map(template => (
           <button
@@ -100,10 +100,10 @@ export default function PaymentTemplateSelector({ lineItemId, actualCost, weddin
             type="button"
             onClick={() => applyTemplate(template)}
             disabled={loading}
-            className="px-2.5 py-1.5 rounded text-xs font-medium transition-colors bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="px-2.5 py-1.5 rounded text-xs font-medium transition-colors bg-white border border-stone text-charcoal hover:bg-stone-lighter disabled:opacity-50"
           >
             {template.name}
-            <span className="ml-1.5 text-slate-400">
+            <span className="ml-1.5 text-warm-gray-light">
               ({template.splits.map(s => `${s.percent}%`).join('/')})
             </span>
           </button>

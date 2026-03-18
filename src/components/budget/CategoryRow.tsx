@@ -41,22 +41,22 @@ function getSubtitle(lineItems: LineItemWithPayments[]): string {
 }
 
 function getBarColor(ratio: number): string {
-  if (ratio > 1) return 'bg-red-500';
-  if (ratio >= 0.85) return 'bg-amber-500';
-  return 'bg-emerald-500';
+  if (ratio > 1) return 'bg-rose';
+  if (ratio >= 0.85) return 'bg-champagne';
+  return 'bg-sage';
 }
 
 function getRemainingDisplay(target: number, actual: number) {
   const remaining = target - actual;
-  if (actual === 0 && target === 0) return { text: '—', color: 'text-slate-300' };
+  if (actual === 0 && target === 0) return { text: '—', color: 'text-stone' };
 
-  if (remaining < 0) return { text: `-${formatCurrency(Math.abs(remaining))}`, color: 'text-red-600' };
-  if (remaining === 0) return { text: formatCurrency(0), color: 'text-green-600' };
+  if (remaining < 0) return { text: `-${formatCurrency(Math.abs(remaining))}`, color: 'text-rose-dark' };
+  if (remaining === 0) return { text: formatCurrency(0), color: 'text-sage-dark' };
 
   const ratio = target > 0 ? actual / target : 0;
   let color: string;
-  if (ratio >= 0.85) color = 'text-amber-600';
-  else color = 'text-green-600';
+  if (ratio >= 0.85) color = 'text-champagne-dark';
+  else color = 'text-sage-dark';
 
   return { text: formatCurrency(remaining), color };
 }
@@ -102,15 +102,15 @@ export default function CategoryRow({
       <>
         <div
           onClick={handleRowClick}
-          className="p-4 cursor-pointer hover:bg-slate-50 transition-colors duration-100 active:bg-slate-100"
+          className="p-4 cursor-pointer hover:bg-stone-lighter transition-colors duration-100 active:bg-stone-lighter"
         >
           {/* Top: name + chevron */}
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-slate-900">{category.name}</p>
-              <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>
+              <p className="text-sm font-medium text-charcoal">{category.name}</p>
+              <p className="text-xs text-warm-gray mt-0.5">{subtitle}</p>
             </div>
-            <svg className="w-4 h-4 text-slate-300 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-stone shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </div>
@@ -118,34 +118,34 @@ export default function CategoryRow({
           {/* 2x2 number grid */}
           <div className="grid grid-cols-4 gap-2 mb-3">
             <div>
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider">Target</p>
-              <p className="text-sm text-slate-500 tabular-nums">{formatCurrency(target)}</p>
+              <p className="text-[10px] text-warm-gray-light uppercase tracking-wider">Target</p>
+              <p className="text-sm text-warm-gray tabular-nums">{formatCurrency(target)}</p>
             </div>
             <div>
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider">Spent</p>
-              <p className="text-sm font-medium text-slate-900 tabular-nums">{formatCurrency(actual)}</p>
+              <p className="text-[10px] text-warm-gray-light uppercase tracking-wider">Spent</p>
+              <p className="text-sm font-medium text-charcoal tabular-nums">{formatCurrency(actual)}</p>
             </div>
             <div>
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider">Paid</p>
-              <p className="text-sm text-slate-500 tabular-nums">{formatCurrency(paid)}</p>
+              <p className="text-[10px] text-warm-gray-light uppercase tracking-wider">Paid</p>
+              <p className="text-sm text-warm-gray tabular-nums">{formatCurrency(paid)}</p>
             </div>
             <div>
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider">Remaining</p>
+              <p className="text-[10px] text-warm-gray-light uppercase tracking-wider">Remaining</p>
               <p className={`text-sm font-medium tabular-nums ${remaining.color}`}>{remaining.text}</p>
             </div>
           </div>
 
           {/* Progress bar */}
           <div>
-            <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-1 bg-stone-lighter rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${getBarColor(ratio)}`}
                 style={{ width: `${barWidth}%` }}
               />
             </div>
             <div className="flex justify-between mt-1">
-              <span className="text-xs text-slate-400 tabular-nums">{formatPercent(ratio * 100)} spent</span>
-              <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(target)}</span>
+              <span className="text-xs text-warm-gray-light tabular-nums">{formatPercent(ratio * 100)} spent</span>
+              <span className="text-xs text-warm-gray-light tabular-nums">{formatCurrency(target)}</span>
             </div>
           </div>
         </div>
@@ -169,36 +169,36 @@ export default function CategoryRow({
         onClick={handleRowClick}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        className="flex items-center gap-4 px-4 py-3 border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors duration-100 group"
+        className="flex items-center gap-4 px-4 py-3 border-b border-stone-lighter cursor-pointer hover:bg-stone-lighter transition-colors duration-100 group"
       >
         {/* Zone 1 — Category name */}
         <div className="w-48 min-w-0 shrink-0">
-          <p className="text-sm font-medium text-slate-900 truncate">{category.name}</p>
-          <p className="text-xs text-slate-500 mt-0.5 truncate">{subtitle}</p>
+          <p className="text-sm font-medium text-charcoal truncate">{category.name}</p>
+          <p className="text-xs text-warm-gray mt-0.5 truncate">{subtitle}</p>
         </div>
 
         {/* Zone 2 — Target */}
         <div className="w-24 text-right shrink-0">
-          <span className="text-sm text-slate-500 tabular-nums">{formatCurrency(target)}</span>
+          <span className="text-sm text-warm-gray tabular-nums">{formatCurrency(target)}</span>
         </div>
 
         {/* Zone 3 — Spent */}
         <div className="w-24 text-right shrink-0">
-          <span className="text-sm font-medium text-slate-900 tabular-nums">{formatCurrency(actual)}</span>
+          <span className="text-sm font-medium text-charcoal tabular-nums">{formatCurrency(actual)}</span>
         </div>
 
         {/* Zone 4 — Progress bar */}
         <div className="flex-1 min-w-[10rem]">
           <div className="print:hidden">
-            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-stone-lighter rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${getBarColor(ratio)}`}
                 style={{ width: `${barWidth}%` }}
               />
             </div>
-            <p className="text-xs text-slate-400 tabular-nums mt-0.5">{formatPercent(ratio * 100)}</p>
+            <p className="text-xs text-warm-gray-light tabular-nums mt-0.5">{formatPercent(ratio * 100)}</p>
           </div>
-          <span className="hidden print:inline text-xs text-slate-600 tabular-nums">{formatCurrency(actual)} / {formatCurrency(target)}</span>
+          <span className="hidden print:inline text-xs text-warm-gray tabular-nums">{formatCurrency(actual)} / {formatCurrency(target)}</span>
         </div>
 
         {/* Zone 5 — Remaining */}
@@ -212,7 +212,7 @@ export default function CategoryRow({
             <button
               type="button"
               onClick={handleDelete}
-              className={`absolute right-6 p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-opacity ${
+              className={`absolute right-6 p-1 rounded text-warm-gray-light hover:text-rose-dark hover:bg-rose-light transition-opacity ${
                 hovered ? 'opacity-100' : 'opacity-0'
               }`}
               aria-label="Delete category"
@@ -223,7 +223,7 @@ export default function CategoryRow({
               </svg>
             </button>
           )}
-          <svg className="w-4 h-4 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 text-stone shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </div>

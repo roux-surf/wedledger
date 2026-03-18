@@ -120,11 +120,11 @@ export default function TemplateManagerModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Timeline Templates">
       {/* Tab toggle */}
-      <div className="flex gap-1 mb-4 bg-slate-100 rounded-lg p-1">
+      <div className="flex gap-1 mb-4 bg-stone-lighter rounded-lg p-1">
         <button
           onClick={() => handleTabChange('load')}
           className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-            tab === 'load' ? 'bg-white shadow text-slate-900' : 'text-slate-600'
+            tab === 'load' ? 'bg-white shadow text-charcoal' : 'text-warm-gray'
           }`}
         >
           Load Template
@@ -132,7 +132,7 @@ export default function TemplateManagerModal({
         <button
           onClick={() => handleTabChange('save')}
           className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-            tab === 'save' ? 'bg-white shadow text-slate-900' : 'text-slate-600'
+            tab === 'save' ? 'bg-white shadow text-charcoal' : 'text-warm-gray'
           }`}
         >
           Save Current
@@ -143,7 +143,7 @@ export default function TemplateManagerModal({
         <div className="space-y-4">
           {/* Built-in templates */}
           <div>
-            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Built-in Templates</h4>
+            <h4 className="text-xs font-semibold text-warm-gray-light uppercase tracking-wider mb-2">Built-in Templates</h4>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {WEDDING_LEVELS.map((level) => {
                 const count = getMilestoneDefaults(level.id).length;
@@ -151,10 +151,10 @@ export default function TemplateManagerModal({
                   <button
                     key={level.id}
                     onClick={() => handleLoadBuiltIn(level.id)}
-                    className="border border-slate-200 rounded-md px-3 py-2 text-left text-sm hover:border-slate-400 transition-colors"
+                    className="border border-stone rounded-md px-3 py-2 text-left text-sm hover:border-warm-gray-light transition-colors"
                   >
-                    <span className="font-medium text-slate-900">{level.displayName}</span>
-                    <span className="block text-xs text-slate-400 mt-0.5">{count} milestones</span>
+                    <span className="font-medium text-charcoal">{level.displayName}</span>
+                    <span className="block text-xs text-warm-gray-light mt-0.5">{count} milestones</span>
                   </button>
                 );
               })}
@@ -163,28 +163,28 @@ export default function TemplateManagerModal({
 
           {/* Custom templates */}
           <div>
-            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Your Templates</h4>
+            <h4 className="text-xs font-semibold text-warm-gray-light uppercase tracking-wider mb-2">Your Templates</h4>
             {loading ? (
-              <p className="text-sm text-slate-500">Loading...</p>
+              <p className="text-sm text-warm-gray">Loading...</p>
             ) : customTemplates.length === 0 ? (
-              <p className="text-sm text-slate-400">No saved templates yet. Save your current timeline to create one.</p>
+              <p className="text-sm text-warm-gray-light">No saved templates yet. Save your current timeline to create one.</p>
             ) : (
               <div className="space-y-2">
                 {customTemplates.map((t) => (
                   <div
                     key={t.id}
-                    className="flex items-center justify-between border border-slate-200 rounded-md px-3 py-2"
+                    className="flex items-center justify-between border border-stone rounded-md px-3 py-2"
                   >
                     <button
                       onClick={() => handleLoadCustom(t)}
                       className="text-left flex-1"
                     >
-                      <span className="text-sm font-medium text-slate-900">{t.name}</span>
-                      <span className="block text-xs text-slate-400">{t.milestones.length} milestones</span>
+                      <span className="text-sm font-medium text-charcoal">{t.name}</span>
+                      <span className="block text-xs text-warm-gray-light">{t.milestones.length} milestones</span>
                     </button>
                     <button
                       onClick={() => handleDeleteTemplate(t.id)}
-                      className="text-slate-400 hover:text-red-600 p-1 ml-2"
+                      className="text-warm-gray-light hover:text-rose-dark p-1 ml-2"
                       title="Delete template"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -197,7 +197,7 @@ export default function TemplateManagerModal({
             )}
           </div>
 
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-warm-gray-light">
             Loading a template will replace all existing milestones for this client.
           </p>
         </div>
@@ -205,12 +205,12 @@ export default function TemplateManagerModal({
         <div className="space-y-4">
           {saveSuccess ? (
             <div className="text-center py-4">
-              <p className="text-sm text-green-600 font-medium">Template saved!</p>
-              <p className="text-xs text-slate-400 mt-1">You can now load it from the Load Template tab.</p>
+              <p className="text-sm text-sage-dark font-medium">Template saved!</p>
+              <p className="text-xs text-warm-gray-light mt-1">You can now load it from the Load Template tab.</p>
             </div>
           ) : (
             <>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-warm-gray">
                 Save the current {currentMilestones.length} milestones as a reusable template.
               </p>
               <Input

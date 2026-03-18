@@ -93,11 +93,11 @@ export default function EditMilestoneModal({
         />
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
+          <label className="block text-sm font-medium text-charcoal mb-1">Status</label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as MilestoneStatus)}
-            className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+            className="w-full px-3 py-2 border border-stone rounded-md text-sm"
           >
             <option value="not_started">Not Started</option>
             <option value="in_progress">In Progress</option>
@@ -106,13 +106,13 @@ export default function EditMilestoneModal({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Target Date</label>
+          <label className="block text-sm font-medium text-charcoal mb-1">Target Date</label>
           <div className="flex items-center gap-2 mb-2">
             <button
               type="button"
               onClick={() => setDateMode('relative')}
               className={`text-xs px-2 py-1 rounded ${
-                dateMode === 'relative' ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-600'
+                dateMode === 'relative' ? 'bg-charcoal text-white' : 'bg-stone text-warm-gray'
               }`}
             >
               Relative
@@ -121,7 +121,7 @@ export default function EditMilestoneModal({
               type="button"
               onClick={() => setDateMode('specific')}
               className={`text-xs px-2 py-1 rounded ${
-                dateMode === 'specific' ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-600'
+                dateMode === 'specific' ? 'bg-charcoal text-white' : 'bg-stone text-warm-gray'
               }`}
             >
               Specific date
@@ -136,29 +136,29 @@ export default function EditMilestoneModal({
                 max="24"
                 value={monthsBefore}
                 onChange={(e) => handleMonthsChange(e.target.value)}
-                className="w-20 px-2 py-1.5 border border-slate-300 rounded-md text-sm"
+                className="w-20 px-2 py-1.5 border border-stone rounded-md text-sm"
               />
-              <span className="text-sm text-slate-500">months before wedding</span>
-              <span className="text-xs text-slate-400">= {targetDate}</span>
+              <span className="text-sm text-warm-gray">months before wedding</span>
+              <span className="text-xs text-warm-gray-light">= {targetDate}</span>
             </div>
           ) : (
             <input
               type="date"
               value={targetDate}
               onChange={(e) => handleDateChange(e.target.value)}
-              className="w-full px-3 py-1.5 border border-slate-300 rounded-md text-sm"
+              className="w-full px-3 py-1.5 border border-stone rounded-md text-sm"
             />
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
-            Budget Category <span className="text-slate-400 font-normal">(optional)</span>
+          <label className="block text-sm font-medium text-charcoal mb-1">
+            Budget Category <span className="text-warm-gray-light font-normal">(optional)</span>
           </label>
           <select
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
-            className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+            className="w-full px-3 py-2 border border-stone rounded-md text-sm"
           >
             <option value="">None</option>
             {categories.map((cat) => (
@@ -174,7 +174,7 @@ export default function EditMilestoneModal({
               onDelete(milestone.id);
               onClose();
             }}
-            className="text-sm text-red-600 hover:text-red-700"
+            className="text-sm text-rose-dark hover:text-rose-dark"
           >
             Delete milestone
           </button>

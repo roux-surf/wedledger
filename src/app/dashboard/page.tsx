@@ -395,12 +395,12 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-ivory">
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">Clients</h2>
-            <p className="text-slate-600 mt-1">
+            <h2 className="text-3xl font-heading font-semibold tracking-tight text-charcoal">Clients</h2>
+            <p className="text-warm-gray mt-1">
               {clients.length} client{clients.length !== 1 ? 's' : ''}
               {marketplaceClients.length > 0 && (
                 <span className="text-purple-600">
@@ -415,8 +415,8 @@ export default async function DashboardPage() {
         </div>
 
         {clients.length === 0 && marketplaceClients.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
-            <p className="text-slate-600 mb-4">No clients yet. Create your first client to get started.</p>
+          <div className="bg-cream border border-stone rounded-lg p-12 text-center">
+            <p className="text-warm-gray mb-4">No clients yet. Create your first client to get started.</p>
             <Link href="/clients/new">
               <Button>Create Client</Button>
             </Link>
@@ -426,7 +426,7 @@ export default async function DashboardPage() {
             {clients.length > 0 && (
               <div>
                 {marketplaceClients.length > 0 && (
-                  <h3 className="text-lg font-semibold text-slate-900 mb-3">My Clients</h3>
+                  <h3 className="text-lg font-semibold text-charcoal mb-3">My Clients</h3>
                 )}
                 <ClientList clients={clients} milestonesByClient={milestonesByClient} />
               </div>
@@ -434,7 +434,7 @@ export default async function DashboardPage() {
 
             {marketplaceClients.length > 0 && (
               <div className="mt-8">
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">Marketplace Clients</h3>
+                <h3 className="text-lg font-semibold text-charcoal mb-3">Marketplace Clients</h3>
                 <MarketplaceClientList clients={marketplaceClients} milestonesByClient={milestonesByClient} />
               </div>
             )}

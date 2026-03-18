@@ -143,16 +143,16 @@ export default function MyWeddingPage() {
   // Loading states
   if (profileLoading || resolving || budgetLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-400">Loading...</p>
+      <div className="min-h-screen bg-ivory flex items-center justify-center">
+        <p className="text-warm-gray-light">Loading...</p>
       </div>
     );
   }
 
   if (!client || !budget || !clientId) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-600">No wedding found. Please contact support.</p>
+      <div className="min-h-screen bg-ivory flex items-center justify-center">
+        <p className="text-warm-gray">No wedding found. Please contact support.</p>
       </div>
     );
   }
@@ -166,43 +166,43 @@ export default function MyWeddingPage() {
   const spentPercent = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
   const getAllocationStatus = () => {
-    if (totalAllocationPercent < 99) return { label: 'Under-allocated', color: 'text-yellow-600', dot: 'bg-yellow-500' };
-    if (totalAllocationPercent <= 101) return { label: 'Fully allocated', color: 'text-green-600', dot: 'bg-green-500' };
-    return { label: 'Over-allocated', color: 'text-red-600', dot: 'bg-red-500' };
+    if (totalAllocationPercent < 99) return { label: 'Under-allocated', color: 'text-champagne-dark', dot: 'bg-champagne' };
+    if (totalAllocationPercent <= 101) return { label: 'Fully allocated', color: 'text-sage', dot: 'bg-sage' };
+    return { label: 'Over-allocated', color: 'text-rose', dot: 'bg-rose' };
   };
   const allocationStatus = getAllocationStatus();
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-ivory">
       {/* Sticky Budget Summary Header */}
       <div
         className={`fixed top-0 left-0 right-0 z-40 transition-transform duration-200 ${
           showStickyHeader ? 'translate-y-0' : '-translate-y-full'
-        } bg-white border-b border-slate-200 shadow-sm`}
+        } bg-cream border-b border-stone shadow-sm`}
       >
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-6">
-            <span className="font-semibold truncate text-slate-900">{client.name}</span>
+            <span className="font-semibold truncate text-charcoal">{client.name}</span>
             <div className="hidden md:flex items-center gap-6 text-sm">
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-500">Budget:</span>
-                <span className="font-medium text-slate-900">{formatCurrency(totalBudget)}</span>
+                <span className="text-warm-gray">Budget:</span>
+                <span className="font-medium text-charcoal">{formatCurrency(totalBudget)}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-500">Spent:</span>
-                <span className="font-medium text-slate-900">{formatCurrency(totalSpent)}</span>
+                <span className="text-warm-gray">Spent:</span>
+                <span className="font-medium text-charcoal">{formatCurrency(totalSpent)}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-500">{remaining >= 0 ? 'Remaining:' : 'Over budget:'}</span>
-                <span className={`font-medium ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <span className="text-warm-gray">{remaining >= 0 ? 'Remaining:' : 'Over budget:'}</span>
+                <span className={`font-medium ${remaining >= 0 ? 'text-sage' : 'text-rose'}`}>
                   {formatCurrency(Math.abs(remaining))}
                 </span>
               </div>
             </div>
             <div className="flex md:hidden items-center gap-2 text-sm">
-              <span className="font-medium text-slate-900">{formatCurrency(totalSpent)}</span>
-              <span className="text-slate-500">/</span>
-              <span className="text-slate-500">{formatCurrency(totalBudget)}</span>
+              <span className="font-medium text-charcoal">{formatCurrency(totalSpent)}</span>
+              <span className="text-warm-gray">/</span>
+              <span className="text-warm-gray">{formatCurrency(totalBudget)}</span>
             </div>
           </div>
         </div>
@@ -210,36 +210,36 @@ export default function MyWeddingPage() {
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Wedding Header Card */}
-        <div ref={headerRef} className="bg-white border border-slate-200 rounded-lg p-6 mb-6">
+        <div ref={headerRef} className="bg-cream border border-stone rounded-lg p-6 mb-6">
           <div className="flex items-start justify-between flex-wrap gap-2">
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-slate-900">{client.name}</h1>
+                <h1 className="text-3xl font-heading font-semibold tracking-tight text-charcoal">{client.name}</h1>
                 <Link
                   href="/my-wedding/setup"
-                  className="text-sm text-slate-400 hover:text-slate-600 transition-colors"
+                  className="text-sm text-warm-gray-light hover:text-warm-gray transition-colors"
                 >
                   Edit
                 </Link>
               </div>
-              <p className="text-slate-600 mt-1">
+              <p className="text-warm-gray mt-1">
                 {formatDate(client.wedding_date)} &bull; {client.city}, {client.state} &bull; {client.guest_count} guests
               </p>
             </div>
-            <div className="bg-slate-50 border border-slate-100 rounded-lg px-5 py-3">
+            <div className="bg-stone-lighter border border-stone-lighter rounded-lg px-5 py-3">
               <WeddingCountdown weddingDate={client.wedding_date} />
             </div>
           </div>
 
           {/* Budget Metrics */}
           <div className="mt-6">
-            <div className="md:hidden bg-slate-100 rounded-lg overflow-hidden grid grid-cols-2 gap-px">
-              <div className="bg-white p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Total Budget</p>
+            <div className="md:hidden bg-stone rounded-lg overflow-hidden grid grid-cols-2 gap-px">
+              <div className="bg-cream p-4">
+                <p className="text-xs text-warm-gray uppercase tracking-wider">Total Budget</p>
                 {isEditingBudget ? (
                   <div className="mt-1">
                     <div className="flex items-center gap-1">
-                      <span className="text-slate-500 text-xl font-bold">$</span>
+                      <span className="text-warm-gray text-xl font-bold">$</span>
                       <input
                         ref={budgetInputRef}
                         type="text"
@@ -252,46 +252,46 @@ export default function MyWeddingPage() {
                           setBudgetValue(sanitizeNumericString(Math.max(0, value)));
                           handleBudgetSave();
                         }}
-                        className="w-28 px-2 py-1 border border-slate-300 rounded text-xl font-bold"
+                        className="w-28 px-2 py-1 border border-stone rounded text-xl font-bold"
                       />
                     </div>
                     {budgetUpdateError && <p className="text-red-600 text-xs mt-1">{budgetUpdateError}</p>}
                   </div>
                 ) : (
-                  <p onClick={handleBudgetEdit} className="text-xl font-bold text-slate-900 mt-1 cursor-pointer hover:bg-slate-50 px-1 -mx-1 rounded">
+                  <p onClick={handleBudgetEdit} className="text-xl font-bold text-charcoal mt-1 cursor-pointer hover:bg-stone-lighter px-1 -mx-1 rounded">
                     {formatCurrency(totalBudget)}
                   </p>
                 )}
               </div>
-              <div className="bg-white p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Allocated</p>
-                <p className="text-xl font-bold text-slate-900 mt-1">
+              <div className="bg-cream p-4">
+                <p className="text-xs text-warm-gray uppercase tracking-wider">Allocated</p>
+                <p className="text-xl font-bold text-charcoal mt-1">
                   {formatCurrency(totalTarget)}
-                  <span className="text-sm font-normal text-slate-400 ml-1.5">{formatPercent(totalAllocationPercent)}</span>
+                  <span className="text-sm font-normal text-warm-gray-light ml-1.5">{formatPercent(totalAllocationPercent)}</span>
                 </p>
                 <div className="flex items-center gap-1.5 mt-1">
                   <span className={`w-1.5 h-1.5 rounded-full ${allocationStatus.dot}`} />
                   <span className={`text-xs ${allocationStatus.color}`}>{allocationStatus.label}</span>
                 </div>
               </div>
-              <div className="bg-white p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Committed</p>
-                <p className="text-xl font-bold text-slate-900 mt-1">{formatCurrency(totalSpent)}</p>
+              <div className="bg-cream p-4">
+                <p className="text-xs text-warm-gray uppercase tracking-wider">Committed</p>
+                <p className="text-xl font-bold text-charcoal mt-1">{formatCurrency(totalSpent)}</p>
               </div>
-              <div className="bg-white p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Remaining</p>
+              <div className="bg-cream p-4">
+                <p className="text-xs text-warm-gray uppercase tracking-wider">Remaining</p>
                 <p className={`text-xl font-bold mt-1 ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {remaining >= 0 ? '' : '-'}{formatCurrency(Math.abs(remaining))}
                 </p>
               </div>
             </div>
-            <div className="hidden md:grid grid-cols-4 gap-px bg-slate-100 rounded-lg overflow-hidden">
-              <div className="bg-white p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Total Budget</p>
+            <div className="hidden md:grid grid-cols-4 gap-px bg-stone rounded-lg overflow-hidden">
+              <div className="bg-cream p-4">
+                <p className="text-xs text-warm-gray uppercase tracking-wider">Total Budget</p>
                 {isEditingBudget ? (
                   <div className="mt-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-500 text-xl font-bold">$</span>
+                      <span className="text-warm-gray text-xl font-bold">$</span>
                       <input
                         ref={budgetInputRef}
                         type="text"
@@ -304,34 +304,34 @@ export default function MyWeddingPage() {
                           setBudgetValue(sanitizeNumericString(Math.max(0, value)));
                           handleBudgetSave();
                         }}
-                        className="w-32 px-2 py-1 border border-slate-300 rounded text-xl font-bold"
+                        className="w-32 px-2 py-1 border border-stone rounded text-xl font-bold"
                       />
                     </div>
                     {budgetUpdateError && <p className="text-red-600 text-xs mt-1">{budgetUpdateError}</p>}
                   </div>
                 ) : (
-                  <p onClick={handleBudgetEdit} className="text-xl font-bold text-slate-900 mt-1 cursor-pointer hover:bg-slate-50 px-1 -mx-1 rounded">
+                  <p onClick={handleBudgetEdit} className="text-xl font-bold text-charcoal mt-1 cursor-pointer hover:bg-stone-lighter px-1 -mx-1 rounded">
                     {formatCurrency(totalBudget)}
                   </p>
                 )}
               </div>
-              <div className="bg-white p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Allocated</p>
-                <p className="text-xl font-bold text-slate-900 mt-1">
+              <div className="bg-cream p-4">
+                <p className="text-xs text-warm-gray uppercase tracking-wider">Allocated</p>
+                <p className="text-xl font-bold text-charcoal mt-1">
                   {formatCurrency(totalTarget)}
-                  <span className="text-sm font-normal text-slate-400 ml-1.5">{formatPercent(totalAllocationPercent)}</span>
+                  <span className="text-sm font-normal text-warm-gray-light ml-1.5">{formatPercent(totalAllocationPercent)}</span>
                 </p>
                 <div className="flex items-center gap-1.5 mt-1">
                   <span className={`w-1.5 h-1.5 rounded-full ${allocationStatus.dot}`} />
                   <span className={`text-xs ${allocationStatus.color}`}>{allocationStatus.label}</span>
                 </div>
               </div>
-              <div className="bg-white p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Committed</p>
-                <p className="text-xl font-bold text-slate-900 mt-1">{formatCurrency(totalSpent)}</p>
+              <div className="bg-cream p-4">
+                <p className="text-xs text-warm-gray uppercase tracking-wider">Committed</p>
+                <p className="text-xl font-bold text-charcoal mt-1">{formatCurrency(totalSpent)}</p>
               </div>
-              <div className="bg-white p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Remaining</p>
+              <div className="bg-cream p-4">
+                <p className="text-xs text-warm-gray uppercase tracking-wider">Remaining</p>
                 <p className={`text-xl font-bold mt-1 ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {remaining >= 0 ? '' : '-'}{formatCurrency(Math.abs(remaining))}
                 </p>
@@ -341,7 +341,7 @@ export default function MyWeddingPage() {
 
           {/* Progress bar */}
           <div className="mt-4">
-            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-stone-lighter rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${
                   budgetStatus === 'green' ? 'bg-green-500' : budgetStatus === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
@@ -350,8 +350,8 @@ export default function MyWeddingPage() {
               />
             </div>
             <div className="flex justify-between mt-1.5">
-              <span className="text-xs text-slate-400">{formatCurrency(totalSpent)} committed</span>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-warm-gray-light">{formatCurrency(totalSpent)} committed</span>
+              <span className="text-xs text-warm-gray-light">
                 {remaining >= 0 ? `${formatCurrency(remaining)} remaining` : `${formatCurrency(Math.abs(remaining))} over budget`}
               </span>
             </div>
@@ -370,7 +370,7 @@ export default function MyWeddingPage() {
             <Button variant="secondary" disabled>
               Need Expert Help?
             </Button>
-            <span className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 text-xs bg-slate-800 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            <span className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 text-xs bg-charcoal text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
               Coming soon
             </span>
           </span>
@@ -378,10 +378,10 @@ export default function MyWeddingPage() {
 
         {/* Budget Section */}
         <div id="budget-section" className="mb-6">
-          <h2 className="font-semibold text-slate-900 text-lg mb-4">Budget</h2>
+          <h2 className="font-semibold text-charcoal text-lg mb-4">Budget</h2>
           {categories.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-lg p-8 text-center">
-              <p className="text-slate-600 mb-2">
+            <div className="bg-cream border border-stone rounded-lg p-8 text-center">
+              <p className="text-warm-gray mb-2">
                 Let&apos;s start building your budget! Add your first category below, or pick a template to get going fast.
               </p>
               <Button
@@ -406,9 +406,9 @@ export default function MyWeddingPage() {
         {/* Timeline Section */}
         <div id="timeline-section">
           {milestones.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-lg p-8 text-center mb-6">
-              <h2 className="font-semibold text-slate-900 text-lg mb-2">Planning Timeline</h2>
-              <p className="text-slate-600">
+            <div className="bg-cream border border-stone rounded-lg p-8 text-center mb-6">
+              <h2 className="font-semibold text-charcoal text-lg mb-2">Planning Timeline</h2>
+              <p className="text-warm-gray">
                 Set up your planning timeline to keep everything on track. Start with a template or add milestones manually.
               </p>
             </div>

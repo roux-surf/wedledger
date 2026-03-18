@@ -13,17 +13,17 @@ import {
 import UpdateFeed from '@/components/engagement/UpdateFeed';
 
 const STATUS_BADGE: Record<EngagementStatus, { label: string; classes: string }> = {
-  pending: { label: 'Pending', classes: 'bg-amber-100 text-amber-800' },
-  accepted: { label: 'Accepted', classes: 'bg-blue-100 text-blue-800' },
-  active: { label: 'Active', classes: 'bg-green-100 text-green-800' },
-  completed: { label: 'Completed', classes: 'bg-slate-100 text-slate-600' },
-  declined: { label: 'Declined', classes: 'bg-red-100 text-red-800' },
-  cancelled: { label: 'Cancelled', classes: 'bg-slate-100 text-slate-600' },
+  pending: { label: 'Pending', classes: 'bg-champagne-light text-champagne-dark' },
+  accepted: { label: 'Accepted', classes: 'bg-sage-light text-sage-dark' },
+  active: { label: 'Active', classes: 'bg-sage-light text-sage-dark' },
+  completed: { label: 'Completed', classes: 'bg-stone-lighter text-warm-gray' },
+  declined: { label: 'Declined', classes: 'bg-rose-light text-rose-dark' },
+  cancelled: { label: 'Cancelled', classes: 'bg-stone-lighter text-warm-gray' },
 };
 
 const TYPE_BADGE: Record<string, { label: string; classes: string }> = {
-  consultation: { label: 'Consultation', classes: 'bg-purple-100 text-purple-800' },
-  subscription: { label: 'Subscription', classes: 'bg-teal-100 text-teal-800' },
+  consultation: { label: 'Consultation', classes: 'bg-champagne-light text-champagne-dark' },
+  subscription: { label: 'Subscription', classes: 'bg-sage-light text-sage-dark' },
 };
 
 export default function MyPlannersPage() {
@@ -86,31 +86,31 @@ export default function MyPlannersPage() {
 
   if (!profile || profile.role !== 'couple') {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-400">This page is for couples.</p>
+      <div className="min-h-screen bg-ivory flex items-center justify-center">
+        <p className="text-warm-gray-light">This page is for couples.</p>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-400">Loading...</p>
+      <div className="min-h-screen bg-ivory flex items-center justify-center">
+        <p className="text-warm-gray-light">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-ivory">
       <main className="max-w-2xl mx-auto px-4 py-10">
-        <h1 className="text-2xl font-bold text-slate-900 mb-6">My Planners</h1>
+        <h1 className="text-2xl font-bold text-charcoal mb-6">My Planners</h1>
 
         {engagements.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-lg p-8 text-center">
-            <p className="text-slate-500 mb-4">You haven&apos;t contacted any planners yet.</p>
+          <div className="bg-cream border border-stone rounded-lg p-8 text-center">
+            <p className="text-warm-gray mb-4">You haven&apos;t contacted any planners yet.</p>
             <a
               href="/find-planner"
-              className="text-sm font-medium text-slate-900 hover:underline"
+              className="text-sm font-medium text-charcoal hover:underline"
             >
               Browse the planner directory &rarr;
             </a>
@@ -125,15 +125,15 @@ export default function MyPlannersPage() {
               return (
                 <div
                   key={engagement.id}
-                  className="bg-white border border-slate-200 rounded-lg overflow-hidden"
+                  className="bg-cream border border-stone rounded-lg overflow-hidden"
                 >
                   <button
                     onClick={() => setExpandedId(isExpanded ? null : engagement.id)}
-                    className="w-full text-left p-4 hover:bg-slate-50 transition-colors"
+                    className="w-full text-left p-4 hover:bg-stone-lighter transition-colors"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="font-medium text-slate-900">{engagement.planner_name}</p>
+                        <p className="font-medium text-charcoal">{engagement.planner_name}</p>
                         <div className="flex flex-wrap items-center gap-2 mt-1.5">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${type.classes}`}>
                             {type.label}
@@ -141,17 +141,17 @@ export default function MyPlannersPage() {
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${status.classes}`}>
                             {status.label}
                           </span>
-                          <span className="text-xs text-slate-400">
+                          <span className="text-xs text-warm-gray-light">
                             {formatRate(engagement.rate_cents)}{engagement.type === 'consultation' ? '/hr' : '/mo'}
                           </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs text-slate-400">
+                        <span className="text-xs text-warm-gray-light">
                           {formatDate(engagement.created_at)}
                         </span>
                         <svg
-                          className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                          className={`w-4 h-4 text-warm-gray-light transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -162,7 +162,7 @@ export default function MyPlannersPage() {
                     </div>
 
                     {engagement.scheduled_at && (
-                      <p className="text-xs text-slate-500 mt-2">
+                      <p className="text-xs text-warm-gray mt-2">
                         Preferred time: {new Date(engagement.scheduled_at).toLocaleString('en-US', {
                           dateStyle: 'medium',
                           timeStyle: 'short',
@@ -172,21 +172,21 @@ export default function MyPlannersPage() {
                   </button>
 
                   {isExpanded && (
-                    <div className="px-4 pb-4 border-t border-slate-100 pt-3 space-y-3">
+                    <div className="px-4 pb-4 border-t border-stone-lighter pt-3 space-y-3">
                       {engagement.message && (
                         <div>
-                          <p className="text-xs font-medium text-slate-500 mb-1">Your message</p>
-                          <p className="text-sm text-slate-700 whitespace-pre-line">{engagement.message}</p>
+                          <p className="text-xs font-medium text-warm-gray mb-1">Your message</p>
+                          <p className="text-sm text-charcoal whitespace-pre-line">{engagement.message}</p>
                         </div>
                       )}
                       {engagement.planner_notes && (
                         <div>
-                          <p className="text-xs font-medium text-slate-500 mb-1">Planner notes</p>
-                          <p className="text-sm text-slate-700 whitespace-pre-line">{engagement.planner_notes}</p>
+                          <p className="text-xs font-medium text-warm-gray mb-1">Planner notes</p>
+                          <p className="text-sm text-charcoal whitespace-pre-line">{engagement.planner_notes}</p>
                         </div>
                       )}
                       {!engagement.message && !engagement.planner_notes && (engagement.status !== 'accepted' && engagement.status !== 'active') && (
-                        <p className="text-sm text-slate-400">No details to show.</p>
+                        <p className="text-sm text-warm-gray-light">No details to show.</p>
                       )}
                       {(engagement.status === 'accepted' || engagement.status === 'active') && (
                         <UpdateFeed

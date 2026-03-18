@@ -15,7 +15,7 @@ const DragHandle = forwardRef<HTMLButtonElement, DragHandleProps>(
       <button
         ref={ref}
         type="button"
-        className="cursor-grab active:cursor-grabbing p-0.5 -ml-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors print:hidden touch-none"
+        className="cursor-grab active:cursor-grabbing p-0.5 -ml-1 rounded hover:bg-stone-lighter text-warm-gray-light hover:text-warm-gray transition-colors print:hidden touch-none"
         {...attributes}
         {...listeners}
       >

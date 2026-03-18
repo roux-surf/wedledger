@@ -10,22 +10,22 @@ interface ClientCardProps {
 }
 
 const urgencyDotColors = {
-  overdue: 'bg-red-500',
-  this_week: 'bg-amber-500',
-  upcoming: 'bg-slate-400',
+  overdue: 'bg-rose',
+  this_week: 'bg-champagne',
+  upcoming: 'bg-warm-gray-light',
 };
 
 export default function ClientCard({ client, onDelete, milestones = [] }: ClientCardProps) {
   const statusColors = {
-    green: 'bg-green-100 text-green-800 border-green-200',
-    yellow: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    red: 'bg-red-100 text-red-800 border-red-200',
+    green: 'bg-sage-light text-sage-dark border-sage',
+    yellow: 'bg-champagne-light text-champagne-dark border-champagne',
+    red: 'bg-rose-light text-rose-dark border-rose',
   };
 
   const statusIndicatorColors = {
-    green: 'bg-green-500',
-    yellow: 'bg-yellow-500',
-    red: 'bg-red-500',
+    green: 'bg-sage',
+    yellow: 'bg-champagne',
+    red: 'bg-rose',
   };
 
   const statusLabels = {
@@ -36,11 +36,11 @@ export default function ClientCard({ client, onDelete, milestones = [] }: Client
 
   return (
     <Link href={`/clients/${client.id}`}>
-      <div className="bg-white border border-slate-200 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer">
+      <div className="bg-cream border border-stone rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-slate-900">{client.name}</h3>
-            <p className="text-sm text-slate-600 mt-1">
+            <h3 className="text-xl font-heading font-semibold tracking-tight text-charcoal">{client.name}</h3>
+            <p className="text-sm text-warm-gray mt-1">
               {client.city}, {client.state}
             </p>
           </div>
@@ -60,7 +60,7 @@ export default function ClientCard({ client, onDelete, milestones = [] }: Client
                   e.preventDefault();
                   onDelete(client.id, client.name);
                 }}
-                className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                className="p-1 rounded text-warm-gray-light hover:text-rose-dark hover:bg-rose-light transition-colors"
                 title="Delete wedding"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -71,38 +71,38 @@ export default function ClientCard({ client, onDelete, milestones = [] }: Client
           </div>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-slate-100">
+        <div className="mt-4 pt-4 border-t border-stone-lighter">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-slate-500 uppercase tracking-wider">Wedding Date</p>
-              <p className="text-sm font-medium text-slate-900 mt-1">
+              <p className="text-xs text-warm-gray uppercase tracking-wider">Wedding Date</p>
+              <p className="text-sm font-medium text-charcoal mt-1">
                 {formatDate(client.wedding_date)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-slate-500 uppercase tracking-wider">Total Budget</p>
-              <p className="text-sm font-medium text-slate-900 mt-1">
+              <p className="text-xs text-warm-gray uppercase tracking-wider">Total Budget</p>
+              <p className="text-sm font-medium text-charcoal mt-1">
                 {formatCurrency(client.total_budget)}
               </p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4 mt-3">
             <div>
-              <p className="text-xs text-slate-500 uppercase tracking-wider">Spent</p>
-              <p className="text-sm font-medium text-slate-900 mt-1">
+              <p className="text-xs text-warm-gray uppercase tracking-wider">Spent</p>
+              <p className="text-sm font-medium text-charcoal mt-1">
                 {formatCurrency(client.total_spent)} of {formatCurrency(client.total_budget)}
               </p>
             </div>
             {client.milestones_total > 0 && (
               <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Timeline</p>
+                <p className="text-xs text-warm-gray uppercase tracking-wider">Timeline</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <p className="text-sm font-medium text-slate-900">
+                  <p className="text-sm font-medium text-charcoal">
                     {client.milestones_completed}/{client.milestones_total}
                   </p>
-                  <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 bg-stone rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-green-500 rounded-full"
+                      className="h-full bg-sage rounded-full"
                       style={{ width: `${(client.milestones_completed / client.milestones_total) * 100}%` }}
                     />
                   </div>
@@ -111,12 +111,12 @@ export default function ClientCard({ client, onDelete, milestones = [] }: Client
             )}
           </div>
           {milestones.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-slate-100 space-y-1.5">
+            <div className="mt-3 pt-3 border-t border-stone-lighter space-y-1.5">
               {milestones.map((m) => (
                 <div key={m.milestone_id} className="flex items-center gap-2 text-sm">
                   <span className={`w-2 h-2 rounded-full shrink-0 ${urgencyDotColors[m.urgency]}`} />
-                  <span className="truncate text-slate-700">{m.title}</span>
-                  <span className="ml-auto text-xs text-slate-400 shrink-0">{formatShortDate(m.target_date)}</span>
+                  <span className="truncate text-charcoal">{m.title}</span>
+                  <span className="ml-auto text-xs text-warm-gray-light shrink-0">{formatShortDate(m.target_date)}</span>
                 </div>
               ))}
             </div>

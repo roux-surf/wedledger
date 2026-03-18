@@ -18,14 +18,14 @@ export default function PlanCard({ plan, description, onSelect, disabled, select
     <div
       className={`border rounded-lg p-6 transition-colors ${
         selected
-          ? 'border-slate-900 bg-slate-50'
-          : 'border-slate-200 bg-white hover:border-slate-300'
+          ? 'border-sage bg-stone-lighter'
+          : 'border-stone bg-white hover:border-warm-gray-light'
       }`}
     >
-      <h3 className="text-lg font-semibold text-slate-900">{config.label}</h3>
-      <p className="text-2xl font-bold text-slate-900 mt-2">${config.price}</p>
-      <p className="text-sm text-slate-500 mt-1">{config.months} months of access</p>
-      <p className="text-sm text-slate-600 mt-3">{description}</p>
+      <h3 className="text-lg font-semibold text-charcoal">{config.label}</h3>
+      <p className="text-2xl font-bold text-charcoal mt-2">${config.price}</p>
+      <p className="text-sm text-warm-gray mt-1">{config.months} months of access</p>
+      <p className="text-sm text-warm-gray mt-3">{description}</p>
       <Button
         className="w-full mt-4"
         variant={selected ? 'primary' : 'secondary'}

@@ -204,8 +204,8 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
   const remaining = (isEditing ? parseNumericInput(formData.actual_cost) : item.actual_cost) - displayPaid;
 
   const getRemainingColor = () => {
-    if (remaining < 0) return 'text-red-600';
-    if (remaining === 0) return 'text-green-600';
+    if (remaining < 0) return 'text-rose-dark';
+    if (remaining === 0) return 'text-sage-dark';
     return '';
   };
 
@@ -237,7 +237,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
   const paymentBadge = payments.length > 0 ? (
     <button
       onClick={toggleExpand}
-      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium bg-rose-light text-rose-dark hover:bg-rose-light/80 transition-colors"
     >
       {payments.length}
       <svg className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -247,7 +247,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
   ) : !isClientView ? (
     <button
       onClick={toggleExpand}
-      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs text-warm-gray-light hover:text-warm-gray hover:bg-stone-lighter transition-colors"
     >
       <svg className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -260,10 +260,10 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
   if (renderMode === 'card') {
     if (isEditing && !isClientView) {
       return (
-        <div className="p-4 bg-slate-50">
+        <div className="p-4 bg-stone-lighter">
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Vendor</label>
+              <label className="block text-xs font-medium text-warm-gray uppercase mb-1">Vendor</label>
               <input
                 ref={vendorInputRef}
                 type="text"
@@ -273,16 +273,16 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                 onKeyDown={handleKeyDown}
                 onBlur={handleBlur}
                 onFocus={(e) => e.target.select()}
-                className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+                className="w-full px-2 py-1.5 border border-stone rounded text-sm"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Status</label>
+              <label className="block text-xs font-medium text-warm-gray uppercase mb-1">Status</label>
               <select
                 name="booking_status"
                 value={formData.booking_status}
                 onChange={handleChange}
-                className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm bg-white"
+                className="w-full px-2 py-1.5 border border-stone rounded text-sm bg-white"
               >
                 <option value="none">None</option>
                 <option value="inquired">Inquired</option>
@@ -293,7 +293,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Estimated</label>
+                <label className="block text-xs font-medium text-warm-gray uppercase mb-1">Estimated</label>
                 <input
                   ref={estimatedInputRef}
                   type="text"
@@ -307,11 +307,11 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                     handleBlur(e);
                   }}
                   onFocus={(e) => e.target.select()}
-                  className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+                  className="w-full px-2 py-1.5 border border-stone rounded text-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Actual</label>
+                <label className="block text-xs font-medium text-warm-gray uppercase mb-1">Actual</label>
                 <input
                   ref={actualInputRef}
                   type="text"
@@ -325,7 +325,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                     handleBlur(e);
                   }}
                   onFocus={(e) => e.target.select()}
-                  className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+                  className="w-full px-2 py-1.5 border border-stone rounded text-sm"
                 />
               </div>
             </div>
@@ -333,14 +333,14 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
               <button
                 type="button"
                 onClick={() => setShowContactFields(true)}
-                className="text-xs text-slate-500 hover:text-slate-700 underline"
+                className="text-xs text-warm-gray hover:text-charcoal underline"
               >
                 + Contact info
               </button>
             ) : (
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Phone</label>
+                  <label className="block text-xs font-medium text-warm-gray uppercase mb-1">Phone</label>
                   <input
                     ref={phoneInputRef}
                     type="tel"
@@ -349,12 +349,12 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
                     onBlur={handleBlur}
-                    className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+                    className="w-full px-2 py-1.5 border border-stone rounded text-sm"
                     placeholder="555-123-4567"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Email</label>
+                  <label className="block text-xs font-medium text-warm-gray uppercase mb-1">Email</label>
                   <input
                     ref={emailInputRef}
                     type="email"
@@ -363,18 +363,18 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
                     onBlur={handleBlur}
-                    className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+                    className="w-full px-2 py-1.5 border border-stone rounded text-sm"
                     placeholder="vendor@email.com"
                   />
                 </div>
               </div>
             )}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-slate-400">Enter to save · Esc to cancel</span>
+              <span className="text-[10px] text-warm-gray-light">Enter to save · Esc to cancel</span>
               <button
                 type="button"
                 onClick={onDelete}
-                className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+                className="p-1 rounded text-warm-gray-light hover:text-rose-dark hover:bg-rose-light"
                 aria-label="Delete"
                 title="Delete"
               >
@@ -391,12 +391,12 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
     return (
       <div>
         <div
-          className="p-4 hover:bg-slate-50 transition-colors duration-100"
+          className="p-4 hover:bg-stone-lighter transition-colors duration-100"
           onClick={isClientView ? undefined : () => handleStartEdit()}
         >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <span className={`text-sm font-medium text-slate-900 ${!isClientView ? 'cursor-pointer' : ''}`}>
+              <span className={`text-sm font-medium text-charcoal ${!isClientView ? 'cursor-pointer' : ''}`}>
                 {item.vendor_name}
               </span>
               <BookingStatusBadge
@@ -405,35 +405,35 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
               />
               {paymentBadge}
             </div>
-            <span className={`text-sm ${getRemainingColor() || 'text-slate-600'}`}>{formatCurrency(remaining)} remaining</span>
+            <span className={`text-sm ${getRemainingColor() || 'text-warm-gray'}`}>{formatCurrency(remaining)} remaining</span>
           </div>
           <div className="grid grid-cols-3 gap-2 text-xs mt-1">
             <div>
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider">Estimated</p>
-              <p className="text-slate-600 tabular-nums">{formatCurrency(item.estimated_cost)}</p>
+              <p className="text-[10px] text-warm-gray-light uppercase tracking-wider">Estimated</p>
+              <p className="text-warm-gray tabular-nums">{formatCurrency(item.estimated_cost)}</p>
             </div>
             <div>
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider">Actual</p>
-              <p className="text-slate-600 tabular-nums">{formatCurrency(item.actual_cost)}</p>
+              <p className="text-[10px] text-warm-gray-light uppercase tracking-wider">Actual</p>
+              <p className="text-warm-gray tabular-nums">{formatCurrency(item.actual_cost)}</p>
             </div>
             <div>
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider">Paid</p>
-              <p className="text-slate-600 tabular-nums">{formatCurrency(displayPaid)}</p>
+              <p className="text-[10px] text-warm-gray-light uppercase tracking-wider">Paid</p>
+              <p className="text-warm-gray tabular-nums">{formatCurrency(displayPaid)}</p>
             </div>
           </div>
           {!isClientView && (item.vendor_phone || item.vendor_email) && (
-            <div className="flex items-center gap-3 text-xs text-slate-400 mt-1">
+            <div className="flex items-center gap-3 text-xs text-warm-gray-light mt-1">
               {item.vendor_phone && <span>{item.vendor_phone}</span>}
               {item.vendor_email && <span>{item.vendor_email}</span>}
             </div>
           )}
           {!isClientView && (
             <div className="flex items-center gap-2 mt-1.5">
-              <p className="text-xs text-slate-400 flex-1">{getPaymentSubtitle()}</p>
+              <p className="text-xs text-warm-gray-light flex-1">{getPaymentSubtitle()}</p>
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+                className="p-1 rounded text-warm-gray-light hover:text-rose-dark hover:bg-rose-light"
                 aria-label="Delete"
                 title="Delete"
               >
@@ -463,7 +463,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
   if (isEditing && !isClientView) {
     return (
       <Fragment>
-        <tr ref={formRef} className="bg-slate-50">
+        <tr ref={formRef} className="bg-stone-lighter">
           <td className="px-4 py-3">
             <div className="flex items-center gap-2">
               <input
@@ -475,14 +475,14 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                 onKeyDown={handleKeyDown}
                 onBlur={handleBlur}
                 onFocus={(e) => e.target.select()}
-                className="w-full px-2 py-1 border border-slate-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-stone rounded text-sm"
               />
               {!showStatusColumn && (
                 <select
                   name="booking_status"
                   value={formData.booking_status}
                   onChange={handleChange}
-                  className="px-1 py-1 border border-slate-300 rounded text-xs bg-white"
+                  className="px-1 py-1 border border-stone rounded text-xs bg-white"
                 >
                   <option value="none">None</option>
                   <option value="inquired">Inquired</option>
@@ -502,7 +502,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                   onChange={handleChange}
                   onKeyDown={handleKeyDown}
                   onBlur={handleBlur}
-                  className="w-28 px-2 py-1 border border-slate-200 rounded text-xs"
+                  className="w-28 px-2 py-1 border border-stone rounded text-xs"
                   placeholder="Phone"
                 />
                 <input
@@ -513,7 +513,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                   onChange={handleChange}
                   onKeyDown={handleKeyDown}
                   onBlur={handleBlur}
-                  className="flex-1 px-2 py-1 border border-slate-200 rounded text-xs"
+                  className="flex-1 px-2 py-1 border border-stone rounded text-xs"
                   placeholder="Email"
                 />
               </div>
@@ -521,7 +521,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
               <button
                 type="button"
                 onClick={() => setShowContactFields(true)}
-                className="text-xs text-slate-400 hover:text-slate-600 mt-1"
+                className="text-xs text-warm-gray-light hover:text-warm-gray mt-1"
               >
                 + Contact info
               </button>
@@ -533,7 +533,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                 name="booking_status"
                 value={formData.booking_status}
                 onChange={handleChange}
-                className="px-1 py-1 border border-slate-300 rounded text-xs bg-white"
+                className="px-1 py-1 border border-stone rounded text-xs bg-white"
               >
                 <option value="none">None</option>
                 <option value="inquired">Inquired</option>
@@ -557,7 +557,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                 handleBlur(e);
               }}
               onFocus={(e) => e.target.select()}
-              className="w-24 px-2 py-1 border border-slate-300 rounded text-sm text-right"
+              className="w-24 px-2 py-1 border border-stone rounded text-sm text-right"
             />
           </td>
           <td className="px-4 py-3 text-right">
@@ -574,10 +574,10 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                 handleBlur(e);
               }}
               onFocus={(e) => e.target.select()}
-              className="w-24 px-2 py-1 border border-slate-300 rounded text-sm text-right"
+              className="w-24 px-2 py-1 border border-stone rounded text-sm text-right"
             />
           </td>
-          <td className="px-4 py-3 text-sm text-slate-500 text-right whitespace-nowrap">{formatCurrency(displayPaid)}{displayPaid > 0 && <span className="text-xs text-slate-400 ml-1">paid</span>}</td>
+          <td className="px-4 py-3 text-sm text-warm-gray text-right whitespace-nowrap">{formatCurrency(displayPaid)}{displayPaid > 0 && <span className="text-xs text-warm-gray-light ml-1">paid</span>}</td>
           <td className="px-4 py-3 text-sm text-right whitespace-nowrap">
             <span className={getRemainingColor()}>{formatCurrency(remaining)}</span>
           </td>
@@ -586,7 +586,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
               <button
                 type="button"
                 onClick={onDelete}
-                className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+                className="p-1 rounded text-warm-gray-light hover:text-rose-dark hover:bg-rose-light"
                 aria-label="Delete"
                 title="Delete"
               >
@@ -594,7 +594,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </button>
-              <span className="text-[10px] text-slate-400 whitespace-nowrap">Enter to save · Esc to cancel</span>
+              <span className="text-[10px] text-warm-gray-light whitespace-nowrap">Enter to save · Esc to cancel</span>
             </div>
           </td>
         </tr>
@@ -617,12 +617,12 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
     );
   }
 
-  const clickableClass = !isClientView ? 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded underline decoration-dashed decoration-transparent hover:decoration-slate-400 underline-offset-2 transition-colors' : '';
+  const clickableClass = !isClientView ? 'cursor-pointer hover:bg-stone-lighter px-1 -mx-1 rounded underline decoration-dashed decoration-transparent hover:decoration-warm-gray-light underline-offset-2 transition-colors' : '';
 
   return (
     <Fragment>
-      <tr ref={setSortableRef} style={sortableStyle} className="hover:bg-slate-50 transition-colors duration-100">
-        <td className="px-4 py-3 text-sm text-slate-900">
+      <tr ref={setSortableRef} style={sortableStyle} className="hover:bg-stone-lighter transition-colors duration-100">
+        <td className="px-4 py-3 text-sm text-charcoal">
           <div className="flex items-center gap-2">
             {isDraggable && (
               <DragHandle listeners={sortableListeners} attributes={sortableAttributes} />
@@ -635,7 +635,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                 {item.vendor_name}
               </span>
               {!isClientView && (
-                <p className="text-xs text-slate-400">{getPaymentSubtitle()}</p>
+                <p className="text-xs text-warm-gray-light">{getPaymentSubtitle()}</p>
               )}
             </div>
             {!showStatusColumn && (
@@ -657,7 +657,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             />
           </td>
         )}
-        <td className="px-4 py-3 text-sm text-slate-900 text-right whitespace-nowrap">
+        <td className="px-4 py-3 text-sm text-charcoal text-right whitespace-nowrap">
           <span
             onClick={isClientView ? undefined : () => handleStartEdit('estimated')}
             className={clickableClass}
@@ -665,7 +665,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             {formatCurrency(item.estimated_cost)}
           </span>
         </td>
-        <td className="px-4 py-3 text-sm text-slate-900 text-right whitespace-nowrap">
+        <td className="px-4 py-3 text-sm text-charcoal text-right whitespace-nowrap">
           <span
             onClick={isClientView ? undefined : () => handleStartEdit('actual')}
             className={clickableClass}
@@ -673,8 +673,8 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             {formatCurrency(item.actual_cost)}
           </span>
         </td>
-        <td className="px-4 py-3 text-sm text-slate-500 text-right whitespace-nowrap">
-          {formatCurrency(displayPaid)}{displayPaid > 0 && <span className="text-xs text-slate-400 ml-1">paid</span>}
+        <td className="px-4 py-3 text-sm text-warm-gray text-right whitespace-nowrap">
+          {formatCurrency(displayPaid)}{displayPaid > 0 && <span className="text-xs text-warm-gray-light ml-1">paid</span>}
         </td>
         <td className="px-4 py-3 text-sm text-right whitespace-nowrap">
           <span className={getRemainingColor()}>{formatCurrency(remaining)}</span>
@@ -684,7 +684,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             <button
               type="button"
               onClick={onDelete}
-              className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+              className="p-1 rounded text-warm-gray-light hover:text-rose-dark hover:bg-rose-light"
               aria-label="Delete"
               title="Delete"
             >

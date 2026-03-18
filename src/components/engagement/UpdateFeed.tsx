@@ -82,12 +82,12 @@ export default function UpdateFeed({
 
   return (
     <div className="space-y-3">
-      <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Updates</p>
+      <p className="text-xs font-medium text-warm-gray uppercase tracking-wider">Updates</p>
 
       {loading ? (
-        <p className="text-sm text-slate-400">Loading...</p>
+        <p className="text-sm text-warm-gray-light">Loading...</p>
       ) : updates.length === 0 ? (
-        <p className="text-sm text-slate-400">No updates yet.</p>
+        <p className="text-sm text-warm-gray-light">No updates yet.</p>
       ) : (
         <div className="space-y-2 max-h-64 overflow-y-auto">
           {updates.map((update) => {
@@ -100,23 +100,23 @@ export default function UpdateFeed({
                 <div
                   className={`max-w-[80%] rounded-lg px-3 py-2 ${
                     fromPlanner
-                      ? 'bg-purple-50 border border-purple-200'
-                      : 'bg-teal-50 border border-teal-200'
+                      ? 'bg-sage-light border border-sage'
+                      : 'bg-rose-light border border-rose'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-0.5">
                     <span
                       className={`text-xs font-medium ${
-                        fromPlanner ? 'text-purple-700' : 'text-teal-700'
+                        fromPlanner ? 'text-sage-dark' : 'text-rose-dark'
                       }`}
                     >
                       {getAuthorName(update.author_user_id)}
                     </span>
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-warm-gray-light">
                       {formatTimestamp(update.created_at)}
                     </span>
                   </div>
-                  <p className="text-sm text-slate-700 whitespace-pre-line">{update.content}</p>
+                  <p className="text-sm text-charcoal whitespace-pre-line">{update.content}</p>
                 </div>
               </div>
             );
@@ -130,12 +130,12 @@ export default function UpdateFeed({
           value={newContent}
           onChange={(e) => setNewContent(e.target.value)}
           placeholder="Write an update..."
-          className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent"
+          className="flex-1 px-3 py-2 text-sm border border-stone rounded-md focus:outline-none focus:ring-2 focus:ring-warm-gray-light focus:border-transparent"
         />
         <button
           type="submit"
           disabled={submitting || !newContent.trim()}
-          className="px-3 py-2 text-sm font-medium text-white bg-slate-800 rounded-md hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-3 py-2 text-sm font-medium text-white bg-charcoal rounded-md hover:bg-charcoal transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {submitting ? 'Sending...' : 'Send'}
         </button>

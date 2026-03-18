@@ -57,9 +57,9 @@ function getMonthMarkers(start: string, end: string): { date: string; label: str
 }
 
 const STATUS_COLORS: Record<MilestoneStatus, string> = {
-  not_started: 'bg-slate-300',
-  in_progress: 'bg-blue-500',
-  completed: 'bg-green-500',
+  not_started: 'bg-stone',
+  in_progress: 'bg-champagne',
+  completed: 'bg-sage',
 };
 
 export default function GanttTimeline({
@@ -89,7 +89,7 @@ export default function GanttTimeline({
 
   if (milestones.length === 0) {
     return (
-      <p className="text-sm text-slate-500 text-center py-8">
+      <p className="text-sm text-warm-gray text-center py-8">
         No milestones yet. Add milestones to start tracking your timeline.
       </p>
     );
@@ -102,12 +102,12 @@ export default function GanttTimeline({
     <div className="relative">
       <div
         ref={containerRef}
-        className="overflow-x-auto border border-slate-200 rounded-lg bg-white"
+        className="overflow-x-auto border border-stone rounded-lg bg-white"
       >
         <div style={{ minWidth: `${minWidth}px` }} className="relative">
           {/* Month header row */}
-          <div className="flex border-b border-slate-200 bg-slate-50 sticky top-0 z-10">
-            <div className="w-40 shrink-0 px-3 py-1 text-xs font-semibold text-slate-500 border-r border-slate-200">
+          <div className="flex border-b border-stone bg-stone-lighter sticky top-0 z-10">
+            <div className="w-40 shrink-0 px-3 py-1 text-xs font-semibold text-warm-gray border-r border-stone">
               Milestone
             </div>
             <div className="flex-1 relative h-6">
@@ -119,7 +119,7 @@ export default function GanttTimeline({
                     className="absolute top-0 h-full flex items-center"
                     style={{ left: `${pct}%` }}
                   >
-                    <span className="text-[10px] text-slate-400 whitespace-nowrap -translate-x-1/2">
+                    <span className="text-[10px] text-warm-gray-light whitespace-nowrap -translate-x-1/2">
                       {marker.label}
                     </span>
                   </div>
@@ -136,12 +136,12 @@ export default function GanttTimeline({
             return (
               <div
                 key={m.id}
-                className="flex border-b border-slate-100 hover:bg-slate-50/50 group"
+                className="flex border-b border-stone-lighter hover:bg-stone-lighter/50 group"
               >
                 {/* Label column */}
-                <div className="w-40 shrink-0 px-3 py-1 border-r border-slate-100 flex items-center min-w-0">
+                <div className="w-40 shrink-0 px-3 py-1 border-r border-stone-lighter flex items-center min-w-0">
                   <span className={`text-xs font-medium truncate ${
-                    m.status === 'completed' ? 'text-slate-400 line-through' : 'text-slate-700'
+                    m.status === 'completed' ? 'text-warm-gray-light line-through' : 'text-charcoal'
                   }`} title={m.title}>
                     {m.title}
                   </span>
@@ -155,7 +155,7 @@ export default function GanttTimeline({
                     return (
                       <div
                         key={marker.date}
-                        className="absolute top-0 bottom-0 border-l border-slate-100"
+                        className="absolute top-0 bottom-0 border-l border-stone-lighter"
                         style={{ left: `${markerPct}%` }}
                       />
                     );
@@ -173,7 +173,7 @@ export default function GanttTimeline({
                     onMouseLeave={() => setTooltip(null)}
                   >
                     <div className={`w-3 h-3 rounded-full -translate-x-1/2 ring-2 ring-white ${
-                      isPastDue ? 'bg-red-500' : STATUS_COLORS[m.status]
+                      isPastDue ? 'bg-rose' : STATUS_COLORS[m.status]
                     }`} />
                   </div>
                 </div>
@@ -183,20 +183,20 @@ export default function GanttTimeline({
 
           {/* Today marker overlay — spans the full height of the bar area */}
           <div
-            className="absolute top-6 bottom-0 w-px border-l-2 border-dashed border-red-400 z-20 pointer-events-none"
+            className="absolute top-6 bottom-0 w-px border-l-2 border-dashed border-rose z-20 pointer-events-none"
             style={{ left: `calc(160px + (100% - 160px) * ${todayPct / 100})` }}
           >
-            <span className="absolute -top-4 left-1 text-[9px] font-bold text-red-500 whitespace-nowrap">
+            <span className="absolute -top-4 left-1 text-[9px] font-bold text-rose whitespace-nowrap">
               Today
             </span>
           </div>
 
           {/* Wedding date marker */}
           <div
-            className="absolute top-6 bottom-0 w-0.5 bg-slate-900 z-20 pointer-events-none"
+            className="absolute top-6 bottom-0 w-0.5 bg-charcoal z-20 pointer-events-none"
             style={{ left: `calc(160px + (100% - 160px) * ${weddingPct / 100})` }}
           >
-            <span className="absolute -top-4 left-1 text-[9px] font-bold text-slate-900 whitespace-nowrap">
+            <span className="absolute -top-4 left-1 text-[9px] font-bold text-charcoal whitespace-nowrap">
               Wedding
             </span>
           </div>
@@ -206,21 +206,21 @@ export default function GanttTimeline({
       {/* Tooltip */}
       {tooltip && (
         <div
-          className="fixed z-50 bg-white border border-slate-200 rounded-lg shadow-lg p-3 max-w-xs"
+          className="fixed z-50 bg-white border border-stone rounded-lg shadow-lg p-3 max-w-xs"
           style={{ left: tooltip.x, top: tooltip.y }}
         >
-          <p className="text-sm font-medium text-slate-900">{tooltip.milestone.title}</p>
+          <p className="text-sm font-medium text-charcoal">{tooltip.milestone.title}</p>
           {tooltip.milestone.description && (
-            <p className="text-xs text-slate-500 mt-1">{tooltip.milestone.description}</p>
+            <p className="text-xs text-warm-gray mt-1">{tooltip.milestone.description}</p>
           )}
           <div className="flex items-center gap-2 mt-2">
             <MilestoneStatusBadge status={tooltip.milestone.status} />
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-warm-gray-light">
               {formatShortDate(tooltip.milestone.target_date)}
             </span>
           </div>
           {tooltip.milestone.category_name && tooltip.milestone.category_target !== undefined && tooltip.milestone.category_spent !== undefined && (
-            <div className="mt-2 pt-2 border-t border-slate-100">
+            <div className="mt-2 pt-2 border-t border-stone-lighter">
               <BudgetLinkBadge
                 categoryName={tooltip.milestone.category_name}
                 categoryTarget={tooltip.milestone.category_target}

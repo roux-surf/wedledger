@@ -16,12 +16,12 @@ import {
 } from '@/lib/types';
 
 const SPECIALTY_BADGE_COLORS: Record<string, string> = {
-  purple: 'bg-purple-100 text-purple-800',
-  blue: 'bg-blue-100 text-blue-800',
-  green: 'bg-green-100 text-green-800',
-  coral: 'bg-orange-100 text-orange-800',
-  teal: 'bg-teal-100 text-teal-800',
-  pink: 'bg-pink-100 text-pink-800',
+  purple: 'bg-sage-light text-sage-dark',
+  blue: 'bg-champagne-light text-champagne-dark',
+  green: 'bg-sage-light text-sage-dark',
+  coral: 'bg-rose-light text-rose-dark',
+  teal: 'bg-sage-light text-sage-dark',
+  pink: 'bg-rose-light text-rose-dark',
 };
 
 interface PlannerWithName extends PlannerProfile {
@@ -131,13 +131,13 @@ export default function PlannerDetailPage() {
   const getEngagementStatusClasses = (status: string): string => {
     switch (status) {
       case 'pending':
-        return 'text-amber-700 bg-amber-50 border-amber-200';
+        return 'text-champagne-dark bg-champagne-light border-champagne';
       case 'accepted':
-        return 'text-blue-700 bg-blue-50 border-blue-200';
+        return 'text-sage-dark bg-sage-light border-sage';
       case 'active':
-        return 'text-green-700 bg-green-50 border-green-200';
+        return 'text-sage-dark bg-sage-light border-sage';
       default:
-        return 'text-slate-600 bg-slate-50 border-slate-200';
+        return 'text-warm-gray bg-stone-lighter border-stone';
     }
   };
 
@@ -193,19 +193,19 @@ export default function PlannerDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-400">Loading...</p>
+      <div className="min-h-screen bg-ivory flex items-center justify-center">
+        <p className="text-warm-gray-light">Loading...</p>
       </div>
     );
   }
 
   if (notFound || !planner) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4">
-        <p className="text-slate-500">Planner not found.</p>
+      <div className="min-h-screen bg-ivory flex flex-col items-center justify-center gap-4">
+        <p className="text-warm-gray">Planner not found.</p>
         <Link
           href="/find-planner"
-          className="text-sm text-slate-600 hover:text-slate-900"
+          className="text-sm text-warm-gray hover:text-charcoal"
         >
           &larr; Back to Directory
         </Link>
@@ -235,26 +235,26 @@ export default function PlannerDetailPage() {
     : "Tell them about your wedding and what kind of ongoing support you're looking for.";
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-ivory">
       <main className="max-w-2xl mx-auto px-4 py-10">
         <Link
           href="/find-planner"
-          className="inline-flex items-center text-sm text-slate-500 hover:text-slate-700 mb-8"
+          className="inline-flex items-center text-sm text-warm-gray hover:text-charcoal mb-8"
         >
           &larr; Back to Directory
         </Link>
 
         {/* Header */}
-        <div className="bg-white border border-slate-200 rounded-lg p-6 md:p-8 mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">{planner.display_name}</h1>
+        <div className="bg-cream border border-stone rounded-lg p-6 md:p-8 mb-6">
+          <h1 className="text-3xl font-heading font-semibold tracking-tight text-charcoal">{planner.display_name}</h1>
           {location && (
-            <p className="text-slate-500 mt-1">{location}</p>
+            <p className="text-warm-gray mt-1">{location}</p>
           )}
 
           {experience.length > 0 && (
             <div className="flex flex-wrap gap-4 mt-4">
               {experience.map((stat) => (
-                <span key={stat} className="text-sm text-slate-600">{stat}</span>
+                <span key={stat} className="text-sm text-warm-gray">{stat}</span>
               ))}
             </div>
           )}
@@ -264,7 +264,7 @@ export default function PlannerDetailPage() {
               {planner.specialties.map((specialty) => {
                 const config = SPECIALTY_CONFIG[specialty];
                 if (!config) return null;
-                const colorClass = SPECIALTY_BADGE_COLORS[config.color] || 'bg-slate-100 text-slate-700';
+                const colorClass = SPECIALTY_BADGE_COLORS[config.color] || 'bg-stone-lighter text-charcoal';
                 return (
                   <span
                     key={specialty}
@@ -280,27 +280,27 @@ export default function PlannerDetailPage() {
 
         {/* Bio */}
         {planner.bio && (
-          <div className="bg-white border border-slate-200 rounded-lg p-6 md:p-8 mb-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-3">About</h2>
-            <p className="text-slate-600 whitespace-pre-line">{planner.bio}</p>
+          <div className="bg-cream border border-stone rounded-lg p-6 md:p-8 mb-6">
+            <h2 className="text-lg font-semibold text-charcoal mb-3">About</h2>
+            <p className="text-warm-gray whitespace-pre-line">{planner.bio}</p>
           </div>
         )}
 
         {/* Rates & CTAs */}
-        <div className="bg-white border border-slate-200 rounded-lg p-6 md:p-8">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Services</h2>
+        <div className="bg-cream border border-stone rounded-lg p-6 md:p-8">
+          <h2 className="text-lg font-semibold text-charcoal mb-4">Services</h2>
 
           <div className="space-y-4">
             {weddingSetUp === false && (
-              <div className="flex items-center gap-3 p-4 bg-slate-100 border border-slate-200 rounded-lg">
-                <svg className="w-5 h-5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <div className="flex items-center gap-3 p-4 bg-stone-lighter border border-stone rounded-lg">
+                <svg className="w-5 h-5 text-warm-gray shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
                 </svg>
                 <div>
-                  <p className="text-sm font-medium text-slate-700">Complete your wedding setup to request a planner</p>
+                  <p className="text-sm font-medium text-charcoal">Complete your wedding setup to request a planner</p>
                   <Link
                     href="/my-wedding/setup"
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                    className="text-sm text-sage hover:text-sage-dark font-medium"
                   >
                     Go to Wedding Setup &rarr;
                   </Link>
@@ -309,10 +309,10 @@ export default function PlannerDetailPage() {
             )}
 
             {planner.consultation_rate_cents != null && (
-              <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+              <div className="flex items-center justify-between p-4 border border-stone rounded-lg">
                 <div>
-                  <p className="font-medium text-slate-900">One-Time Consultation</p>
-                  <p className="text-sm text-slate-500">{formatRate(planner.consultation_rate_cents)}/hr</p>
+                  <p className="font-medium text-charcoal">One-Time Consultation</p>
+                  <p className="text-sm text-warm-gray">{formatRate(planner.consultation_rate_cents)}/hr</p>
                 </div>
                 {existingConsultation ? (
                   <span className={`px-4 py-2 text-sm font-medium border rounded-md ${getEngagementStatusClasses(existingConsultation.status)}`}>
@@ -321,7 +321,7 @@ export default function PlannerDetailPage() {
                 ) : weddingSetUp ? (
                   <button
                     onClick={() => openModal('consultation')}
-                    className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-white bg-charcoal rounded-md hover:bg-charcoal transition-colors"
                   >
                     Book a Consultation
                   </button>
@@ -330,10 +330,10 @@ export default function PlannerDetailPage() {
             )}
 
             {planner.subscription_rate_cents != null && (
-              <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+              <div className="flex items-center justify-between p-4 border border-stone rounded-lg">
                 <div>
-                  <p className="font-medium text-slate-900">Ongoing Planning</p>
-                  <p className="text-sm text-slate-500">{formatRate(planner.subscription_rate_cents)}/mo</p>
+                  <p className="font-medium text-charcoal">Ongoing Planning</p>
+                  <p className="text-sm text-warm-gray">{formatRate(planner.subscription_rate_cents)}/mo</p>
                 </div>
                 {existingSubscription ? (
                   <span className={`px-4 py-2 text-sm font-medium border rounded-md ${getEngagementStatusClasses(existingSubscription.status)}`}>
@@ -342,7 +342,7 @@ export default function PlannerDetailPage() {
                 ) : weddingSetUp ? (
                   <button
                     onClick={() => openModal('subscription')}
-                    className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-white bg-charcoal rounded-md hover:bg-charcoal transition-colors"
                   >
                     Subscribe
                   </button>
@@ -351,7 +351,7 @@ export default function PlannerDetailPage() {
             )}
 
             {planner.consultation_rate_cents == null && planner.subscription_rate_cents == null && (
-              <p className="text-sm text-slate-400">No rates listed yet.</p>
+              <p className="text-sm text-warm-gray-light">No rates listed yet.</p>
             )}
           </div>
         </div>
@@ -364,12 +364,12 @@ export default function PlannerDetailPage() {
         title={modalType ? modalTitle : ''}
       >
         <div className="space-y-5">
-          <p className="text-sm text-slate-500">
-            Rate: <span className="font-medium text-slate-700">{modalType ? modalRate : ''}</span>
+          <p className="text-sm text-warm-gray">
+            Rate: <span className="font-medium text-charcoal">{modalType ? modalRate : ''}</span>
           </p>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-charcoal mb-1">
               Tell {planner.display_name} about your wedding
             </label>
             <textarea
@@ -377,7 +377,7 @@ export default function PlannerDetailPage() {
               onChange={(e) => setMessage(e.target.value)}
               rows={4}
               placeholder={messagePlaceholder}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-stone rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sage focus:border-transparent resize-none"
             />
             {message.length > 0 && message.length < 20 && (
               <p className="text-xs text-red-500 mt-1">Please write at least 20 characters ({20 - message.length} more needed)</p>
@@ -386,7 +386,7 @@ export default function PlannerDetailPage() {
 
           {modalType === 'consultation' && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-charcoal mb-1">
                 Preferred date & time
               </label>
               <div className="flex gap-3">
@@ -395,12 +395,12 @@ export default function PlannerDetailPage() {
                   value={preferredDate}
                   onChange={(e) => setPreferredDate(e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
-                  className="flex-1 px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent"
+                  className="flex-1 px-3 py-2 border border-stone rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sage focus:border-transparent"
                 />
                 <select
                   value={preferredTime}
                   onChange={(e) => setPreferredTime(e.target.value)}
-                  className="px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent"
+                  className="px-3 py-2 border border-stone rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sage focus:border-transparent"
                 >
                   <option value="">Time</option>
                   <option value="09:00">9:00 AM</option>
@@ -425,8 +425,8 @@ export default function PlannerDetailPage() {
             </div>
           )}
 
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-            <p className="text-sm text-blue-700">
+          <div className="bg-champagne-light border border-champagne rounded-md p-3">
+            <p className="text-sm text-champagne-dark">
               The planner will review your request and confirm the time. You&apos;ll be notified when they respond.
             </p>
           </div>
@@ -434,14 +434,14 @@ export default function PlannerDetailPage() {
           <div className="flex justify-end gap-3 pt-2">
             <button
               onClick={closeModal}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-charcoal bg-white border border-stone rounded-md hover:bg-stone-lighter transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={submitting || message.length < 20}
-              className="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-white bg-charcoal rounded-md hover:bg-charcoal transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? 'Sending...' : 'Send Request'}
             </button>

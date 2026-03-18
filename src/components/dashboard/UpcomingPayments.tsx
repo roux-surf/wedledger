@@ -25,8 +25,8 @@ export default function UpcomingPayments({ alerts }: UpcomingPaymentsProps) {
       <div>
         <div className="flex items-center gap-2 mb-2">
           <span className={`w-2 h-2 rounded-full ${dotClass}`} />
-          <h4 className="text-sm font-medium text-slate-700">{title}</h4>
-          <span className="text-xs text-slate-400">({items.length})</span>
+          <h4 className="text-sm font-medium text-charcoal">{title}</h4>
+          <span className="text-xs text-warm-gray-light">({items.length})</span>
         </div>
         <div className="space-y-1">
           {items.map((alert) => (
@@ -34,17 +34,17 @@ export default function UpcomingPayments({ alerts }: UpcomingPaymentsProps) {
               <div className={`flex items-center justify-between gap-3 px-3 py-2 rounded-lg ${bgClass} hover:opacity-80 transition-opacity cursor-pointer`}>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="font-medium text-slate-900 truncate">{alert.vendor_name}</span>
-                    <span className="text-slate-400">-</span>
-                    <span className="text-slate-600 truncate">{alert.label}</span>
+                    <span className="font-medium text-charcoal truncate">{alert.vendor_name}</span>
+                    <span className="text-warm-gray-light">-</span>
+                    <span className="text-warm-gray truncate">{alert.label}</span>
                   </div>
-                  <div className="text-xs text-slate-500 mt-0.5">
+                  <div className="text-xs text-warm-gray mt-0.5">
                     {alert.client_name} &bull; {alert.category_name}
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-sm font-medium text-slate-900">{formatCurrency(alert.amount)}</p>
-                  <p className="text-xs text-slate-500">{formatShortDate(alert.due_date)}</p>
+                  <p className="text-sm font-medium text-charcoal">{formatCurrency(alert.amount)}</p>
+                  <p className="text-xs text-warm-gray">{formatShortDate(alert.due_date)}</p>
                 </div>
               </div>
             </Link>
@@ -55,12 +55,12 @@ export default function UpcomingPayments({ alerts }: UpcomingPaymentsProps) {
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg p-5 mb-6">
-      <h3 className="text-lg font-semibold text-slate-900 mb-4">Upcoming Payments</h3>
+    <div className="bg-cream border border-stone rounded-lg p-5 mb-6">
+      <h3 className="text-lg font-semibold text-charcoal mb-4">Upcoming Payments</h3>
       <div className="space-y-4">
-        {renderSection('Overdue', overdue, 'bg-red-50', 'bg-red-500')}
-        {renderSection('Due This Week', thisWeek, 'bg-amber-50', 'bg-amber-500')}
-        {renderSection('Upcoming', upcoming, 'bg-slate-50', 'bg-slate-400')}
+        {renderSection('Overdue', overdue, 'bg-rose-light', 'bg-rose')}
+        {renderSection('Due This Week', thisWeek, 'bg-champagne-light', 'bg-champagne')}
+        {renderSection('Upcoming', upcoming, 'bg-stone-lighter', 'bg-warm-gray-light')}
       </div>
     </div>
   );

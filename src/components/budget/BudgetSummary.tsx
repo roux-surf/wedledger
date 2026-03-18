@@ -68,21 +68,21 @@ export default function BudgetSummary({ clientId, onPushToClient, currentPublish
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg p-6">
+    <div className="bg-white border border-stone rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-slate-900">AI Budget Summary</h3>
+        <h3 className="text-lg font-semibold text-charcoal">AI Budget Summary</h3>
         <Button onClick={generateSummary} disabled={loading}>
           {loading ? 'Generating...' : 'Generate Budget Summary'}
         </Button>
       </div>
 
       {currentPublishedSummary && (
-        <div className="flex items-center gap-3 mb-4 px-3 py-2 bg-green-50 border border-green-200 rounded-md">
-          <span className="text-sm text-green-700">Currently published to client view</span>
+        <div className="flex items-center gap-3 mb-4 px-3 py-2 bg-sage-light border border-sage rounded-md">
+          <span className="text-sm text-sage-dark">Currently published to client view</span>
           <button
             onClick={handleRemoveFromClient}
             disabled={removing}
-            className="text-xs text-red-600 hover:text-red-700 underline ml-auto"
+            className="text-xs text-rose-dark hover:text-rose-dark underline ml-auto"
           >
             {removing ? 'Removing...' : 'Remove from Client View'}
           </button>
@@ -90,27 +90,27 @@ export default function BudgetSummary({ clientId, onPushToClient, currentPublish
       )}
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-600">{error}</p>
+        <div className="p-4 bg-rose-light border border-rose rounded-md">
+          <p className="text-sm text-rose-dark">{error}</p>
         </div>
       )}
 
       {summary && (
-        <div className="p-4 bg-slate-50 border border-slate-200 rounded-md">
-          <p className="text-sm text-slate-700 whitespace-pre-wrap">{summary}</p>
+        <div className="p-4 bg-stone-lighter border border-stone rounded-md">
+          <p className="text-sm text-charcoal whitespace-pre-wrap">{summary}</p>
           <div className="mt-3 flex items-center gap-4">
             <button
               onClick={() => {
                 navigator.clipboard.writeText(summary);
               }}
-              className="text-xs text-slate-500 hover:text-slate-700 underline"
+              className="text-xs text-warm-gray hover:text-charcoal underline"
             >
               Copy to clipboard
             </button>
             <button
               onClick={handlePushToClient}
               disabled={pushing}
-              className="text-xs font-medium text-blue-600 hover:text-blue-700 underline"
+              className="text-xs font-medium text-rose-dark hover:text-rose-dark underline"
             >
               {pushing ? 'Pushing...' : 'Push to Client View'}
             </button>
@@ -119,7 +119,7 @@ export default function BudgetSummary({ clientId, onPushToClient, currentPublish
       )}
 
       {!summary && !error && !loading && (
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-warm-gray">
           Click the button above to generate a professional budget summary suitable for client communication.
         </p>
       )}

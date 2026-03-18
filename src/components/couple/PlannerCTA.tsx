@@ -29,16 +29,16 @@ export default function PlannerCTA({ profileCreatedAt }: PlannerCTAProps) {
   };
 
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-100 rounded-lg p-6 relative">
+    <div className="bg-rose-light border border-stone rounded-lg p-6 relative">
       <button
         onClick={handleDismiss}
-        className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 text-lg leading-none"
+        className="absolute top-3 right-3 text-warm-gray-light hover:text-warm-gray text-lg leading-none"
         aria-label="Dismiss"
       >
         &times;
       </button>
-      <h3 className="text-base font-semibold text-slate-900">Feeling overwhelmed?</h3>
-      <p className="text-sm text-slate-600 mt-2 max-w-lg">
+      <h3 className="text-base font-semibold text-charcoal">Feeling overwhelmed?</h3>
+      <p className="text-sm text-warm-gray mt-2 max-w-lg">
         WedLedger can match you with an experienced wedding planner who can help with exactly
         what you need — from a quick consultation to ongoing support.
       </p>
@@ -46,7 +46,7 @@ export default function PlannerCTA({ profileCreatedAt }: PlannerCTAProps) {
         <Button variant="secondary" disabled>
           Browse Planners
         </Button>
-        <span className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 text-xs bg-slate-800 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+        <span className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 text-xs bg-charcoal text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
           Coming soon
         </span>
       </div>

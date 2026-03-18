@@ -25,16 +25,16 @@ export default function WeddingCountdown({ weddingDate }: WeddingCountdownProps)
   if (daysUntil <= 0 && daysUntil !== 0) {
     return (
       <div className="text-center">
-        <p className="text-sm text-slate-500">{getMessage()}</p>
+        <p className="text-sm text-warm-gray">{getMessage()}</p>
       </div>
     );
   }
 
   return (
     <div className="text-center">
-      <p className="text-3xl font-bold text-slate-900">{daysUntil}</p>
-      <p className="text-sm font-medium text-slate-500 mt-0.5">days to go</p>
-      <p className="text-xs text-slate-400 mt-1">{getMessage()}</p>
+      <p className="text-3xl font-heading font-semibold tracking-tight text-charcoal">{daysUntil}</p>
+      <p className="text-sm font-medium text-warm-gray mt-0.5">days to go</p>
+      <p className="text-xs text-warm-gray-light mt-1">{getMessage()}</p>
     </div>
   );
 }

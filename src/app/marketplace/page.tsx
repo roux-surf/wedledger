@@ -11,8 +11,8 @@ export default function MarketplacePage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-      <p className="text-slate-400">Redirecting...</p>
+    <div className="min-h-screen bg-ivory flex items-center justify-center">
+      <p className="text-warm-gray-light">Redirecting...</p>
     </div>
   );
 }

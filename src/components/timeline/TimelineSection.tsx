@@ -147,11 +147,11 @@ export default function TimelineSection({
       {/* Section header */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-3">
-          <h3 className={`font-semibold text-slate-900 ${isClientView ? 'text-xl' : 'text-lg'}`}>
+          <h3 className={`font-semibold text-charcoal ${isClientView ? 'text-xl' : 'text-lg'}`}>
             Planning Timeline
           </h3>
           {total > 0 && (
-            <span className="text-sm text-slate-500">
+            <span className="text-sm text-warm-gray">
               {completed} of {total} complete
             </span>
           )}
@@ -159,11 +159,11 @@ export default function TimelineSection({
 
         <div className="flex items-center gap-2">
           {/* View toggle */}
-          <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+          <div className="flex items-center gap-1 bg-stone-lighter rounded-lg p-0.5">
             <button
               onClick={() => setViewMode('gantt')}
               className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
-                viewMode === 'gantt' ? 'bg-white shadow text-slate-900' : 'text-slate-500'
+                viewMode === 'gantt' ? 'bg-white shadow text-charcoal' : 'text-warm-gray'
               }`}
             >
               Timeline
@@ -171,7 +171,7 @@ export default function TimelineSection({
             <button
               onClick={() => setViewMode('list')}
               className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
-                viewMode === 'list' ? 'bg-white shadow text-slate-900' : 'text-slate-500'
+                viewMode === 'list' ? 'bg-white shadow text-charcoal' : 'text-warm-gray'
               }`}
             >
               List
@@ -183,13 +183,13 @@ export default function TimelineSection({
             <>
               <button
                 onClick={() => setShowTemplateModal(true)}
-                className="text-xs text-slate-500 hover:text-slate-700 px-2 py-1"
+                className="text-xs text-warm-gray hover:text-charcoal px-2 py-1"
               >
                 Templates
               </button>
               <button
                 onClick={() => setShowAddForm(!showAddForm)}
-                className="text-xs font-medium text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-md transition-colors"
+                className="text-xs font-medium text-charcoal bg-stone-lighter hover:bg-stone px-2.5 py-1 rounded-md transition-colors"
               >
                 + Add Milestone
               </button>
@@ -201,9 +201,9 @@ export default function TimelineSection({
       {/* Progress bar */}
       {total > 0 && (
         <div className="mb-4">
-          <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-stone rounded-full overflow-hidden">
             <div
-              className="h-full bg-green-500 rounded-full transition-all duration-300"
+              className="h-full bg-sage rounded-full transition-all duration-300"
               style={{ width: `${(completed / total) * 100}%` }}
             />
           </div>

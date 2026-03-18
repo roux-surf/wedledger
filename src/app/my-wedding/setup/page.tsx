@@ -177,20 +177,20 @@ export default function WeddingSetupPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-400">Loading...</p>
+      <div className="min-h-screen bg-ivory flex items-center justify-center">
+        <p className="text-warm-gray-light">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-ivory">
       <main className="max-w-2xl mx-auto px-4 py-12">
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-slate-900">
+          <h1 className="text-3xl font-bold text-charcoal">
             {isEditing ? 'Edit wedding details' : "Let\u2019s plan your wedding"}
           </h1>
-          <p className="text-lg text-slate-600 mt-2">
+          <p className="text-lg text-warm-gray mt-2">
             {isEditing
               ? 'Update your wedding information below.'
               : 'Tell us a bit about your big day so we can set everything up for you.'}
@@ -199,9 +199,9 @@ export default function WeddingSetupPage() {
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Wedding Basics */}
-          <section className="bg-white border border-slate-200 rounded-lg p-6 md:p-8">
-            <h2 className="text-xl font-semibold text-slate-900 mb-1">The basics</h2>
-            <p className="text-sm text-slate-500 mb-6">
+          <section className="bg-cream border border-stone rounded-lg p-6 md:p-8">
+            <h2 className="text-xl font-semibold text-charcoal mb-1">The basics</h2>
+            <p className="text-sm text-warm-gray mb-6">
               Don&apos;t worry — you can change all of this later.
             </p>
 
@@ -240,7 +240,7 @@ export default function WeddingSetupPage() {
                 <div className="w-full">
                   <label
                     htmlFor="state"
-                    className="block text-sm font-medium text-slate-700 mb-1"
+                    className="block text-sm font-medium text-charcoal mb-1"
                   >
                     State
                   </label>
@@ -250,7 +250,7 @@ export default function WeddingSetupPage() {
                     value={formData.state}
                     onChange={handleChange}
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
+                    className="w-full px-3 py-2 border border-stone rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sage focus:border-sage"
                   >
                     <option value="">Select state</option>
                     {US_STATES.map((state) => (
@@ -278,9 +278,9 @@ export default function WeddingSetupPage() {
           </section>
 
           {/* Budget Setup */}
-          <section className="bg-white border border-slate-200 rounded-lg p-6 md:p-8">
-            <h2 className="text-xl font-semibold text-slate-900 mb-1">Your budget</h2>
-            <p className="text-sm text-slate-500 mb-6">
+          <section className="bg-cream border border-stone rounded-lg p-6 md:p-8">
+            <h2 className="text-xl font-semibold text-charcoal mb-1">Your budget</h2>
+            <p className="text-sm text-warm-gray mb-6">
               Set your total budget and we&apos;ll help you allocate it across categories.
             </p>
 
@@ -299,11 +299,11 @@ export default function WeddingSetupPage() {
               />
 
               {!isEditing && <div>
-                <p className="text-sm font-medium text-slate-700 mb-1">
+                <p className="text-sm font-medium text-charcoal mb-1">
                   Start from a budget template{' '}
-                  <span className="text-slate-400 font-normal">(optional)</span>
+                  <span className="text-warm-gray-light font-normal">(optional)</span>
                 </p>
-                <p className="text-xs text-slate-500 mb-3">
+                <p className="text-xs text-warm-gray mb-3">
                   Templates pre-fill how your budget is split across categories like venue, catering, and photography. You can adjust everything later.
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -316,8 +316,8 @@ export default function WeddingSetupPage() {
                       }
                       className={`rounded-md border px-3 py-2 text-left text-sm transition-colors ${
                         selectedTemplate === level.id
-                          ? 'border-slate-900 bg-slate-900 text-white'
-                          : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+                          ? 'border-charcoal bg-charcoal text-white'
+                          : 'border-stone bg-white text-charcoal hover:border-warm-gray-light'
                       }`}
                     >
                       <span className="font-medium">{level.displayName}</span>
@@ -331,8 +331,8 @@ export default function WeddingSetupPage() {
                     onClick={() => setSelectedTemplate(null)}
                     className={`rounded-md border px-3 py-2 text-left text-sm transition-colors ${
                       selectedTemplate === null
-                        ? 'border-slate-900 bg-slate-900 text-white'
-                        : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+                        ? 'border-charcoal bg-charcoal text-white'
+                        : 'border-stone bg-white text-charcoal hover:border-warm-gray-light'
                     }`}
                   >
                     <span className="font-medium">Skip</span>

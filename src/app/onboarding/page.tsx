@@ -191,17 +191,17 @@ export default function OnboardingPage() {
   // Don't render onboarding UI while checking profile or if already onboarded
   if (profileLoading || profile?.onboarding_completed) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-400">Loading...</p>
+      <div className="min-h-screen bg-ivory flex items-center justify-center">
+        <p className="text-warm-gray-light">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-ivory flex items-center justify-center px-4">
       <div className="w-full max-w-3xl">
         {error && (
-          <div className="mb-4 p-3 text-sm text-red-600 bg-red-50 rounded-md border border-red-200">
+          <div className="mb-4 p-3 text-sm text-rose bg-rose-light rounded-md border border-rose">
             {error}
           </div>
         )}
@@ -234,59 +234,59 @@ export default function OnboardingPage() {
 function RoleSelection({ onSelect }: { onSelect: (role: UserRole) => void }) {
   return (
     <div className="text-center">
-      <h1 className="text-2xl font-bold text-slate-900">Welcome to WedLedger</h1>
-      <p className="text-slate-600 mt-2 mb-8">How will you be using WedLedger?</p>
+      <h1 className="text-3xl font-heading font-semibold tracking-tight text-charcoal">Welcome to WedLedger</h1>
+      <p className="text-warm-gray mt-2 mb-8">How will you be using WedLedger?</p>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Couple card */}
-        <div className="border border-slate-200 bg-white rounded-lg p-6 text-left">
-          <h2 className="text-lg font-semibold text-slate-900">
+        <div className="border border-stone bg-cream rounded-lg p-6 text-left">
+          <h2 className="text-xl font-heading font-semibold tracking-tight text-charcoal">
             I&apos;m planning my wedding
           </h2>
-          <p className="text-sm text-slate-600 mt-2">
+          <p className="text-sm text-warm-gray mt-2">
             Plan your own wedding with professional-grade budget and timeline tools.
             Get expert help when you need it.
           </p>
-          <ul className="mt-4 space-y-2 text-sm text-slate-700">
+          <ul className="mt-4 space-y-2 text-sm text-charcoal">
             <li className="flex items-start gap-2">
-              <span className="text-slate-400 mt-0.5">&#10003;</span>
+              <span className="text-warm-gray-light mt-0.5">&#10003;</span>
               Full budget management
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-slate-400 mt-0.5">&#10003;</span>
+              <span className="text-warm-gray-light mt-0.5">&#10003;</span>
               Timeline &amp; milestones
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-slate-400 mt-0.5">&#10003;</span>
+              <span className="text-warm-gray-light mt-0.5">&#10003;</span>
               Access to planner network
             </li>
           </ul>
-          <p className="text-xs text-slate-500 mt-4">Starting at $100 for 12 months</p>
+          <p className="text-xs text-warm-gray mt-4">Starting at $100 for 12 months</p>
           <Button className="w-full mt-4" onClick={() => onSelect('couple')}>
             Get Started
           </Button>
         </div>
 
         {/* Planner card */}
-        <div className="border border-slate-200 bg-white rounded-lg p-6 text-left">
-          <h2 className="text-lg font-semibold text-slate-900">
+        <div className="border border-stone bg-cream rounded-lg p-6 text-left">
+          <h2 className="text-xl font-heading font-semibold tracking-tight text-charcoal">
             I&apos;m a wedding planner
           </h2>
-          <p className="text-sm text-slate-600 mt-2">
+          <p className="text-sm text-warm-gray mt-2">
             Manage multiple weddings, track every vendor and payment, and share
             polished updates with your couples.
           </p>
-          <ul className="mt-4 space-y-2 text-sm text-slate-700">
+          <ul className="mt-4 space-y-2 text-sm text-charcoal">
             <li className="flex items-start gap-2">
-              <span className="text-slate-400 mt-0.5">&#10003;</span>
+              <span className="text-warm-gray-light mt-0.5">&#10003;</span>
               Multi-client dashboard
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-slate-400 mt-0.5">&#10003;</span>
+              <span className="text-warm-gray-light mt-0.5">&#10003;</span>
               Client-facing views
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-slate-400 mt-0.5">&#10003;</span>
+              <span className="text-warm-gray-light mt-0.5">&#10003;</span>
               Grow with the marketplace
             </li>
           </ul>
@@ -297,7 +297,7 @@ function RoleSelection({ onSelect }: { onSelect: (role: UserRole) => void }) {
           >
             Set Up My Practice
           </Button>
-          <p className="text-xs text-slate-400 text-center mt-2">
+          <p className="text-xs text-warm-gray-light text-center mt-2">
             Free during early access
           </p>
         </div>
@@ -319,8 +319,8 @@ function PlanSelection({
 }) {
   return (
     <div className="text-center">
-      <h1 className="text-2xl font-bold text-slate-900">Choose Your Plan</h1>
-      <p className="text-slate-600 mt-2 mb-8">
+      <h1 className="text-3xl font-heading font-semibold tracking-tight text-charcoal">Choose Your Plan</h1>
+      <p className="text-warm-gray mt-2 mb-8">
         Select the timeline that fits your wedding.
       </p>
 
@@ -341,7 +341,7 @@ function PlanSelection({
         />
       </div>
 
-      <p className="text-xs text-slate-400 mt-6">
+      <p className="text-xs text-warm-gray-light mt-6">
         Payment will be set up in a future update. Your account is free during early access.
       </p>
 
@@ -349,7 +349,7 @@ function PlanSelection({
         type="button"
         onClick={onBack}
         disabled={loading}
-        className="mt-4 text-sm text-slate-500 hover:text-slate-700"
+        className="mt-4 text-sm text-warm-gray hover:text-charcoal"
       >
         &larr; Back
       </button>
@@ -372,14 +372,14 @@ function PlannerNameStep({
 }) {
   return (
     <div className="max-w-md mx-auto">
-      <h1 className="text-2xl font-bold text-slate-900 text-center">
+      <h1 className="text-3xl font-heading font-semibold tracking-tight text-charcoal text-center">
         Set Up Your Practice
       </h1>
-      <p className="text-slate-600 mt-2 mb-8 text-center">
+      <p className="text-warm-gray mt-2 mb-8 text-center">
         What&apos;s your name?
       </p>
 
-      <form onSubmit={onSubmit} className="bg-white border border-slate-200 rounded-lg p-6">
+      <form onSubmit={onSubmit} className="bg-cream border border-stone rounded-lg p-6">
         <Input
           id="display_name"
           label="Display Name"

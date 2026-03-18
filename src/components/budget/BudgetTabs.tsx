@@ -45,24 +45,24 @@ export default function BudgetTabs({
   return (
     <div>
       {/* Tab bar */}
-      <div className="flex border-b border-slate-200 mb-0 print:hidden">
+      <div className="flex border-b border-stone mb-0 print:hidden">
         <button
           onClick={() => setActiveTab('categories')}
           className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-            activeTab === 'categories' ? 'text-slate-900 border-slate-900' : 'text-slate-500 border-transparent hover:text-slate-700'
+            activeTab === 'categories' ? 'text-charcoal border-charcoal' : 'text-warm-gray border-transparent hover:text-charcoal'
           }`}
         >
-          Categories<span className="text-slate-400 font-normal ml-1">({categories.length})</span>
+          Categories<span className="text-warm-gray-light font-normal ml-1">({categories.length})</span>
         </button>
         <button
           onClick={() => setActiveTab('vendors')}
           className={`relative px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-            activeTab === 'vendors' ? 'text-slate-900 border-slate-900' : 'text-slate-500 border-transparent hover:text-slate-700'
+            activeTab === 'vendors' ? 'text-charcoal border-charcoal' : 'text-warm-gray border-transparent hover:text-charcoal'
           }`}
         >
-          Vendors & Payments<span className="text-slate-400 font-normal ml-1">({categories.reduce((sum, cat) => sum + (cat.line_items?.length || 0), 0)})</span>
+          Vendors & Payments<span className="text-warm-gray-light font-normal ml-1">({categories.reduce((sum, cat) => sum + (cat.line_items?.length || 0), 0)})</span>
           {overdueCount > 0 && (
-            <span className="absolute top-2 -right-0.5 w-2 h-2 rounded-full bg-red-500" />
+            <span className="absolute top-2 -right-0.5 w-2 h-2 rounded-full bg-rose" />
           )}
         </button>
       </div>

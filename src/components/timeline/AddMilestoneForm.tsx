@@ -61,7 +61,7 @@ export default function AddMilestoneForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
+    <form onSubmit={handleSubmit} className="bg-stone-lighter border border-stone rounded-lg p-4 space-y-3">
       <Input
         id="milestone-title"
         label="Title"
@@ -80,13 +80,13 @@ export default function AddMilestoneForm({
       />
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">When</label>
+        <label className="block text-sm font-medium text-charcoal mb-1">When</label>
         <div className="flex items-center gap-2 mb-2">
           <button
             type="button"
             onClick={() => setDateMode('relative')}
             className={`text-xs px-2 py-1 rounded ${
-              dateMode === 'relative' ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-600'
+              dateMode === 'relative' ? 'bg-charcoal text-white' : 'bg-stone text-warm-gray'
             }`}
           >
             Months before wedding
@@ -95,7 +95,7 @@ export default function AddMilestoneForm({
             type="button"
             onClick={() => setDateMode('specific')}
             className={`text-xs px-2 py-1 rounded ${
-              dateMode === 'specific' ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-600'
+              dateMode === 'specific' ? 'bg-charcoal text-white' : 'bg-stone text-warm-gray'
             }`}
           >
             Specific date
@@ -110,9 +110,9 @@ export default function AddMilestoneForm({
               max="24"
               value={monthsBefore}
               onChange={(e) => setMonthsBefore(e.target.value)}
-              className="w-20 px-2 py-1.5 border border-slate-300 rounded-md text-sm"
+              className="w-20 px-2 py-1.5 border border-stone rounded-md text-sm"
             />
-            <span className="text-sm text-slate-500">months before wedding</span>
+            <span className="text-sm text-warm-gray">months before wedding</span>
           </div>
         ) : (
           <input
@@ -120,19 +120,19 @@ export default function AddMilestoneForm({
             value={specificDate}
             onChange={(e) => setSpecificDate(e.target.value)}
             required={dateMode === 'specific'}
-            className="w-full px-3 py-1.5 border border-slate-300 rounded-md text-sm"
+            className="w-full px-3 py-1.5 border border-stone rounded-md text-sm"
           />
         )}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">
-          Link to budget category <span className="text-slate-400 font-normal">(optional)</span>
+        <label className="block text-sm font-medium text-charcoal mb-1">
+          Link to budget category <span className="text-warm-gray-light font-normal">(optional)</span>
         </label>
         <select
           value={categoryId}
           onChange={(e) => setCategoryId(e.target.value)}
-          className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+          className="w-full px-3 py-2 border border-stone rounded-md text-sm"
         >
           <option value="">None</option>
           {categories.map((cat) => (

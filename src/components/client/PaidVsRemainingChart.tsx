@@ -34,72 +34,72 @@ export default function PaidVsRemainingChart({ data }: PaidVsRemainingChartProps
   const scale = total > 100 ? 100 / total : 1;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg p-5">
-      <h4 className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-4">
+    <div className="bg-cream border border-stone rounded-lg p-5">
+      <h4 className="text-sm font-medium text-warm-gray uppercase tracking-wider mb-4">
         Financial Position
       </h4>
 
       {/* Progress bar */}
-      <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden flex">
+      <div className="w-full h-4 bg-stone-lighter rounded-full overflow-hidden flex">
         {paidPct > 0 && (
           <div
-            className="bg-emerald-500 h-full transition-all duration-500"
+            className="bg-sage h-full transition-all duration-500"
             style={{ width: `${paidPct * scale}%` }}
           />
         )}
         {pendingPct > 0 && (
           <div
-            className="bg-blue-400 h-full transition-all duration-500"
+            className="bg-champagne h-full transition-all duration-500"
             style={{ width: `${pendingPct * scale}%` }}
           />
         )}
         {uncommittedPct > 0 && (
           <div
-            className="bg-slate-200 h-full transition-all duration-500"
+            className="bg-stone h-full transition-all duration-500"
             style={{ width: `${uncommittedPct * scale}%` }}
           />
         )}
         {overCommittedPct > 0 && (
           <div
-            className="bg-red-400 h-full transition-all duration-500"
+            className="bg-rose h-full transition-all duration-500"
             style={{ width: `${overCommittedPct * scale}%` }}
           />
         )}
         {overPaidPct > 0 && (
           <div
-            className="bg-amber-400 h-full transition-all duration-500"
+            className="bg-champagne h-full transition-all duration-500"
             style={{ width: `${overPaidPct * scale}%` }}
           />
         )}
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-slate-500">
+      <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-warm-gray">
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
+          <span className="w-2.5 h-2.5 rounded-full bg-sage inline-block" />
           Paid
         </div>
         {!isOverPaid && (
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-champagne inline-block" />
             Pending
           </div>
         )}
         {!isOverCommitted && (
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-slate-200 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-stone inline-block" />
             Uncommitted
           </div>
         )}
         {isOverCommitted && (
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-400 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-rose inline-block" />
             Over-committed
           </div>
         )}
         {isOverPaid && (
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-champagne inline-block" />
             Over-paid
           </div>
         )}
@@ -107,34 +107,34 @@ export default function PaidVsRemainingChart({ data }: PaidVsRemainingChartProps
 
       {/* Metric cards */}
       <div className="grid grid-cols-3 gap-3 mt-5">
-        <div className="bg-slate-50 rounded-lg p-3 text-center">
-          <p className="text-emerald-600 text-lg md:text-xl font-bold">{formatCurrency(totalPaid)}</p>
-          <p className="text-slate-500 text-xs mt-1">
+        <div className="bg-stone-lighter rounded-lg p-3 text-center">
+          <p className="text-sage text-lg md:text-xl font-bold">{formatCurrency(totalPaid)}</p>
+          <p className="text-warm-gray text-xs mt-1">
             Paid ({totalBudget > 0 ? Math.round(paidPct) : 0}%)
           </p>
         </div>
         {isOverPaid ? (
-          <div className="bg-amber-50 rounded-lg p-3 text-center">
-            <p className="text-amber-600 text-lg md:text-xl font-bold">{formatCurrency(overPaid)}</p>
-            <p className="text-slate-500 text-xs mt-1">Over-paid</p>
+          <div className="bg-champagne-light rounded-lg p-3 text-center">
+            <p className="text-champagne text-lg md:text-xl font-bold">{formatCurrency(overPaid)}</p>
+            <p className="text-warm-gray text-xs mt-1">Over-paid</p>
           </div>
         ) : (
-          <div className="bg-slate-50 rounded-lg p-3 text-center">
-            <p className="text-blue-600 text-lg md:text-xl font-bold">{formatCurrency(displayPending)}</p>
-            <p className="text-slate-500 text-xs mt-1">
+          <div className="bg-stone-lighter rounded-lg p-3 text-center">
+            <p className="text-sage text-lg md:text-xl font-bold">{formatCurrency(displayPending)}</p>
+            <p className="text-warm-gray text-xs mt-1">
               Pending ({totalBudget > 0 ? Math.round(pendingPct) : 0}%)
             </p>
           </div>
         )}
         {isOverCommitted ? (
-          <div className="bg-red-50 rounded-lg p-3 text-center">
-            <p className="text-red-600 text-lg md:text-xl font-bold">{formatCurrency(overBudget)}</p>
-            <p className="text-slate-500 text-xs mt-1">Over-committed</p>
+          <div className="bg-rose-light rounded-lg p-3 text-center">
+            <p className="text-rose text-lg md:text-xl font-bold">{formatCurrency(overBudget)}</p>
+            <p className="text-warm-gray text-xs mt-1">Over-committed</p>
           </div>
         ) : (
-          <div className="bg-slate-50 rounded-lg p-3 text-center">
-            <p className="text-slate-700 text-lg md:text-xl font-bold">{formatCurrency(displayUncommitted)}</p>
-            <p className="text-slate-500 text-xs mt-1">
+          <div className="bg-stone-lighter rounded-lg p-3 text-center">
+            <p className="text-charcoal text-lg md:text-xl font-bold">{formatCurrency(displayUncommitted)}</p>
+            <p className="text-warm-gray text-xs mt-1">
               Uncommitted ({totalBudget > 0 ? Math.round(uncommittedPct) : 0}%)
             </p>
           </div>

@@ -33,8 +33,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
   // While loading, show a minimal loading state
   if (!isAuthLoaded || loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-400">Loading...</p>
+      <div className="min-h-screen bg-ivory flex items-center justify-center">
+        <p className="text-warm-gray-light">Loading...</p>
       </div>
     );
   }
@@ -47,8 +47,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
   // No profile — redirect is happening via useEffect
   if (!profile) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-400">Loading...</p>
+      <div className="min-h-screen bg-ivory flex items-center justify-center">
+        <p className="text-warm-gray-light">Loading...</p>
       </div>
     );
   }

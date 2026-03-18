@@ -8,22 +8,22 @@ interface ClientPaymentScheduleProps {
 }
 
 const urgencyConfig = {
-  overdue: { label: 'Overdue', className: 'bg-red-100 text-red-700' },
-  this_week: { label: 'Due Soon', className: 'bg-amber-100 text-amber-700' },
-  upcoming: { label: 'Upcoming', className: 'bg-blue-100 text-blue-700' },
-  no_date: { label: 'No Date', className: 'bg-slate-100 text-slate-500' },
+  overdue: { label: 'Overdue', className: 'bg-rose-light text-rose-dark' },
+  this_week: { label: 'Due Soon', className: 'bg-champagne-light text-champagne-dark' },
+  upcoming: { label: 'Upcoming', className: 'bg-sage-light text-sage-dark' },
+  no_date: { label: 'No Date', className: 'bg-stone-lighter text-warm-gray' },
 };
 
 export default function ClientPaymentSchedule({ payments }: ClientPaymentScheduleProps) {
   return (
-    <div className="bg-white border border-slate-200 rounded-lg p-5">
-      <h4 className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-4">
+    <div className="bg-cream border border-stone rounded-lg p-5">
+      <h4 className="text-sm font-medium text-warm-gray uppercase tracking-wider mb-4">
         Upcoming Payments
       </h4>
 
       {payments.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-slate-400 text-sm">All payments are up to date.</p>
+          <p className="text-warm-gray-light text-sm">All payments are up to date.</p>
         </div>
       ) : (
         <>
@@ -31,7 +31,7 @@ export default function ClientPaymentSchedule({ payments }: ClientPaymentSchedul
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+                <tr className="text-warm-gray text-xs uppercase tracking-wider border-b border-stone">
                   <th className="text-left pb-2 font-medium">Vendor</th>
                   <th className="text-left pb-2 font-medium">Payment</th>
                   <th className="text-left pb-2 font-medium">Category</th>
@@ -40,15 +40,15 @@ export default function ClientPaymentSchedule({ payments }: ClientPaymentSchedul
                   <th className="text-left pb-2 font-medium">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-stone-lighter">
                 {payments.map((p) => {
                   const config = urgencyConfig[p.urgency];
                   return (
-                    <tr key={p.paymentId} className="text-slate-600">
-                      <td className="py-2.5 font-medium text-slate-900">{p.vendorName}</td>
+                    <tr key={p.paymentId} className="text-warm-gray">
+                      <td className="py-2.5 font-medium text-charcoal">{p.vendorName}</td>
                       <td className="py-2.5">{p.label}</td>
-                      <td className="py-2.5 text-slate-500">{p.categoryName}</td>
-                      <td className="py-2.5 text-right font-medium text-slate-900">{formatCurrency(p.amount)}</td>
+                      <td className="py-2.5 text-warm-gray">{p.categoryName}</td>
+                      <td className="py-2.5 text-right font-medium text-charcoal">{formatCurrency(p.amount)}</td>
                       <td className="py-2.5 pl-4">
                         {p.dueDate ? formatShortDate(p.dueDate) : '—'}
                       </td>
@@ -69,18 +69,18 @@ export default function ClientPaymentSchedule({ payments }: ClientPaymentSchedul
             {payments.map((p) => {
               const config = urgencyConfig[p.urgency];
               return (
-                <div key={p.paymentId} className="bg-slate-50 rounded-lg p-3">
+                <div key={p.paymentId} className="bg-stone-lighter rounded-lg p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-slate-900 font-medium text-sm truncate">{p.vendorName}</p>
-                      <p className="text-slate-500 text-xs mt-0.5">
+                      <p className="text-charcoal font-medium text-sm truncate">{p.vendorName}</p>
+                      <p className="text-warm-gray text-xs mt-0.5">
                         {p.label} &bull; {p.categoryName}
                       </p>
                     </div>
-                    <p className="text-slate-900 font-medium text-sm whitespace-nowrap">{formatCurrency(p.amount)}</p>
+                    <p className="text-charcoal font-medium text-sm whitespace-nowrap">{formatCurrency(p.amount)}</p>
                   </div>
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-slate-500 text-xs">
+                    <span className="text-warm-gray text-xs">
                       {p.dueDate ? formatShortDate(p.dueDate) : 'No due date'}
                     </span>
                     <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${config.className}`}>

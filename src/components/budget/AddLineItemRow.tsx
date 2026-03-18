@@ -92,7 +92,7 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
 
   if (renderMode === 'card') {
     return (
-      <div className="p-3 bg-slate-50/50 border-t border-dashed border-slate-200">
+      <div className="p-3 bg-stone-lighter/50 border-t border-dashed border-stone">
         <div className="space-y-2">
           <input
             ref={vendorRef}
@@ -100,7 +100,7 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
             value={formData.vendor_name}
             onChange={e => setFormData(prev => ({ ...prev, vendor_name: e.target.value }))}
             onKeyDown={handleKeyDown}
-            className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+            className="w-full px-2 py-1.5 border border-stone rounded text-sm bg-white placeholder:text-warm-gray-light"
             placeholder="+ Add vendor..."
           />
           {formData.vendor_name.trim() && (
@@ -113,7 +113,7 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
                   onChange={e => setFormData(prev => ({ ...prev, estimated_cost: e.target.value }))}
                   onBlur={e => handleNumericBlur('estimated_cost', e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+                  className="w-full px-2 py-1.5 border border-stone rounded text-sm bg-white placeholder:text-warm-gray-light"
                   placeholder="Estimated $"
                 />
                 <input
@@ -123,7 +123,7 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
                   onChange={e => setFormData(prev => ({ ...prev, actual_cost: e.target.value }))}
                   onBlur={e => handleNumericBlur('actual_cost', e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+                  className="w-full px-2 py-1.5 border border-stone rounded text-sm bg-white placeholder:text-warm-gray-light"
                   placeholder="Actual $"
                 />
               </div>
@@ -131,7 +131,7 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
                 <select
                   value={formData.booking_status}
                   onChange={e => setFormData(prev => ({ ...prev, booking_status: e.target.value as BookingStatus }))}
-                  className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white text-slate-600"
+                  className="w-full px-2 py-1.5 border border-stone rounded text-sm bg-white text-warm-gray"
                 >
                   <option value="none">No status</option>
                   <option value="inquired">Inquired</option>
@@ -144,7 +144,7 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
                   value={formData.notes}
                   onChange={e => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                   onKeyDown={handleKeyDown}
-                  className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+                  className="w-full px-2 py-1.5 border border-stone rounded text-sm bg-white placeholder:text-warm-gray-light"
                   placeholder="Notes"
                 />
               </div>
@@ -155,7 +155,7 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
                     value={formData.vendor_phone}
                     onChange={e => setFormData(prev => ({ ...prev, vendor_phone: e.target.value }))}
                     onKeyDown={handleKeyDown}
-                    className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+                    className="w-full px-2 py-1.5 border border-stone rounded text-sm bg-white placeholder:text-warm-gray-light"
                     placeholder="Phone"
                   />
                   <input
@@ -163,7 +163,7 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
                     value={formData.vendor_email}
                     onChange={e => setFormData(prev => ({ ...prev, vendor_email: e.target.value }))}
                     onKeyDown={handleKeyDown}
-                    className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+                    className="w-full px-2 py-1.5 border border-stone rounded text-sm bg-white placeholder:text-warm-gray-light"
                     placeholder="Email"
                   />
                 </div>
@@ -171,12 +171,12 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
                 <button
                   type="button"
                   onClick={() => setShowMore(true)}
-                  className="text-xs text-slate-400 hover:text-slate-600"
+                  className="text-xs text-warm-gray-light hover:text-warm-gray"
                 >
                   + More fields
                 </button>
               )}
-              <p className="text-xs text-slate-400">Press Enter to add, Escape to clear</p>
+              <p className="text-xs text-warm-gray-light">Press Enter to add, Escape to clear</p>
             </>
           )}
         </div>
@@ -186,7 +186,7 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
 
   // Table mode
   return (
-    <tr className="bg-slate-50/30">
+    <tr className="bg-stone-lighter/30">
       <td className="px-4 py-1.5">
         <input
           ref={vendorRef}
@@ -194,7 +194,7 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
           value={formData.vendor_name}
           onChange={e => setFormData(prev => ({ ...prev, vendor_name: e.target.value }))}
           onKeyDown={handleKeyDown}
-          className="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+          className="w-full px-2 py-1 border border-stone rounded text-sm bg-white placeholder:text-warm-gray-light"
           placeholder="+ Add vendor..."
         />
       </td>
@@ -206,7 +206,7 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
           onChange={e => setFormData(prev => ({ ...prev, estimated_cost: e.target.value }))}
           onBlur={e => handleNumericBlur('estimated_cost', e.target.value)}
           onKeyDown={handleKeyDown}
-          className="w-24 px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+          className="w-24 px-2 py-1 border border-stone rounded text-sm bg-white placeholder:text-warm-gray-light"
           placeholder="0"
         />
       </td>
@@ -218,13 +218,13 @@ export default function AddLineItemRow({ categoryId, onUpdate, renderMode = 'tab
           onChange={e => setFormData(prev => ({ ...prev, actual_cost: e.target.value }))}
           onBlur={e => handleNumericBlur('actual_cost', e.target.value)}
           onKeyDown={handleKeyDown}
-          className="w-24 px-2 py-1 border border-slate-200 rounded text-sm bg-white placeholder:text-slate-400"
+          className="w-24 px-2 py-1 border border-stone rounded text-sm bg-white placeholder:text-warm-gray-light"
           placeholder="0"
         />
       </td>
-      <td className="px-4 py-1.5 text-sm text-slate-400">-</td>
-      <td className="px-4 py-1.5 text-sm text-slate-400">
-        <span className="text-xs text-slate-400">Enter to add</span>
+      <td className="px-4 py-1.5 text-sm text-warm-gray-light">-</td>
+      <td className="px-4 py-1.5 text-sm text-warm-gray-light">
+        <span className="text-xs text-warm-gray-light">Enter to add</span>
       </td>
     </tr>
   );

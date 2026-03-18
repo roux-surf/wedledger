@@ -16,12 +16,12 @@ import {
 } from '@/lib/types';
 
 const SPECIALTY_COLORS: Record<string, { selected: string; unselected: string }> = {
-  purple: { selected: 'bg-purple-100 text-purple-800 border-purple-300', unselected: 'bg-slate-100 text-slate-600 border-slate-200' },
-  blue: { selected: 'bg-blue-100 text-blue-800 border-blue-300', unselected: 'bg-slate-100 text-slate-600 border-slate-200' },
-  green: { selected: 'bg-green-100 text-green-800 border-green-300', unselected: 'bg-slate-100 text-slate-600 border-slate-200' },
-  coral: { selected: 'bg-orange-100 text-orange-800 border-orange-300', unselected: 'bg-slate-100 text-slate-600 border-slate-200' },
-  teal: { selected: 'bg-teal-100 text-teal-800 border-teal-300', unselected: 'bg-slate-100 text-slate-600 border-slate-200' },
-  pink: { selected: 'bg-pink-100 text-pink-800 border-pink-300', unselected: 'bg-slate-100 text-slate-600 border-slate-200' },
+  purple: { selected: 'bg-sage-light text-sage-dark border-sage', unselected: 'bg-stone-lighter text-warm-gray border-stone' },
+  blue: { selected: 'bg-champagne-light text-champagne-dark border-champagne', unselected: 'bg-stone-lighter text-warm-gray border-stone' },
+  green: { selected: 'bg-sage-light text-sage-dark border-sage', unselected: 'bg-stone-lighter text-warm-gray border-stone' },
+  coral: { selected: 'bg-rose-light text-rose-dark border-rose', unselected: 'bg-stone-lighter text-warm-gray border-stone' },
+  teal: { selected: 'bg-sage-light text-sage-dark border-sage', unselected: 'bg-stone-lighter text-warm-gray border-stone' },
+  pink: { selected: 'bg-rose-light text-rose-dark border-rose', unselected: 'bg-stone-lighter text-warm-gray border-stone' },
 };
 
 export default function PlannerProfilePage() {
@@ -85,23 +85,20 @@ export default function PlannerProfilePage() {
     }
   }, [profile, loadProfile]);
 
-  // Save helper — uses ref to avoid race conditions between concurrent blur events
+  // Save helper — upsert to avoid duplicate key errors from concurrent blur events
   const saveField = useCallback(async (fields: Record<string, unknown>) => {
     if (!user) return;
 
-    if (profileIdRef.current) {
-      const { error } = await supabase
-        .from('planner_profiles')
-        .update({ ...fields, updated_at: new Date().toISOString() })
-        .eq('id', profileIdRef.current);
-      if (error) throw error;
-    } else {
-      const { data, error } = await supabase
-        .from('planner_profiles')
-        .insert({ ...fields, user_id: user.id, updated_at: new Date().toISOString() })
-        .select()
-        .single();
-      if (error) throw error;
+    const { data, error } = await supabase
+      .from('planner_profiles')
+      .upsert(
+        { ...fields, user_id: user.id, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      )
+      .select()
+      .single();
+    if (error) throw error;
+    if (data && !profileIdRef.current) {
       profileIdRef.current = data.id;
       setProfileId(data.id);
     }
@@ -198,27 +195,27 @@ export default function PlannerProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-400">Loading...</p>
+      <div className="min-h-screen bg-ivory flex items-center justify-center">
+        <p className="text-warm-gray-light">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-ivory">
       <main className="max-w-2xl mx-auto px-4 py-12">
         <div className="mb-10">
-          <h1 className="text-3xl font-bold text-slate-900">My Profile</h1>
-          <p className="text-lg text-slate-600 mt-2">
+          <h1 className="text-3xl font-bold text-charcoal">My Profile</h1>
+          <p className="text-lg text-warm-gray mt-2">
             Set up your public profile so couples can find and hire you.
           </p>
         </div>
 
         <div className="space-y-8">
           {/* Basic Info */}
-          <section className="bg-white border border-slate-200 rounded-lg p-6 md:p-8">
-            <h2 className="text-xl font-semibold text-slate-900 mb-1">Basic info</h2>
-            <p className="text-sm text-slate-500 mb-6">
+          <section className="bg-cream border border-stone rounded-lg p-6 md:p-8">
+            <h2 className="text-xl font-semibold text-charcoal mb-1">Basic info</h2>
+            <p className="text-sm text-warm-gray mb-6">
               Tell couples who you are and where you&apos;re based.
             </p>
 
@@ -228,7 +225,7 @@ export default function PlannerProfilePage() {
                 label="Your name"
                 value={fullName}
                 disabled
-                className="bg-slate-50 text-slate-500"
+                className="bg-stone-lighter text-warm-gray"
               />
 
               <div>
@@ -240,13 +237,13 @@ export default function PlannerProfilePage() {
                   onBlur={handleDisplayNameBlur}
                   placeholder="e.g., Elegant Events Co."
                 />
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-warm-gray-light">
                   Put your business name here. This is what couples will see in the directory.
                 </p>
               </div>
 
               <div className="w-full">
-                <label htmlFor="bio" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="bio" className="block text-sm font-medium text-charcoal mb-1">
                   Bio
                 </label>
                 <textarea
@@ -258,9 +255,9 @@ export default function PlannerProfilePage() {
                   onBlur={handleBioBlur}
                   placeholder="Tell couples about yourself, your approach to wedding planning, and what makes you unique."
                   rows={4}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 resize-none"
+                  className="w-full px-3 py-2 border border-stone rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sage focus:border-sage resize-none"
                 />
-                <p className="mt-1 text-xs text-slate-400 text-right">{bio.length}/500</p>
+                <p className="mt-1 text-xs text-warm-gray-light text-right">{bio.length}/500</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -274,7 +271,7 @@ export default function PlannerProfilePage() {
                 />
 
                 <div className="w-full">
-                  <label htmlFor="state" className="block text-sm font-medium text-slate-700 mb-1">
+                  <label htmlFor="state" className="block text-sm font-medium text-charcoal mb-1">
                     State
                   </label>
                   <select
@@ -284,7 +281,7 @@ export default function PlannerProfilePage() {
                       setState(e.target.value);
                       handleSaveField({ state: e.target.value || null });
                     }}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
+                    className="w-full px-3 py-2 border border-stone rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sage focus:border-sage"
                   >
                     <option value="">Select state</option>
                     {US_STATES.map((s) => (
@@ -321,9 +318,9 @@ export default function PlannerProfilePage() {
           </section>
 
           {/* Specialties */}
-          <section className="bg-white border border-slate-200 rounded-lg p-6 md:p-8">
-            <h2 className="text-xl font-semibold text-slate-900 mb-1">Specialties</h2>
-            <p className="text-sm text-slate-500 mb-6">
+          <section className="bg-cream border border-stone rounded-lg p-6 md:p-8">
+            <h2 className="text-xl font-semibold text-charcoal mb-1">Specialties</h2>
+            <p className="text-sm text-warm-gray mb-6">
               Select up to 4 specialties that describe your planning style.
             </p>
 
@@ -351,14 +348,14 @@ export default function PlannerProfilePage() {
               )}
             </div>
             {specialties.length >= 4 && (
-              <p className="mt-3 text-xs text-slate-400">Maximum of 4 specialties selected.</p>
+              <p className="mt-3 text-xs text-warm-gray-light">Maximum of 4 specialties selected.</p>
             )}
           </section>
 
           {/* Rates */}
-          <section className="bg-white border border-slate-200 rounded-lg p-6 md:p-8">
-            <h2 className="text-xl font-semibold text-slate-900 mb-1">Rates</h2>
-            <p className="text-sm text-slate-500 mb-6">
+          <section className="bg-cream border border-stone rounded-lg p-6 md:p-8">
+            <h2 className="text-xl font-semibold text-charcoal mb-1">Rates</h2>
+            <p className="text-sm text-warm-gray mb-6">
               Set your pricing. You can offer consultations, ongoing planning, or both.
             </p>
 
@@ -374,7 +371,7 @@ export default function PlannerProfilePage() {
                   onBlur={handleConsultationRateBlur}
                   placeholder="e.g., 150"
                 />
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-warm-gray-light">
                   One-time consultations with couples. Set your hourly rate.
                 </p>
               </div>
@@ -390,7 +387,7 @@ export default function PlannerProfilePage() {
                   onBlur={handleSubscriptionRateBlur}
                   placeholder="e.g., 500"
                 />
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-warm-gray-light">
                   Ongoing planning support. Couples subscribe month-to-month.
                 </p>
               </div>
@@ -398,13 +395,13 @@ export default function PlannerProfilePage() {
           </section>
 
           {/* Availability */}
-          <section className="bg-white border border-slate-200 rounded-lg p-6 md:p-8">
-            <h2 className="text-xl font-semibold text-slate-900 mb-1">Availability</h2>
+          <section className="bg-cream border border-stone rounded-lg p-6 md:p-8">
+            <h2 className="text-xl font-semibold text-charcoal mb-1">Availability</h2>
 
             <div className="flex items-center justify-between mt-4">
               <div>
-                <p className="text-sm font-medium text-slate-900">Accepting new clients</p>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-sm font-medium text-charcoal">Accepting new clients</p>
+                <p className="text-xs text-warm-gray-light mt-0.5">
                   When turned off, your profile won&apos;t appear in the planner directory.
                 </p>
               </div>
@@ -412,7 +409,7 @@ export default function PlannerProfilePage() {
                 type="button"
                 onClick={toggleAcceptingClients}
                 className={`relative w-11 h-6 rounded-full transition-colors ${
-                  acceptingClients ? 'bg-green-500' : 'bg-slate-300'
+                  acceptingClients ? 'bg-sage' : 'bg-stone'
                 }`}
               >
                 <span
@@ -425,18 +422,18 @@ export default function PlannerProfilePage() {
           </section>
 
           {/* Publish */}
-          <section className="bg-white border border-slate-200 rounded-lg p-6 md:p-8">
-            <h2 className="text-xl font-semibold text-slate-900 mb-1">Publish</h2>
+          <section className="bg-cream border border-stone rounded-lg p-6 md:p-8">
+            <h2 className="text-xl font-semibold text-charcoal mb-1">Publish</h2>
 
             <div className="flex items-center justify-between mt-4">
               <div>
-                <p className="text-sm font-medium text-slate-900">Publish profile</p>
+                <p className="text-sm font-medium text-charcoal">Publish profile</p>
                 {profilePublished ? (
-                  <p className="text-xs text-green-600 mt-0.5">
+                  <p className="text-xs text-sage-dark mt-0.5">
                     Your profile is visible to all WedLedger couples.
                   </p>
                 ) : (
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-warm-gray-light mt-0.5">
                     Your profile is currently hidden from the directory.
                   </p>
                 )}
@@ -445,7 +442,7 @@ export default function PlannerProfilePage() {
                 type="button"
                 onClick={togglePublish}
                 className={`relative w-11 h-6 rounded-full transition-colors ${
-                  profilePublished ? 'bg-green-500' : 'bg-slate-300'
+                  profilePublished ? 'bg-sage' : 'bg-stone'
                 }`}
               >
                 <span
@@ -459,7 +456,7 @@ export default function PlannerProfilePage() {
               <p className="mt-3 text-sm text-red-600">{publishError}</p>
             )}
             {!profilePublished && !publishError && (
-              <p className="mt-3 text-xs text-slate-400">
+              <p className="mt-3 text-xs text-warm-gray-light">
                 Your profile will be visible to all WedLedger couples once published.
               </p>
             )}

@@ -181,21 +181,21 @@ export default function NewClientPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200">
+    <div className="min-h-screen bg-ivory">
+      <header className="bg-cream border-b border-stone">
         <div className="max-w-2xl mx-auto px-4 py-4">
-          <Link href="/dashboard" className="text-slate-600 hover:text-slate-900 text-sm">
+          <Link href="/dashboard" className="text-warm-gray hover:text-charcoal text-sm">
             &larr; Back to Dashboard
           </Link>
         </div>
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-slate-900 mb-6">New Client</h1>
+        <h1 className="text-2xl font-bold text-charcoal mb-6">New Client</h1>
 
-        <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-lg p-6">
+        <form onSubmit={handleSubmit} className="bg-cream border border-stone rounded-lg p-6">
           {error && (
-            <div className="mb-4 p-3 text-sm text-red-600 bg-red-50 rounded-md border border-red-200">
+            <div className="mb-4 p-3 text-sm text-rose bg-rose-light rounded-md border border-rose">
               {error}
             </div>
           )}
@@ -235,7 +235,7 @@ export default function NewClientPage() {
               <div className="w-full">
                 <label
                   htmlFor="state"
-                  className="block text-sm font-medium text-slate-700 mb-1"
+                  className="block text-sm font-medium text-charcoal mb-1"
                 >
                   State
                 </label>
@@ -245,7 +245,7 @@ export default function NewClientPage() {
                   value={formData.state}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
+                  className="w-full px-3 py-2 border border-stone rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sage focus:border-sage"
                 >
                   <option value="">Select state</option>
                   {US_STATES.map((state) => (
@@ -285,9 +285,9 @@ export default function NewClientPage() {
           </div>
 
           <div className="mt-6">
-            <p className="text-sm font-medium text-slate-700 mb-1">
+            <p className="text-sm font-medium text-charcoal mb-1">
               Start from a budget template{' '}
-              <span className="text-slate-400 font-normal">(optional)</span>
+              <span className="text-warm-gray-light font-normal">(optional)</span>
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {WEDDING_LEVELS.map((level) => (
@@ -299,8 +299,8 @@ export default function NewClientPage() {
                   }
                   className={`rounded-md border px-3 py-2 text-left text-sm transition-colors ${
                     selectedTemplate === level.id
-                      ? 'border-slate-900 bg-slate-900 text-white'
-                      : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+                      ? 'border-charcoal bg-charcoal text-white'
+                      : 'border-stone bg-white text-charcoal hover:border-warm-gray-light'
                   }`}
                 >
                   <span className="font-medium">{level.displayName}</span>
@@ -314,8 +314,8 @@ export default function NewClientPage() {
                 onClick={() => setSelectedTemplate(null)}
                 className={`rounded-md border px-3 py-2 text-left text-sm transition-colors ${
                   selectedTemplate === null
-                    ? 'border-slate-900 bg-slate-900 text-white'
-                    : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+                    ? 'border-charcoal bg-charcoal text-white'
+                    : 'border-stone bg-white text-charcoal hover:border-warm-gray-light'
                 }`}
               >
                 <span className="font-medium">Skip</span>
@@ -324,7 +324,7 @@ export default function NewClientPage() {
                 </span>
               </button>
             </div>
-            <p className="text-xs text-slate-400 mt-2">This pre-fills your budget allocations and planning timeline. You can adjust everything after creation.</p>
+            <p className="text-xs text-warm-gray-light mt-2">This pre-fills your budget allocations and planning timeline. You can adjust everything after creation.</p>
           </div>
 
           <div className="mt-6 flex gap-3">

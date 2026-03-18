@@ -51,11 +51,11 @@ export function ToastProvider({ children }: ToastProviderProps) {
         }`}
       >
         <div className={`flex items-center gap-1.5 px-3 py-1.5 text-white text-sm rounded-full shadow-lg ${
-          isError ? 'bg-red-700' : 'bg-slate-800'
+          isError ? 'bg-rose-dark' : 'bg-charcoal'
         }`}>
           {isError ? (
             <svg
-              className="w-4 h-4 text-red-300"
+              className="w-4 h-4 text-rose-light"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -69,7 +69,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
             </svg>
           ) : (
             <svg
-              className="w-4 h-4 text-green-400"
+              className="w-4 h-4 text-sage"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

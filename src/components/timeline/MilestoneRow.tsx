@@ -25,10 +25,10 @@ export default function MilestoneRow({
   return (
     <div className={`flex items-start gap-3 py-3 px-4 rounded-lg border transition-colors ${
       milestone.status === 'completed'
-        ? 'bg-green-50/50 border-green-200'
+        ? 'bg-sage-light/50 border-sage'
         : isPastDue
-          ? 'bg-red-50/50 border-red-200'
-          : 'bg-white border-slate-200'
+          ? 'bg-rose-light/50 border-rose'
+          : 'bg-white border-stone'
     }`}>
       {/* Checkbox / status indicator */}
       <div className="pt-0.5 shrink-0">
@@ -42,8 +42,8 @@ export default function MilestoneRow({
             disabled={milestone.status === 'completed'}
             className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
               milestone.status === 'completed'
-                ? 'bg-green-500 border-green-500 text-white cursor-default'
-                : 'border-slate-300 hover:border-slate-400 cursor-pointer'
+                ? 'bg-sage border-sage text-white cursor-default'
+                : 'border-stone hover:border-warm-gray-light cursor-pointer'
             }`}
           >
             {milestone.status === 'completed' && (
@@ -56,7 +56,7 @@ export default function MilestoneRow({
           <select
             value={milestone.status}
             onChange={(e) => onStatusChange(milestone.id, e.target.value as MilestoneStatus)}
-            className="text-xs border border-slate-200 rounded px-1 py-0.5 bg-white"
+            className="text-xs border border-stone rounded px-1 py-0.5 bg-white"
           >
             <option value="not_started">Not Started</option>
             <option value="in_progress">In Progress</option>
@@ -69,20 +69,20 @@ export default function MilestoneRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-sm font-medium ${
-            milestone.status === 'completed' ? 'text-slate-400 line-through' : 'text-slate-900'
+            milestone.status === 'completed' ? 'text-warm-gray-light line-through' : 'text-charcoal'
           }`}>
             {milestone.title}
           </span>
           {!isClientView && <MilestoneStatusBadge status={milestone.status} />}
           {isPastDue && (
-            <span className="text-xs font-medium text-red-600">Past due</span>
+            <span className="text-xs font-medium text-rose-dark">Past due</span>
           )}
         </div>
         {milestone.description && (
-          <p className="text-xs text-slate-500 mt-0.5">{milestone.description}</p>
+          <p className="text-xs text-warm-gray mt-0.5">{milestone.description}</p>
         )}
         <div className="flex items-center gap-3 mt-1 flex-wrap">
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-warm-gray-light">
             {formatShortDate(milestone.target_date)}
             {!isClientView && ` (${formatRelativeMonths(milestone.months_before)})`}
           </span>
@@ -102,7 +102,7 @@ export default function MilestoneRow({
         <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={() => onEdit(milestone)}
-            className="text-slate-400 hover:text-slate-600 p-1"
+            className="text-warm-gray-light hover:text-warm-gray p-1"
             title="Edit milestone"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,7 +111,7 @@ export default function MilestoneRow({
           </button>
           <button
             onClick={() => onDelete(milestone.id)}
-            className="text-slate-400 hover:text-red-600 p-1"
+            className="text-warm-gray-light hover:text-rose-dark p-1"
             title="Delete milestone"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

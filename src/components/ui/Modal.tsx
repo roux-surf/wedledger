@@ -45,11 +45,11 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
       onClick={handleOverlayClick}
     >
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-          <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-stone">
+          <h2 className="text-lg font-semibold text-charcoal">{title}</h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors"
+            className="text-warm-gray-light hover:text-warm-gray transition-colors"
           >
             <svg
               className="w-5 h-5"

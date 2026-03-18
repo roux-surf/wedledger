@@ -76,20 +76,20 @@ export default function AddPaymentForm({ lineItemId, actualCost, totalScheduled 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-2 md:flex-row md:items-end">
       <div className="flex-1">
-        <label className="block text-xs font-medium text-slate-600 mb-1">Label</label>
+        <label className="block text-xs font-medium text-warm-gray mb-1">Label</label>
         <input
           type="text"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={(e) => e.target.select()}
-          className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+          className="w-full px-2 py-1.5 border border-stone rounded text-sm"
           placeholder="e.g., Deposit, Final Balance"
           required
         />
       </div>
       <div className="w-full md:w-28">
-        <label className="block text-xs font-medium text-slate-600 mb-1">Amount</label>
+        <label className="block text-xs font-medium text-warm-gray mb-1">Amount</label>
         <input
           type="text"
           inputMode="decimal"
@@ -98,23 +98,23 @@ export default function AddPaymentForm({ lineItemId, actualCost, totalScheduled 
           onBlur={handleAmountBlur}
           onKeyDown={handleKeyDown}
           onFocus={(e) => e.target.select()}
-          className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+          className="w-full px-2 py-1.5 border border-stone rounded text-sm"
           placeholder="0"
         />
         {actualCost !== undefined && actualCost > 0 && actualCost !== totalScheduled && parseNumericInput(amount) > 0 && (parseNumericInput(amount) + totalScheduled) > actualCost && (
-          <p className="text-xs text-amber-600 mt-1">
+          <p className="text-xs text-champagne-dark mt-1">
             Total will exceed actual cost by {formatCurrency(parseNumericInput(amount) + totalScheduled - actualCost)}
           </p>
         )}
       </div>
       <div className="w-full md:w-36">
-        <label className="block text-xs font-medium text-slate-600 mb-1">Due Date</label>
+        <label className="block text-xs font-medium text-warm-gray mb-1">Due Date</label>
         <input
           type="date"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+          className="w-full px-2 py-1.5 border border-stone rounded text-sm"
         />
       </div>
       <Button type="submit" size="sm" disabled={loading || !label.trim()}>

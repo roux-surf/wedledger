@@ -57,9 +57,9 @@ function SortButton({
     <button
       type="button"
       onClick={() => onSort(sortKey)}
-      className={`text-xs font-medium uppercase tracking-wider select-none cursor-pointer hover:text-slate-700 ${
+      className={`text-xs font-medium uppercase tracking-wider select-none cursor-pointer hover:text-charcoal ${
         align === 'right' ? 'text-right' : 'text-left'
-      } ${isActive ? 'text-slate-700' : 'text-slate-500'}`}
+      } ${isActive ? 'text-charcoal' : 'text-warm-gray'}`}
     >
       {label}
       <SortIndicator direction={direction} />
@@ -154,22 +154,22 @@ export default function CategoryTable({
   const totalBarWidth = Math.min(totalRatio * 100, 100);
 
   const getTotalBarColor = () => {
-    if (totalRatio > 1) return 'bg-red-500';
-    if (totalRatio >= 0.85) return 'bg-amber-500';
-    return 'bg-emerald-500';
+    if (totalRatio > 1) return 'bg-rose';
+    if (totalRatio >= 0.85) return 'bg-champagne';
+    return 'bg-sage';
   };
 
   const getTotalRemainingColor = () => {
-    if (totalRemaining < 0) return 'text-red-600';
-    if (totalRatio >= 0.85) return 'text-amber-600';
-    return 'text-green-600';
+    if (totalRemaining < 0) return 'text-rose-dark';
+    if (totalRatio >= 0.85) return 'text-champagne-dark';
+    return 'text-sage-dark';
   };
 
   return (
     <>
-      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden print:rounded-none print:border-slate-300">
+      <div className="bg-white border border-stone rounded-lg overflow-hidden print:rounded-none print:border-stone">
         {/* Sort header — desktop only */}
-        <div className="hidden md:flex items-center gap-4 px-4 py-2.5 border-b border-slate-200 bg-slate-50">
+        <div className="hidden md:flex items-center gap-4 px-4 py-2.5 border-b border-stone bg-stone-lighter">
           <div className="w-48 shrink-0">
             <SortButton label="Category" sortKey="name" sortConfig={sortConfig} onSort={handleSort} />
           </div>
@@ -180,7 +180,7 @@ export default function CategoryTable({
             <SortButton label="Spent" sortKey="actual_spend" sortConfig={sortConfig} onSort={handleSort} align="right" />
           </div>
           <div className="flex-1 min-w-[10rem]">
-            <span className="text-xs font-medium uppercase tracking-wider text-slate-500">Progress</span>
+            <span className="text-xs font-medium uppercase tracking-wider text-warm-gray">Progress</span>
           </div>
           <div className="w-28 shrink-0 text-right">
             <SortButton label="Remaining" sortKey="difference" sortConfig={sortConfig} onSort={handleSort} align="right" />
@@ -204,7 +204,7 @@ export default function CategoryTable({
         </div>
 
         {/* Mobile card list */}
-        <div className="md:hidden print:hidden divide-y divide-slate-100">
+        <div className="md:hidden print:hidden divide-y divide-stone-lighter">
           {sortedCategories.map((category) => (
             <CategoryRow
               key={category.id}
@@ -222,27 +222,27 @@ export default function CategoryTable({
         {orderedCategories.length > 0 && (
           <>
             {/* Desktop footer */}
-            <div className="hidden md:flex items-center gap-4 px-4 py-3 border-t border-slate-200 bg-slate-50">
+            <div className="hidden md:flex items-center gap-4 px-4 py-3 border-t border-stone bg-stone-lighter">
               <div className="w-48 shrink-0 min-w-0">
-                <p className="text-sm font-medium text-slate-900">Total</p>
+                <p className="text-sm font-medium text-charcoal">Total</p>
               </div>
               <div className="w-24 shrink-0 text-right">
-                <span className="text-sm text-slate-500 tabular-nums">{formatCurrency(totalAllocated)}</span>
+                <span className="text-sm text-warm-gray tabular-nums">{formatCurrency(totalAllocated)}</span>
               </div>
               <div className="w-24 shrink-0 text-right">
-                <span className="text-sm font-medium text-slate-900 tabular-nums">{formatCurrency(totalActualSpend)}</span>
+                <span className="text-sm font-medium text-charcoal tabular-nums">{formatCurrency(totalActualSpend)}</span>
               </div>
               <div className="flex-1 min-w-[10rem]">
                 <div className="print:hidden">
-                  <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-stone rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all ${getTotalBarColor()}`}
                       style={{ width: `${totalBarWidth}%` }}
                     />
                   </div>
-                  <p className="text-xs text-slate-400 tabular-nums mt-0.5">{formatPercent(totalRatio * 100)}</p>
+                  <p className="text-xs text-warm-gray-light tabular-nums mt-0.5">{formatPercent(totalRatio * 100)}</p>
                 </div>
-                <span className="hidden print:inline text-xs text-slate-600 tabular-nums">{formatCurrency(totalActualSpend)} / {formatCurrency(totalAllocated)}</span>
+                <span className="hidden print:inline text-xs text-warm-gray tabular-nums">{formatCurrency(totalActualSpend)} / {formatCurrency(totalAllocated)}</span>
               </div>
               <div className="w-28 shrink-0 text-right">
                 <span className={`text-sm font-medium tabular-nums ${getTotalRemainingColor()}`}>
@@ -253,22 +253,22 @@ export default function CategoryTable({
             </div>
 
             {/* Mobile footer */}
-            <div className="md:hidden p-4 bg-slate-50 border-t border-slate-200">
+            <div className="md:hidden p-4 bg-stone-lighter border-t border-stone">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-slate-900">Total</span>
+                <span className="text-sm font-medium text-charcoal">Total</span>
                 <span className={`text-sm font-medium tabular-nums ${getTotalRemainingColor()}`}>
                   {totalRemaining < 0 ? `-${formatCurrency(Math.abs(totalRemaining))}` : `${formatCurrency(totalRemaining)} left`}
                 </span>
               </div>
-              <div className="h-1 bg-slate-200 rounded-full overflow-hidden mb-1">
+              <div className="h-1 bg-stone rounded-full overflow-hidden mb-1">
                 <div
                   className={`h-full rounded-full transition-all ${getTotalBarColor()}`}
                   style={{ width: `${totalBarWidth}%` }}
                 />
               </div>
               <div className="flex justify-between">
-                <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(totalActualSpend)} spent</span>
-                <span className="text-xs text-slate-400 tabular-nums">{formatCurrency(totalAllocated)} allocated</span>
+                <span className="text-xs text-warm-gray-light tabular-nums">{formatCurrency(totalActualSpend)} spent</span>
+                <span className="text-xs text-warm-gray-light tabular-nums">{formatCurrency(totalAllocated)} allocated</span>
               </div>
             </div>
           </>
@@ -276,21 +276,21 @@ export default function CategoryTable({
 
         {/* Inline add form — desktop */}
         {!isClientView && orderedCategories.length > 0 && (
-          <div className="hidden md:block px-4 py-3 border-t border-slate-100 bg-slate-50/50">
+          <div className="hidden md:block px-4 py-3 border-t border-stone-lighter bg-stone-lighter/50">
             <AddCategoryForm budgetId={budgetId} onCategoryAdded={onUpdate} />
           </div>
         )}
 
         {/* Inline add form — mobile */}
         {!isClientView && orderedCategories.length > 0 && (
-          <div className="md:hidden px-4 py-3 border-t border-slate-100 bg-slate-50/50">
+          <div className="md:hidden px-4 py-3 border-t border-stone-lighter bg-stone-lighter/50">
             <AddCategoryForm budgetId={budgetId} onCategoryAdded={onUpdate} />
           </div>
         )}
 
         {orderedCategories.length === 0 && (
           <div className="m-4">
-            <div className="p-8 text-center text-sm text-slate-500 border-2 border-dashed border-slate-200 rounded-lg mb-4">
+            <div className="p-8 text-center text-sm text-warm-gray border-2 border-dashed border-stone rounded-lg mb-4">
               No categories yet. Add one below to start building your budget.
             </div>
             {!isClientView && (

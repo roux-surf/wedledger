@@ -20,21 +20,21 @@ export default function BudgetLinkBadge({
 
   return (
     <div className="flex items-center gap-2 text-xs">
-      <span className="text-slate-500 font-medium">{categoryName}</span>
+      <span className="text-warm-gray font-medium">{categoryName}</span>
       {categoryTarget > 0 && (
         <>
           {isClientView ? (
-            <span className={isOver ? 'text-red-600' : 'text-slate-500'}>
+            <span className={isOver ? 'text-rose-dark' : 'text-warm-gray'}>
               {formatPercent(Math.min(pct, 999))} committed
             </span>
           ) : (
-            <span className={isOver ? 'text-red-600' : 'text-slate-500'}>
+            <span className={isOver ? 'text-rose-dark' : 'text-warm-gray'}>
               {formatCurrency(categorySpent)} of {formatCurrency(categoryTarget)}
             </span>
           )}
-          <div className="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+          <div className="w-16 h-1.5 bg-stone rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all ${isOver ? 'bg-red-500' : 'bg-green-500'}`}
+              className={`h-full rounded-full transition-all ${isOver ? 'bg-rose' : 'bg-sage'}`}
               style={{ width: `${Math.min(pct, 100)}%` }}
             />
           </div>

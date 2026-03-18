@@ -35,18 +35,18 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
 
   const getStatusBadge = () => {
     if (payment.status === 'paid') {
-      return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Paid</span>;
+      return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-sage-light text-sage-dark">Paid</span>;
     }
     if (payment.due_date) {
       const urgency = getPaymentUrgency(payment.due_date);
       if (urgency === 'overdue') {
-        return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">Overdue</span>;
+        return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-rose-light text-rose-dark">Overdue</span>;
       }
       if (urgency === 'this_week') {
-        return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Due Soon</span>;
+        return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-champagne-light text-champagne-dark">Due Soon</span>;
       }
     }
-    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">Pending</span>;
+    return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-stone-lighter text-warm-gray">Pending</span>;
   };
 
   const handleSave = async () => {
@@ -154,7 +154,7 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
   if (renderMode === 'card') {
     if (isEditing && !isClientView) {
       return (
-        <div className="p-3 bg-slate-50 border-b border-slate-100">
+        <div className="p-3 bg-stone-lighter border-b border-stone-lighter">
           <div className="space-y-2">
             <input
               ref={labelRef}
@@ -164,7 +164,7 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
               onKeyDown={handleKeyDown}
               onBlur={handleBlur}
               onFocus={(e) => e.target.select()}
-              className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+              className="w-full px-2 py-1.5 border border-stone rounded text-sm"
               placeholder="Payment label"
             />
             <div className="grid grid-cols-2 gap-2">
@@ -181,7 +181,7 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
                   handleBlur(e);
                 }}
                 onFocus={(e) => e.target.select()}
-                className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+                className="w-full px-2 py-1.5 border border-stone rounded text-sm"
                 placeholder="Amount"
               />
               <input
@@ -191,15 +191,15 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
                 onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
                 onKeyDown={handleKeyDown}
                 onBlur={handleBlur}
-                className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
+                className="w-full px-2 py-1.5 border border-stone rounded text-sm"
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-slate-400">Enter to save · Esc to cancel</span>
+              <span className="text-[10px] text-warm-gray-light">Enter to save · Esc to cancel</span>
               <button
                 type="button"
                 onClick={onDelete}
-                className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+                className="p-1 rounded text-warm-gray-light hover:text-rose-dark hover:bg-rose-light"
                 aria-label="Delete"
                 title="Delete"
               >
@@ -215,17 +215,17 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
 
     return (
       <div
-        className="p-3 border-b border-slate-100 flex items-center justify-between gap-2 hover:bg-slate-50 transition-colors duration-100"
+        className="p-3 border-b border-stone-lighter flex items-center justify-between gap-2 hover:bg-stone-lighter transition-colors duration-100"
         onClick={isClientView ? undefined : () => handleStartEdit()}
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className={`text-sm ${!isClientView ? 'cursor-pointer' : ''} ${payment.status === 'paid' ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
+            <span className={`text-sm ${!isClientView ? 'cursor-pointer' : ''} ${payment.status === 'paid' ? 'text-warm-gray-light line-through' : 'text-charcoal'}`}>
               {payment.label}
             </span>
             {getStatusBadge()}
           </div>
-          <div className="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
+          <div className="flex items-center gap-3 text-xs text-warm-gray mt-0.5">
             <span>{formatCurrency(payment.amount)}</span>
             {payment.due_date && <span>Due {formatShortDate(payment.due_date)}</span>}
             {payment.paid_date && <span>Paid {formatShortDate(payment.paid_date)}</span>}
@@ -236,8 +236,8 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
             onClick={(e) => { e.stopPropagation(); handleTogglePaid(); }}
             className={`shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
               payment.status === 'paid'
-                ? 'bg-green-500 border-green-500 text-white'
-                : 'border-slate-300 hover:border-slate-400'
+                ? 'bg-sage border-sage text-white'
+                : 'border-stone hover:border-warm-gray-light'
             }`}
           >
             {payment.status === 'paid' && (
@@ -254,7 +254,7 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
   // Table mode (desktop)
   if (isEditing && !isClientView) {
     return (
-      <tr className="bg-slate-50">
+      <tr className="bg-stone-lighter">
         {showCheckbox && <td className="px-2 py-1.5"></td>}
         <td className="px-4 py-1.5">
           <input
@@ -265,7 +265,7 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
             onKeyDown={handleKeyDown}
             onBlur={handleBlur}
             onFocus={(e) => e.target.select()}
-            className="w-full px-2 py-1 border border-slate-300 rounded text-sm"
+            className="w-full px-2 py-1 border border-stone rounded text-sm"
           />
         </td>
         <td className="px-4 py-1.5">
@@ -282,7 +282,7 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
               handleBlur(e);
             }}
             onFocus={(e) => e.target.select()}
-            className="w-24 px-2 py-1 border border-slate-300 rounded text-sm"
+            className="w-24 px-2 py-1 border border-stone rounded text-sm"
           />
         </td>
         <td className="px-4 py-1.5">
@@ -293,18 +293,18 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
             onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
             onKeyDown={handleKeyDown}
             onBlur={handleBlur}
-            className="px-2 py-1 border border-slate-300 rounded text-sm"
+            className="px-2 py-1 border border-stone rounded text-sm"
           />
         </td>
         <td className="px-4 py-1.5">
           <div className="flex items-center justify-between">
             {getStatusBadge()}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-slate-400">Enter to save · Esc to cancel</span>
+              <span className="text-[10px] text-warm-gray-light">Enter to save · Esc to cancel</span>
               <button
                 type="button"
                 onClick={onDelete}
-                className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+                className="p-1 rounded text-warm-gray-light hover:text-rose-dark hover:bg-rose-light"
                 aria-label="Delete"
                 title="Delete"
               >
@@ -319,10 +319,10 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
     );
   }
 
-  const clickableClass = !isClientView ? 'cursor-pointer hover:bg-slate-100 px-1 -mx-1 rounded underline decoration-dashed decoration-transparent hover:decoration-slate-400 underline-offset-2 transition-colors' : '';
+  const clickableClass = !isClientView ? 'cursor-pointer hover:bg-stone-lighter px-1 -mx-1 rounded underline decoration-dashed decoration-transparent hover:decoration-warm-gray-light underline-offset-2 transition-colors' : '';
 
   return (
-    <tr className={`hover:bg-slate-50 transition-colors duration-100 ${payment.status === 'paid' ? 'opacity-60' : ''}`}>
+    <tr className={`hover:bg-stone-lighter transition-colors duration-100 ${payment.status === 'paid' ? 'opacity-60' : ''}`}>
       {showCheckbox && (
         <td className="px-2 py-1.5">
           {payment.status === 'pending' && (
@@ -330,22 +330,22 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
               type="checkbox"
               checked={isSelected || false}
               onChange={onToggleSelect}
-              className="rounded border-slate-300"
+              className="rounded border-stone"
             />
           )}
         </td>
       )}
-      <td className="px-4 py-1.5 text-sm text-slate-900">
+      <td className="px-4 py-1.5 text-sm text-charcoal">
         <span onClick={isClientView ? undefined : () => handleStartEdit('label')} className={clickableClass}>
           {payment.label}
         </span>
       </td>
-      <td className="px-4 py-1.5 text-sm text-slate-900">
+      <td className="px-4 py-1.5 text-sm text-charcoal">
         <span onClick={isClientView ? undefined : () => handleStartEdit('amount')} className={clickableClass}>
           {formatCurrency(payment.amount)}
         </span>
       </td>
-      <td className="px-4 py-1.5 text-sm text-slate-500">
+      <td className="px-4 py-1.5 text-sm text-warm-gray">
         <span onClick={isClientView ? undefined : () => handleStartEdit('due_date')} className={clickableClass}>
           {payment.due_date ? formatShortDate(payment.due_date) : '+ date'}
         </span>
@@ -356,7 +356,7 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
           {!isClientView && (
             <button
               onClick={handleTogglePaid}
-              className="text-xs text-slate-500 hover:text-slate-700 underline"
+              className="text-xs text-warm-gray hover:text-charcoal underline"
             >
               {payment.status === 'paid' ? 'Undo' : 'Mark Paid'}
             </button>
@@ -365,7 +365,7 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
             <button
               type="button"
               onClick={onDelete}
-              className="ml-auto p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50"
+              className="ml-auto p-1 rounded text-warm-gray-light hover:text-rose-dark hover:bg-rose-light"
               aria-label="Delete"
               title="Delete"
             >

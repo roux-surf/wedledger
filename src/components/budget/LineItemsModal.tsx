@@ -176,14 +176,14 @@ export default function LineItemsModal({
   return (
     <>
     <Modal isOpen={isOpen} onClose={onClose} title={`${category.name} - Line Items`}>
-      <div className="mb-4 p-4 bg-slate-50 rounded-lg">
+      <div className="mb-4 p-4 bg-stone-lighter rounded-lg">
         <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4 text-center">
           <div>
-            <p className="text-xs text-slate-500 uppercase">Target</p>
+            <p className="text-xs text-warm-gray uppercase">Target</p>
             {isEditingTarget && !isClientView ? (
               <div className="mt-0.5">
                 <div className="flex items-center justify-center gap-1">
-                  <span className="text-slate-500 text-lg font-semibold">$</span>
+                  <span className="text-warm-gray text-lg font-semibold">$</span>
                   <input
                     ref={targetInputRef}
                     type="text"
@@ -193,31 +193,31 @@ export default function LineItemsModal({
                     onKeyDown={handleTargetKeyDown}
                     onBlur={() => handleTargetSave()}
                     onFocus={(e) => e.target.select()}
-                    className="w-24 px-2 py-0.5 border border-slate-300 rounded text-lg font-semibold text-center"
+                    className="w-24 px-2 py-0.5 border border-stone rounded text-lg font-semibold text-center"
                   />
                 </div>
               </div>
             ) : (
               <p
                 onClick={!isClientView ? handleTargetEdit : undefined}
-                className={`text-lg font-semibold text-slate-900 ${!isClientView ? 'cursor-pointer hover:bg-slate-200/50 px-2 -mx-2 rounded' : ''}`}
+                className={`text-lg font-semibold text-charcoal ${!isClientView ? 'cursor-pointer hover:bg-stone/50 px-2 -mx-2 rounded' : ''}`}
               >
                 {formatCurrency(category.target_amount)}
               </p>
             )}
-            <p className="text-xs text-slate-400 mt-0.5">{formatPercent(allocationPercent)} of budget</p>
+            <p className="text-xs text-warm-gray-light mt-0.5">{formatPercent(allocationPercent)} of budget</p>
           </div>
           <div>
-            <p className="text-xs text-slate-500 uppercase">Estimated</p>
-            <p className="text-lg font-semibold text-slate-900">{formatCurrency(category.estimated_total)}</p>
+            <p className="text-xs text-warm-gray uppercase">Estimated</p>
+            <p className="text-lg font-semibold text-charcoal">{formatCurrency(category.estimated_total)}</p>
           </div>
           <div>
-            <p className="text-xs text-slate-500 uppercase">Actual Spend</p>
-            <p className="text-lg font-semibold text-slate-900">{formatCurrency(totalActual)}</p>
+            <p className="text-xs text-warm-gray uppercase">Actual Spend</p>
+            <p className="text-lg font-semibold text-charcoal">{formatCurrency(totalActual)}</p>
           </div>
           <div>
-            <p className="text-xs text-slate-500 uppercase">Remaining to Pay</p>
-            <p className="text-lg font-semibold text-slate-900">{formatCurrency(totalRemaining)}</p>
+            <p className="text-xs text-warm-gray uppercase">Remaining to Pay</p>
+            <p className="text-lg font-semibold text-charcoal">{formatCurrency(totalRemaining)}</p>
           </div>
         </div>
       </div>
@@ -228,15 +228,15 @@ export default function LineItemsModal({
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Vendor</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Estimated</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Actual</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Paid</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase">Remaining</th>
+                <tr className="border-b border-stone">
+                  <th className="px-4 py-2 text-left text-xs font-medium text-warm-gray uppercase">Vendor</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-warm-gray uppercase">Estimated</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-warm-gray uppercase">Actual</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-warm-gray uppercase">Paid</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-warm-gray uppercase">Remaining</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-stone-lighter">
                 {lineItems.map((item) => (
                   <LineItemRow
                     key={item.id}
@@ -250,7 +250,7 @@ export default function LineItemsModal({
             </table>
           </div>
           {/* Mobile card list */}
-          <div className="md:hidden divide-y divide-slate-100">
+          <div className="md:hidden divide-y divide-stone-lighter">
             {lineItems.map((item) => (
               <LineItemRow
                 key={item.id}
@@ -264,29 +264,29 @@ export default function LineItemsModal({
           </div>
         </>
       ) : (
-        <p className="text-center text-slate-500 py-8">No line items yet.</p>
+        <p className="text-center text-warm-gray py-8">No line items yet.</p>
       )}
 
       {!isClientView && (
-        <div className="mt-4 pt-4 border-t border-slate-200">
+        <div className="mt-4 pt-4 border-t border-stone">
           {showAddForm ? (
             <form onSubmit={handleAddItem} className="space-y-3">
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Vendor Name</label>
+                  <label className="block text-xs font-medium text-warm-gray mb-1">Vendor Name</label>
                   <input
                     type="text"
                     value={newItem.vendor_name}
                     onChange={(e) => setNewItem((prev) => ({ ...prev, vendor_name: e.target.value }))}
                     onKeyDown={handleAddFormKeyDown}
                     onFocus={(e) => e.target.select()}
-                    className="w-full px-3 py-2 border border-slate-300 rounded text-sm"
+                    className="w-full px-3 py-2 border border-stone rounded text-sm"
                     placeholder="e.g., ABC Catering"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Estimated Cost</label>
+                  <label className="block text-xs font-medium text-warm-gray mb-1">Estimated Cost</label>
                   <input
                     type="text"
                     inputMode="decimal"
@@ -295,12 +295,12 @@ export default function LineItemsModal({
                     onBlur={(e) => handleNumericBlur('estimated_cost', e.target.value)}
                     onKeyDown={handleAddFormKeyDown}
                     onFocus={(e) => e.target.select()}
-                    className="w-full px-3 py-2 border border-slate-300 rounded text-sm"
+                    className="w-full px-3 py-2 border border-stone rounded text-sm"
                     placeholder="0"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Actual Cost</label>
+                  <label className="block text-xs font-medium text-warm-gray mb-1">Actual Cost</label>
                   <input
                     type="text"
                     inputMode="decimal"
@@ -309,17 +309,17 @@ export default function LineItemsModal({
                     onBlur={(e) => handleNumericBlur('actual_cost', e.target.value)}
                     onKeyDown={handleAddFormKeyDown}
                     onFocus={(e) => e.target.select()}
-                    className="w-full px-3 py-2 border border-slate-300 rounded text-sm"
+                    className="w-full px-3 py-2 border border-stone rounded text-sm"
                     placeholder="0"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Booking Status</label>
+                <label className="block text-xs font-medium text-warm-gray mb-1">Booking Status</label>
                 <select
                   value={newItem.booking_status}
                   onChange={(e) => setNewItem((prev) => ({ ...prev, booking_status: e.target.value as BookingStatus }))}
-                  className="w-full px-3 py-2 border border-slate-300 rounded text-sm bg-white"
+                  className="w-full px-3 py-2 border border-stone rounded text-sm bg-white"
                 >
                   <option value="none">None</option>
                   <option value="inquired">Inquired</option>
