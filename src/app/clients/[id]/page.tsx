@@ -327,14 +327,6 @@ export default function ClientBudgetPage() {
                   Client View
                 </button>
               </div>
-              {!isClientView && (
-                <button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="px-3 py-1.5 text-sm font-medium text-rose hover:text-rose-dark hover:bg-rose-light rounded-md transition-colors"
-                >
-                  Delete Wedding
-                </button>
-              )}
             </div>
           )}
         </div>
@@ -489,20 +481,28 @@ export default function ClientBudgetPage() {
                         </select>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 pt-1">
+                    <div className="flex items-center justify-between pt-1">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleDetailsSave}
+                          disabled={detailsSaving}
+                          className="px-4 py-1.5 text-sm font-medium bg-charcoal text-white rounded-md hover:bg-charcoal/90 disabled:opacity-50 transition-colors"
+                        >
+                          {detailsSaving ? 'Saving...' : 'Save'}
+                        </button>
+                        <button
+                          onClick={() => setIsEditingDetails(false)}
+                          disabled={detailsSaving}
+                          className="px-4 py-1.5 text-sm font-medium text-warm-gray hover:text-charcoal rounded-md transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
                       <button
-                        onClick={handleDetailsSave}
-                        disabled={detailsSaving}
-                        className="px-4 py-1.5 text-sm font-medium bg-charcoal text-white rounded-md hover:bg-charcoal/90 disabled:opacity-50 transition-colors"
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="px-4 py-1.5 text-sm font-medium text-rose hover:text-rose-dark hover:bg-rose-light rounded-md transition-colors"
                       >
-                        {detailsSaving ? 'Saving...' : 'Save'}
-                      </button>
-                      <button
-                        onClick={() => setIsEditingDetails(false)}
-                        disabled={detailsSaving}
-                        className="px-4 py-1.5 text-sm font-medium text-warm-gray hover:text-charcoal rounded-md transition-colors"
-                      >
-                        Cancel
+                        Delete Wedding
                       </button>
                     </div>
                   </div>
@@ -748,9 +748,9 @@ export default function ClientBudgetPage() {
             setShowDeleteConfirm(false);
           }
         }}
-        title="Delete Wedding"
-        message={`Are you sure you want to delete ${client.name}? This will permanently delete all budget data, categories, line items, and payments. This cannot be undone.`}
-        confirmLabel="Delete Wedding"
+        title="Are you sure?"
+        message={`Deleting "${client.name}" will permanently remove all budget data, categories, line items, and payments associated with this wedding. This action cannot be undone.`}
+        confirmLabel="Yes, Delete Wedding"
         loading={deleting}
       />
     </div>
