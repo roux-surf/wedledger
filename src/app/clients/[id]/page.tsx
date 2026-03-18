@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { useSupabaseClient } from '@/lib/supabase/client';
 import { formatCurrency, formatDate, formatPercent, getBudgetStatus, parseNumericInput, sanitizeNumericString } from '@/lib/types';
+import { US_STATES } from '@/lib/constants';
 import { getWeddingLevelById } from '@/lib/budgetTemplates';
 import { useClientBudget } from '@/lib/hooks/useClientBudget';
 import BudgetTabs from '@/components/budget/BudgetTabs';
@@ -36,6 +37,17 @@ export default function ClientBudgetPage() {
   // Delete confirmation state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Wedding details editing state
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
+  const [detailsForm, setDetailsForm] = useState({
+    name: '',
+    wedding_date: '',
+    city: '',
+    state: '',
+    guest_count: '',
+  });
+  const [detailsSaving, setDetailsSaving] = useState(false);
 
   // Sticky header state
   const [showStickyHeader, setShowStickyHeader] = useState(false);
@@ -127,6 +139,55 @@ export default function ClientBudgetPage() {
   const handleBudgetCancel = () => {
     setIsEditingBudget(false);
     setBudgetUpdateError(null);
+  };
+
+  // Determine if the current user is the owner (planner who created the wedding)
+  const isOwner = !!(user && client && client.user_id === user.id);
+
+  const handleEditDetails = () => {
+    if (!client) return;
+    setDetailsForm({
+      name: client.name || '',
+      wedding_date: client.wedding_date || '',
+      city: client.city || '',
+      state: client.state || '',
+      guest_count: client.guest_count ? String(client.guest_count) : '',
+    });
+    setIsEditingDetails(true);
+  };
+
+  const handleDetailsSave = async () => {
+    if (!client) return;
+    setDetailsSaving(true);
+    try {
+      const guestCount = Math.round(parseNumericInput(detailsForm.guest_count));
+      const { error } = await supabase
+        .from('clients')
+        .update({
+          name: detailsForm.name,
+          wedding_date: detailsForm.wedding_date,
+          city: detailsForm.city,
+          state: detailsForm.state,
+          guest_count: guestCount,
+        })
+        .eq('id', client.id);
+      if (error) {
+        showToast('Failed to update wedding details', 'error');
+        return;
+      }
+      setIsEditingDetails(false);
+      showSaved();
+      fetchData();
+    } catch {
+      showToast('Failed to update wedding details', 'error');
+    } finally {
+      setDetailsSaving(false);
+    }
+  };
+
+  const handleDetailChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setDetailsForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleBudgetSave = async () => {
@@ -354,26 +415,135 @@ export default function ClientBudgetPage() {
           <div ref={clientInfoRef} className="bg-cream border border-stone rounded-lg p-6 mb-6">
             {/* Layer 1 — Client info + status badge */}
             <div className="flex items-start justify-between flex-wrap gap-2">
-              <div>
-                <h2 className="text-3xl font-heading font-semibold tracking-tight text-charcoal">{client.name}</h2>
-                <p className="text-warm-gray mt-1">
-                  {client.city}, {client.state} &bull; {formatDate(client.wedding_date)} &bull; {client.guest_count} guests
-                  {budget.template_id && (() => {
-                    const level = getWeddingLevelById(budget.template_id);
-                    return level ? (
-                      <>
-                        {' '}&bull;{' '}
-                        <span className="bg-stone-lighter text-warm-gray text-xs px-2 py-0.5 rounded-full inline-flex items-center">
-                          {level.displayName} template
-                        </span>
-                      </>
-                    ) : null;
-                  })()}
-                </p>
+              <div className="flex-1 min-w-0">
+                {isEditingDetails ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="edit-name" className="block text-sm font-medium text-charcoal mb-1">Wedding Name</label>
+                      <input
+                        id="edit-name"
+                        name="name"
+                        type="text"
+                        value={detailsForm.name}
+                        onChange={handleDetailChange}
+                        required
+                        className="w-full px-3 py-2 border border-stone rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sage focus:border-sage"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="edit-wedding_date" className="block text-sm font-medium text-charcoal mb-1">Wedding Date</label>
+                        <input
+                          id="edit-wedding_date"
+                          name="wedding_date"
+                          type="date"
+                          value={detailsForm.wedding_date}
+                          onChange={handleDetailChange}
+                          required
+                          className="w-full px-3 py-2 border border-stone rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sage focus:border-sage"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="edit-guest_count" className="block text-sm font-medium text-charcoal mb-1">Guest Count</label>
+                        <input
+                          id="edit-guest_count"
+                          name="guest_count"
+                          type="text"
+                          inputMode="numeric"
+                          value={detailsForm.guest_count}
+                          onChange={handleDetailChange}
+                          required
+                          placeholder="e.g., 150"
+                          className="w-full px-3 py-2 border border-stone rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sage focus:border-sage"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="edit-city" className="block text-sm font-medium text-charcoal mb-1">City</label>
+                        <input
+                          id="edit-city"
+                          name="city"
+                          type="text"
+                          value={detailsForm.city}
+                          onChange={handleDetailChange}
+                          required
+                          placeholder="e.g., Austin"
+                          className="w-full px-3 py-2 border border-stone rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sage focus:border-sage"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="edit-state" className="block text-sm font-medium text-charcoal mb-1">State</label>
+                        <select
+                          id="edit-state"
+                          name="state"
+                          value={detailsForm.state}
+                          onChange={handleDetailChange}
+                          required
+                          className="w-full px-3 py-2 border border-stone rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sage focus:border-sage"
+                        >
+                          <option value="">Select state</option>
+                          {US_STATES.map((state) => (
+                            <option key={state} value={state}>{state}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        onClick={handleDetailsSave}
+                        disabled={detailsSaving}
+                        className="px-4 py-1.5 text-sm font-medium bg-charcoal text-white rounded-md hover:bg-charcoal/90 disabled:opacity-50 transition-colors"
+                      >
+                        {detailsSaving ? 'Saving...' : 'Save'}
+                      </button>
+                      <button
+                        onClick={() => setIsEditingDetails(false)}
+                        disabled={detailsSaving}
+                        className="px-4 py-1.5 text-sm font-medium text-warm-gray hover:text-charcoal rounded-md transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-3xl font-heading font-semibold tracking-tight text-charcoal">{client.name}</h2>
+                      {isOwner && !isReadOnly && (
+                        <button
+                          onClick={handleEditDetails}
+                          className="text-warm-gray hover:text-charcoal transition-colors p-1"
+                          title="Edit wedding details"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-warm-gray mt-1">
+                      {client.city}, {client.state} &bull; {formatDate(client.wedding_date)} &bull; {client.guest_count} guests
+                      {budget.template_id && (() => {
+                        const level = getWeddingLevelById(budget.template_id);
+                        return level ? (
+                          <>
+                            {' '}&bull;{' '}
+                            <span className="bg-stone-lighter text-warm-gray text-xs px-2 py-0.5 rounded-full inline-flex items-center">
+                              {level.displayName} template
+                            </span>
+                          </>
+                        ) : null;
+                      })()}
+                    </p>
+                  </>
+                )}
               </div>
-              <span className={`px-3 py-1 text-sm font-medium rounded-full ${statusColors[budgetStatus]}`}>
-                {statusLabels[budgetStatus]}
-              </span>
+              {!isEditingDetails && (
+                <span className={`px-3 py-1 text-sm font-medium rounded-full ${statusColors[budgetStatus]}`}>
+                  {statusLabels[budgetStatus]}
+                </span>
+              )}
             </div>
 
             {/* Layer 2 — Metrics tiles */}
