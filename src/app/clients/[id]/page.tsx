@@ -569,6 +569,7 @@ export default function ClientBudgetPage() {
           try {
             const { error } = await supabase.from('clients').delete().eq('id', clientId);
             if (error) throw error;
+            router.refresh();
             router.push('/dashboard');
           } catch (err) {
             console.warn('Failed to delete client:', err);

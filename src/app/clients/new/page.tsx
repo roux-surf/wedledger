@@ -171,6 +171,7 @@ export default function NewClientPage() {
         }
       }
 
+      router.refresh();
       router.push(`/clients/${client.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');

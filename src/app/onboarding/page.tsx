@@ -180,6 +180,7 @@ export default function OnboardingPage() {
       }
 
       await refetch();
+      router.refresh();
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
