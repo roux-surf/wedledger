@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { formatCurrency } from '@/lib/types';
+import { formatCurrency, Payment } from '@/lib/types';
 import { useSupabaseClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
 
@@ -9,7 +9,7 @@ interface PaymentTemplateSelectorProps {
   lineItemId: string;
   actualCost: number;
   weddingDate?: string;
-  onPaymentsCreated: () => void;
+  onPaymentsCreated: (newPayments?: Payment[]) => void;
 }
 
 interface PaymentTemplate {
@@ -75,11 +75,11 @@ export default function PaymentTemplateSelector({ lineItemId, actualCost, weddin
       const totalSoFar = payments.slice(0, -1).reduce((sum, p) => sum + p.amount, 0);
       payments[payments.length - 1].amount = Math.round((actualCost - totalSoFar) * 100) / 100;
 
-      const { error } = await supabase.from('payments').insert(payments);
+      const { data: inserted, error } = await supabase.from('payments').insert(payments).select();
       if (error) throw error;
 
       showSaved();
-      onPaymentsCreated();
+      onPaymentsCreated(inserted as Payment[]);
     } catch (err) {
       console.warn('Failed to apply payment template:', err);
       showToast('Failed to apply payment template', 'error');

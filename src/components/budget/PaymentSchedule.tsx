@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Payment, formatCurrency } from '@/lib/types';
 import { useSupabaseClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
@@ -27,18 +27,29 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, esti
   const [bulkLoading, setBulkLoading] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<{ id: string; label: string } | null>(null);
   const [deletingPayment, setDeletingPayment] = useState(false);
+  const [optimisticPayments, setOptimisticPayments] = useState<Payment[]>([]);
 
-  const totalScheduled = payments.reduce((sum, p) => sum + Number(p.amount), 0);
-  const totalPaid = payments
+  // Show optimistic payments until the parent re-renders with real data
+  const displayPayments = optimisticPayments.length > 0 ? optimisticPayments : payments;
+
+  // Clear optimistic state once parent provides the real payments
+  useEffect(() => {
+    if (optimisticPayments.length > 0 && payments.length > 0) {
+      setOptimisticPayments([]);
+    }
+  }, [payments, optimisticPayments.length]);
+
+  const totalScheduled = displayPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const totalPaid = displayPayments
     .filter((p) => p.status === 'paid')
     .reduce((sum, p) => sum + Number(p.amount), 0);
   const remaining = totalScheduled - totalPaid;
 
-  const pendingPayments = payments.filter(p => p.status === 'pending');
+  const pendingPayments = displayPayments.filter(p => p.status === 'pending');
   const hasMultiplePending = pendingPayments.length >= 2;
 
   const handleDeletePayment = (paymentId: string) => {
-    const payment = payments.find(p => p.id === paymentId);
+    const payment = displayPayments.find(p => p.id === paymentId);
     setPaymentToDelete({ id: paymentId, label: payment?.label || 'this payment' });
   };
 
@@ -119,9 +130,16 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, esti
     }
   };
 
-  const hasLegacyData = legacyPaidToDate > 0 && payments.length === 0;
+  const handlePaymentsCreated = (newPayments?: Payment[]) => {
+    if (newPayments && newPayments.length > 0) {
+      setOptimisticPayments(newPayments);
+    }
+    onUpdate();
+  };
+
+  const hasLegacyData = legacyPaidToDate > 0 && displayPayments.length === 0;
   const templateCost = (actualCost || 0) > 0 ? actualCost! : (estimatedCost || 0);
-  const showTemplateSelector = !isClientView && payments.length === 0 && templateCost > 0;
+  const showTemplateSelector = !isClientView && displayPayments.length === 0 && templateCost > 0;
 
   return (
     <div className="bg-stone-lighter border-t border-stone">
@@ -131,24 +149,24 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, esti
           lineItemId={lineItemId}
           actualCost={templateCost}
           weddingDate={weddingDate}
-          onPaymentsCreated={onUpdate}
+          onPaymentsCreated={handlePaymentsCreated}
         />
       )}
 
       {/* Payment mismatch warnings */}
-      {payments.length > 0 && (actualCost || 0) > 0 && totalScheduled > (actualCost || 0) && (
+      {displayPayments.length > 0 && (actualCost || 0) > 0 && totalScheduled > (actualCost || 0) && (
         <div className="px-4 py-2 border-b border-champagne bg-champagne-light text-xs text-champagne-dark">
           Scheduled payments exceed actual cost by {formatCurrency(totalScheduled - (actualCost || 0))}
         </div>
       )}
-      {payments.length > 0 && (actualCost || 0) > 0 && totalScheduled < (actualCost || 0) && totalScheduled > 0 && (
+      {displayPayments.length > 0 && (actualCost || 0) > 0 && totalScheduled < (actualCost || 0) && totalScheduled > 0 && (
         <div className="px-4 py-2 border-b border-stone bg-stone-lighter text-xs text-warm-gray">
           Scheduled payments are {formatCurrency((actualCost || 0) - totalScheduled)} less than actual cost
         </div>
       )}
 
       {/* Summary bar */}
-      {payments.length > 0 && (
+      {displayPayments.length > 0 && (
         <div className="px-4 py-2 border-b border-stone flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-warm-gray">
           <span>Scheduled: <span className="font-medium text-charcoal">{formatCurrency(totalScheduled)}</span></span>
           <span>Paid: <span className="font-medium text-sage-dark">{formatCurrency(totalPaid)}</span></span>
@@ -186,7 +204,7 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, esti
       )}
 
       {/* Payment rows */}
-      {payments.length > 0 && (
+      {displayPayments.length > 0 && (
         <>
           {/* Desktop table */}
           <div className="hidden md:block">
@@ -203,7 +221,7 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, esti
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-lighter">
-                {payments.map((payment) => (
+                {displayPayments.map((payment) => (
                   <PaymentRow
                     key={payment.id}
                     payment={payment}
@@ -223,7 +241,7 @@ export default function PaymentSchedule({ payments, lineItemId, actualCost, esti
           </div>
           {/* Mobile cards */}
           <div className="md:hidden">
-            {payments.map((payment) => (
+            {displayPayments.map((payment) => (
               <PaymentRow
                 key={payment.id}
                 payment={payment}
