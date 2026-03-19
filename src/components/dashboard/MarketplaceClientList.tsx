@@ -49,8 +49,8 @@ function MarketplaceClientCard({ client, milestones }: { client: MarketplaceClie
     <Link href={`/clients/${client.id}`}>
       <div className="bg-cream border border-stone rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer">
         <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <h3 className="text-xl font-heading font-semibold tracking-tight text-charcoal">{client.name}</h3>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-xl font-heading font-semibold tracking-tight text-charcoal truncate">{client.name}</h3>
             <p className="text-sm text-warm-gray mt-1">
               {client.city}, {client.state}
             </p>
