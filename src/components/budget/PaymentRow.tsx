@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { Payment, formatCurrency, formatShortDate, getPaymentUrgency, parseNumericInput, sanitizeNumericString } from '@/lib/types';
 import { useSupabaseClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
+import DateInput from '@/components/ui/DateInput';
 
 interface PaymentRowProps {
   payment: Payment;
@@ -26,12 +27,12 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
     amount: sanitizeNumericString(payment.amount),
     due_date: payment.due_date || '',
   });
-  const [, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const supabase = useSupabaseClient();
   const { showSaved, showToast } = useToast();
   const labelRef = useRef<HTMLInputElement>(null);
   const amountRef = useRef<HTMLInputElement>(null);
-  const dueDateRef = useRef<HTMLInputElement>(null);
+  const editContainerRef = useRef<HTMLElement>(null);
 
   const getStatusBadge = () => {
     if (payment.status === 'paid') {
@@ -50,6 +51,7 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
   };
 
   const handleSave = async () => {
+    if (loading) return;
     setLoading(true);
     try {
       const newAmount = parseNumericInput(formData.amount);
@@ -97,7 +99,8 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
   };
 
   const handleTogglePaid = async () => {
-    if (isClientView) return;
+    if (isClientView || loading) return;
+    setLoading(true);
     try {
       const newStatus = payment.status === 'paid' ? 'pending' : 'paid';
       const { error } = await supabase
@@ -114,6 +117,8 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
     } catch (err) {
       console.warn('Failed to toggle payment status:', err);
       showToast('Failed to update payment status', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -125,8 +130,8 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
       due_date: payment.due_date || '',
     });
     setIsEditing(true);
-    if (field) {
-      const refMap = { label: labelRef, amount: amountRef, due_date: dueDateRef };
+    if (field && field !== 'due_date') {
+      const refMap = { label: labelRef, amount: amountRef };
       setTimeout(() => refMap[field].current?.focus(), 0);
     }
   };
@@ -142,9 +147,9 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
   };
 
   const handleBlur = (e: React.FocusEvent) => {
+    if (loading) return;
     const focusedElement = e.relatedTarget as HTMLElement;
-    const editableInputs = [labelRef.current, amountRef.current, dueDateRef.current];
-    if (editableInputs.includes(focusedElement as HTMLInputElement)) {
+    if (focusedElement && editContainerRef.current?.contains(focusedElement)) {
       return;
     }
     handleSave();
@@ -154,7 +159,7 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
   if (renderMode === 'card') {
     if (isEditing && !isClientView) {
       return (
-        <div className="p-3 bg-stone-lighter border-b border-stone-lighter">
+        <div ref={editContainerRef as React.RefObject<HTMLDivElement>} className="p-3 bg-stone-lighter border-b border-stone-lighter">
           <div className="space-y-2">
             <input
               ref={labelRef}
@@ -184,11 +189,9 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
                 className="w-full px-2 py-1.5 border border-stone rounded text-sm"
                 placeholder="Amount"
               />
-              <input
-                ref={dueDateRef}
-                type="date"
+              <DateInput
                 value={formData.due_date}
-                onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
+                onChange={(iso) => setFormData(prev => ({ ...prev, due_date: iso }))}
                 onKeyDown={handleKeyDown}
                 onBlur={handleBlur}
                 className="w-full px-2 py-1.5 border border-stone rounded text-sm"
@@ -234,7 +237,9 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
         {!isClientView && (
           <button
             onClick={(e) => { e.stopPropagation(); handleTogglePaid(); }}
+            disabled={loading}
             className={`shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+              loading ? 'opacity-50 cursor-not-allowed' :
               payment.status === 'paid'
                 ? 'bg-sage border-sage text-white'
                 : 'border-stone hover:border-warm-gray-light'
@@ -254,7 +259,7 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
   // Table mode (desktop)
   if (isEditing && !isClientView) {
     return (
-      <tr className="bg-stone-lighter">
+      <tr ref={editContainerRef as React.RefObject<HTMLTableRowElement>} className="bg-stone-lighter">
         {showCheckbox && <td className="px-2 py-1.5"></td>}
         <td className="px-4 py-1.5">
           <input
@@ -286,14 +291,12 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
           />
         </td>
         <td className="px-4 py-1.5">
-          <input
-            ref={dueDateRef}
-            type="date"
+          <DateInput
             value={formData.due_date}
-            onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
+            onChange={(iso) => setFormData(prev => ({ ...prev, due_date: iso }))}
             onKeyDown={handleKeyDown}
             onBlur={handleBlur}
-            className="px-2 py-1 border border-stone rounded text-sm"
+            className="w-28 px-2 py-1 border border-stone rounded text-sm"
           />
         </td>
         <td className="px-4 py-1.5">
@@ -356,7 +359,8 @@ export default function PaymentRow({ payment, lineItemId, actualCost, totalSched
           {!isClientView && (
             <button
               onClick={handleTogglePaid}
-              className="text-xs text-warm-gray hover:text-charcoal underline"
+              disabled={loading}
+              className={`text-xs underline ${loading ? 'text-stone cursor-not-allowed' : 'text-warm-gray hover:text-charcoal'}`}
             >
               {payment.status === 'paid' ? 'Undo' : 'Mark Paid'}
             </button>
