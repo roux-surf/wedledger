@@ -380,7 +380,7 @@ export default function PlannerDetailPage() {
               className="w-full px-3 py-2 border border-stone rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sage focus:border-transparent resize-none"
             />
             {message.length > 0 && message.length < 20 && (
-              <p className="text-xs text-red-500 mt-1">Please write at least 20 characters ({20 - message.length} more needed)</p>
+              <p className="text-xs text-rose mt-1">Please write at least 20 characters ({20 - message.length} more needed)</p>
             )}
           </div>
 

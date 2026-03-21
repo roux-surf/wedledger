@@ -69,7 +69,7 @@ function MarketplaceClientCard({ client, milestones }: { client: MarketplaceClie
 
         {/* Marketplace badge and couple name */}
         <div className="flex flex-wrap items-center gap-2 mt-2">
-          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-champagne-light text-champagne-dark">
             Marketplace
           </span>
           <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-stone-lighter text-charcoal">

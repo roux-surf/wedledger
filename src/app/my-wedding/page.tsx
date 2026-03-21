@@ -7,21 +7,23 @@ import { useUser } from '@clerk/nextjs';
 import { useSupabaseClient } from '@/lib/supabase/client';
 import { useUserProfile } from '@/lib/UserProfileContext';
 import { useClientBudget } from '@/lib/hooks/useClientBudget';
-import { formatCurrency, formatDate, formatPercent, getBudgetStatus, parseNumericInput, sanitizeNumericString } from '@/lib/types';
+import { useBudgetEditing } from '@/lib/hooks/useBudgetEditing';
+import { formatCurrency, formatDate, getBudgetStatus, getAllocationStatus } from '@/lib/types';
 import BudgetTabs from '@/components/budget/BudgetTabs';
 import BudgetSummary from '@/components/budget/BudgetSummary';
+import BudgetMetrics from '@/components/budget/BudgetMetrics';
+import BudgetProgressBar from '@/components/budget/BudgetProgressBar';
+import StickyBudgetHeader from '@/components/budget/StickyBudgetHeader';
 import TimelineSection from '@/components/timeline/TimelineSection';
 import WeddingCountdown from '@/components/couple/WeddingCountdown';
 import PlannerCTA from '@/components/couple/PlannerCTA';
 import Button from '@/components/ui/Button';
-import { useToast } from '@/components/ui/Toast';
 
 export default function MyWeddingPage() {
   const router = useRouter();
   const { user } = useUser();
   const supabase = useSupabaseClient();
   const { profile, loading: profileLoading } = useUserProfile();
-  const { showSaved, showToast } = useToast();
 
   const [clientId, setClientId] = useState<string | null>(null);
   const [resolving, setResolving] = useState(true);
@@ -72,12 +74,12 @@ export default function MyWeddingPage() {
     }
   }, [clientId, fetchData]);
 
-  // Budget editing state
-  const [isEditingBudget, setIsEditingBudget] = useState(false);
-  const [budgetValue, setBudgetValue] = useState('');
-  const [, setBudgetUpdateLoading] = useState(false);
-  const [budgetUpdateError, setBudgetUpdateError] = useState<string | null>(null);
-  const budgetInputRef = useRef<HTMLInputElement>(null);
+  // Budget editing via shared hook
+  const editing = useBudgetEditing({
+    clientId: client?.id ?? null,
+    currentBudget: client?.total_budget ?? 0,
+    onSaved: fetchData,
+  });
 
   // Sticky header
   const [showStickyHeader, setShowStickyHeader] = useState(false);
@@ -93,52 +95,6 @@ export default function MyWeddingPage() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const handleBudgetEdit = () => {
-    setBudgetValue(sanitizeNumericString(client?.total_budget || 0));
-    setBudgetUpdateError(null);
-    setIsEditingBudget(true);
-    setTimeout(() => {
-      budgetInputRef.current?.focus();
-      budgetInputRef.current?.select();
-    }, 0);
-  };
-
-  const handleBudgetKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') { e.preventDefault(); handleBudgetSave(); }
-    else if (e.key === 'Escape') { e.preventDefault(); setIsEditingBudget(false); setBudgetUpdateError(null); }
-  };
-
-  const handleBudgetSave = async () => {
-    if (!client) return;
-    setBudgetUpdateLoading(true);
-    setBudgetUpdateError(null);
-
-    try {
-      const newBudget = parseNumericInput(budgetValue);
-      if (newBudget < 0) { setBudgetUpdateError('Budget cannot be negative'); return; }
-
-      const { error } = await supabase
-        .from('clients')
-        .update({ total_budget: newBudget })
-        .eq('id', client.id);
-
-      if (error) {
-        showToast('Failed to update budget', 'error');
-        setBudgetUpdateError(error.message || 'Failed to update budget');
-        return;
-      }
-
-      setIsEditingBudget(false);
-      showSaved();
-      fetchData();
-    } catch {
-      showToast('Failed to update budget', 'error');
-      setBudgetUpdateError('An unexpected error occurred');
-    } finally {
-      setBudgetUpdateLoading(false);
-    }
-  };
 
   // Loading states
   if (profileLoading || resolving || budgetLoading) {
@@ -163,50 +119,17 @@ export default function MyWeddingPage() {
   const budgetStatus = getBudgetStatus(totalBudget, totalSpent);
   const remaining = totalBudget - totalSpent;
   const totalAllocationPercent = totalBudget > 0 ? (totalTarget / totalBudget) * 100 : 0;
-  const spentPercent = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
-
-  const getAllocationStatus = () => {
-    if (totalAllocationPercent < 99) return { label: 'Under-allocated', color: 'text-champagne-dark', dot: 'bg-champagne' };
-    if (totalAllocationPercent <= 101) return { label: 'Fully allocated', color: 'text-sage', dot: 'bg-sage' };
-    return { label: 'Over-allocated', color: 'text-rose', dot: 'bg-rose' };
-  };
-  const allocationStatus = getAllocationStatus();
+  const allocationStatus = getAllocationStatus(totalAllocationPercent);
 
   return (
     <div className="min-h-screen bg-ivory">
-      {/* Sticky Budget Summary Header */}
-      <div
-        className={`fixed top-0 left-0 right-0 z-40 transition-transform duration-200 ${
-          showStickyHeader ? 'translate-y-0' : '-translate-y-full'
-        } bg-cream border-b border-stone shadow-sm`}
-      >
-        <div className="max-w-6xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between gap-6">
-            <span className="font-semibold truncate text-charcoal">{client.name}</span>
-            <div className="hidden md:flex items-center gap-6 text-sm">
-              <div className="flex items-center gap-1.5">
-                <span className="text-warm-gray">Budget:</span>
-                <span className="font-medium text-charcoal">{formatCurrency(totalBudget)}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-warm-gray">Spent:</span>
-                <span className="font-medium text-charcoal">{formatCurrency(totalSpent)}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-warm-gray">{remaining >= 0 ? 'Remaining:' : 'Over budget:'}</span>
-                <span className={`font-medium ${remaining >= 0 ? 'text-sage' : 'text-rose'}`}>
-                  {formatCurrency(Math.abs(remaining))}
-                </span>
-              </div>
-            </div>
-            <div className="flex md:hidden items-center gap-2 text-sm">
-              <span className="font-medium text-charcoal">{formatCurrency(totalSpent)}</span>
-              <span className="text-warm-gray">/</span>
-              <span className="text-warm-gray">{formatCurrency(totalBudget)}</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <StickyBudgetHeader
+        visible={showStickyHeader}
+        name={client.name}
+        totalBudget={totalBudget}
+        totalSpent={totalSpent}
+        remaining={remaining}
+      />
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Wedding Header Card */}
@@ -232,130 +155,31 @@ export default function MyWeddingPage() {
           </div>
 
           {/* Budget Metrics */}
-          <div className="mt-6">
-            <div className="md:hidden bg-stone rounded-lg overflow-hidden grid grid-cols-2 gap-px">
-              <div className="bg-cream p-4">
-                <p className="text-xs text-warm-gray uppercase tracking-wider">Total Budget</p>
-                {isEditingBudget ? (
-                  <div className="mt-1">
-                    <div className="flex items-center gap-1">
-                      <span className="text-warm-gray text-xl font-bold">$</span>
-                      <input
-                        ref={budgetInputRef}
-                        type="text"
-                        inputMode="decimal"
-                        value={budgetValue}
-                        onChange={(e) => setBudgetValue(e.target.value)}
-                        onKeyDown={handleBudgetKeyDown}
-                        onBlur={(e) => {
-                          const value = parseNumericInput(e.target.value);
-                          setBudgetValue(sanitizeNumericString(Math.max(0, value)));
-                          handleBudgetSave();
-                        }}
-                        className="w-28 px-2 py-1 border border-stone rounded text-xl font-bold"
-                      />
-                    </div>
-                    {budgetUpdateError && <p className="text-red-600 text-xs mt-1">{budgetUpdateError}</p>}
-                  </div>
-                ) : (
-                  <p onClick={handleBudgetEdit} className="text-xl font-bold text-charcoal mt-1 cursor-pointer hover:bg-stone-lighter px-1 -mx-1 rounded">
-                    {formatCurrency(totalBudget)}
-                  </p>
-                )}
-              </div>
-              <div className="bg-cream p-4">
-                <p className="text-xs text-warm-gray uppercase tracking-wider">Allocated</p>
-                <p className="text-xl font-bold text-charcoal mt-1">
-                  {formatCurrency(totalTarget)}
-                  <span className="text-sm font-normal text-warm-gray-light ml-1.5">{formatPercent(totalAllocationPercent)}</span>
-                </p>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className={`w-1.5 h-1.5 rounded-full ${allocationStatus.dot}`} />
-                  <span className={`text-xs ${allocationStatus.color}`}>{allocationStatus.label}</span>
-                </div>
-              </div>
-              <div className="bg-cream p-4">
-                <p className="text-xs text-warm-gray uppercase tracking-wider">Committed</p>
-                <p className="text-xl font-bold text-charcoal mt-1">{formatCurrency(totalSpent)}</p>
-              </div>
-              <div className="bg-cream p-4">
-                <p className="text-xs text-warm-gray uppercase tracking-wider">Remaining</p>
-                <p className={`text-xl font-bold mt-1 ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {remaining >= 0 ? '' : '-'}{formatCurrency(Math.abs(remaining))}
-                </p>
-              </div>
-            </div>
-            <div className="hidden md:grid grid-cols-4 gap-px bg-stone rounded-lg overflow-hidden">
-              <div className="bg-cream p-4">
-                <p className="text-xs text-warm-gray uppercase tracking-wider">Total Budget</p>
-                {isEditingBudget ? (
-                  <div className="mt-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-warm-gray text-xl font-bold">$</span>
-                      <input
-                        ref={budgetInputRef}
-                        type="text"
-                        inputMode="decimal"
-                        value={budgetValue}
-                        onChange={(e) => setBudgetValue(e.target.value)}
-                        onKeyDown={handleBudgetKeyDown}
-                        onBlur={(e) => {
-                          const value = parseNumericInput(e.target.value);
-                          setBudgetValue(sanitizeNumericString(Math.max(0, value)));
-                          handleBudgetSave();
-                        }}
-                        className="w-32 px-2 py-1 border border-stone rounded text-xl font-bold"
-                      />
-                    </div>
-                    {budgetUpdateError && <p className="text-red-600 text-xs mt-1">{budgetUpdateError}</p>}
-                  </div>
-                ) : (
-                  <p onClick={handleBudgetEdit} className="text-xl font-bold text-charcoal mt-1 cursor-pointer hover:bg-stone-lighter px-1 -mx-1 rounded">
-                    {formatCurrency(totalBudget)}
-                  </p>
-                )}
-              </div>
-              <div className="bg-cream p-4">
-                <p className="text-xs text-warm-gray uppercase tracking-wider">Allocated</p>
-                <p className="text-xl font-bold text-charcoal mt-1">
-                  {formatCurrency(totalTarget)}
-                  <span className="text-sm font-normal text-warm-gray-light ml-1.5">{formatPercent(totalAllocationPercent)}</span>
-                </p>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className={`w-1.5 h-1.5 rounded-full ${allocationStatus.dot}`} />
-                  <span className={`text-xs ${allocationStatus.color}`}>{allocationStatus.label}</span>
-                </div>
-              </div>
-              <div className="bg-cream p-4">
-                <p className="text-xs text-warm-gray uppercase tracking-wider">Committed</p>
-                <p className="text-xl font-bold text-charcoal mt-1">{formatCurrency(totalSpent)}</p>
-              </div>
-              <div className="bg-cream p-4">
-                <p className="text-xs text-warm-gray uppercase tracking-wider">Remaining</p>
-                <p className={`text-xl font-bold mt-1 ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {remaining >= 0 ? '' : '-'}{formatCurrency(Math.abs(remaining))}
-                </p>
-              </div>
-            </div>
-          </div>
+          <BudgetMetrics
+            totalBudget={totalBudget}
+            totalTarget={totalTarget}
+            totalSpent={totalSpent}
+            remaining={remaining}
+            totalAllocationPercent={totalAllocationPercent}
+            allocationStatus={allocationStatus}
+            spentLabel="Committed"
+            isEditingBudget={editing.isEditing}
+            budgetValue={editing.budgetValue}
+            setBudgetValue={editing.setBudgetValue}
+            budgetUpdateError={editing.budgetUpdateError}
+            budgetInputRef={editing.budgetInputRef}
+            onBudgetEdit={editing.startEditing}
+            onBudgetKeyDown={editing.handleKeyDown}
+            onBudgetBlur={editing.handleBlur}
+          />
 
           {/* Progress bar */}
-          <div className="mt-4">
-            <div className="h-1.5 bg-stone-lighter rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${
-                  budgetStatus === 'green' ? 'bg-green-500' : budgetStatus === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
-                }`}
-                style={{ width: `${Math.min(spentPercent, 100)}%` }}
-              />
-            </div>
-            <div className="flex justify-between mt-1.5">
-              <span className="text-xs text-warm-gray-light">{formatCurrency(totalSpent)} committed</span>
-              <span className="text-xs text-warm-gray-light">
-                {remaining >= 0 ? `${formatCurrency(remaining)} remaining` : `${formatCurrency(Math.abs(remaining))} over budget`}
-              </span>
-            </div>
-          </div>
+          <BudgetProgressBar
+            budgetStatus={budgetStatus}
+            totalBudget={totalBudget}
+            totalSpent={totalSpent}
+            remaining={remaining}
+          />
         </div>
 
         {/* Quick Actions */}

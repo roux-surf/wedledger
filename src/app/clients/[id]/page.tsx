@@ -5,12 +5,16 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { useSupabaseClient } from '@/lib/supabase/client';
-import { formatCurrency, formatDate, formatPercent, getBudgetStatus, parseNumericInput, sanitizeNumericString } from '@/lib/types';
+import { formatCurrency, formatDate, getBudgetStatus, getAllocationStatus, parseNumericInput } from '@/lib/types';
 import { US_STATES } from '@/lib/constants';
 import { getWeddingLevelById } from '@/lib/budgetTemplates';
 import { useClientBudget } from '@/lib/hooks/useClientBudget';
+import { useBudgetEditing } from '@/lib/hooks/useBudgetEditing';
 import BudgetTabs from '@/components/budget/BudgetTabs';
 import BudgetSummary from '@/components/budget/BudgetSummary';
+import BudgetMetrics from '@/components/budget/BudgetMetrics';
+import BudgetProgressBar from '@/components/budget/BudgetProgressBar';
+import StickyBudgetHeader from '@/components/budget/StickyBudgetHeader';
 import TimelineSection from '@/components/timeline/TimelineSection';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/components/ui/Toast';
@@ -27,12 +31,12 @@ export default function ClientBudgetPage() {
   const [isClientView, setIsClientView] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
 
-  // Budget editing state
-  const [isEditingBudget, setIsEditingBudget] = useState(false);
-  const [budgetValue, setBudgetValue] = useState('');
-  const [, setBudgetUpdateLoading] = useState(false);
-  const [budgetUpdateError, setBudgetUpdateError] = useState<string | null>(null);
-  const budgetInputRef = useRef<HTMLInputElement>(null);
+  // Budget editing via shared hook
+  const editing = useBudgetEditing({
+    clientId: client?.id ?? null,
+    currentBudget: client?.total_budget ?? 0,
+    onSaved: fetchData,
+  });
 
   // Delete confirmation state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -103,43 +107,10 @@ export default function ClientBudgetPage() {
 
   // Reset budget editing state when switching to client view or read-only
   useEffect(() => {
-    if ((isClientView || isReadOnly) && isEditingBudget) {
-      setIsEditingBudget(false);
-      setBudgetUpdateError(null);
+    if ((isClientView || isReadOnly) && editing.isEditing) {
+      editing.cancel();
     }
   }, [isClientView, isReadOnly]);
-
-  // Handle budget update
-  const handleBudgetEdit = () => {
-    if (isClientView || isReadOnly) return;
-    setBudgetValue(sanitizeNumericString(client?.total_budget || 0));
-    setBudgetUpdateError(null);
-    setIsEditingBudget(true);
-    // Focus the input after state update
-    setTimeout(() => {
-      budgetInputRef.current?.focus();
-      budgetInputRef.current?.select();
-    }, 0);
-  };
-
-  const handleBudgetKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleBudgetSave();
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      handleBudgetCancel();
-    }
-  };
-
-  const handleBudgetBlur = () => {
-    handleBudgetSave();
-  };
-
-  const handleBudgetCancel = () => {
-    setIsEditingBudget(false);
-    setBudgetUpdateError(null);
-  };
 
   // Determine if the current user is the owner (planner who created the wedding)
   const isOwner = !!(user && client && client.user_id === user.id);
@@ -190,43 +161,6 @@ export default function ClientBudgetPage() {
     setDetailsForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleBudgetSave = async () => {
-    if (!client) return;
-
-    setBudgetUpdateLoading(true);
-    setBudgetUpdateError(null);
-
-    try {
-      const newBudget = parseNumericInput(budgetValue);
-      if (newBudget < 0) {
-        setBudgetUpdateError('Budget cannot be negative');
-        return;
-      }
-
-      const { error } = await supabase
-        .from('clients')
-        .update({ total_budget: newBudget })
-        .eq('id', client.id);
-
-      if (error) {
-        console.warn('Failed to update budget:', error);
-        showToast('Failed to update budget', 'error');
-        setBudgetUpdateError(error.message || 'Failed to update budget');
-        return;
-      }
-
-      setIsEditingBudget(false);
-      showSaved();
-      fetchData();
-    } catch (err) {
-      console.warn('Failed to update budget:', err);
-      showToast('Failed to update budget', 'error');
-      setBudgetUpdateError('An unexpected error occurred');
-    } finally {
-      setBudgetUpdateLoading(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-ivory flex items-center justify-center">
@@ -252,17 +186,7 @@ export default function ClientBudgetPage() {
   const totalBudget = Number(client.total_budget);
   const totalAllocationPercent = totalBudget > 0 ? (totalTarget / totalBudget) * 100 : 0;
 
-  const getAllocationStatus = () => {
-    if (totalAllocationPercent < 99) {
-      return { label: 'Under-allocated', color: 'text-champagne-dark', dot: 'bg-champagne' };
-    } else if (totalAllocationPercent <= 101) {
-      return { label: 'Fully allocated', color: 'text-sage', dot: 'bg-sage' };
-    } else {
-      return { label: 'Over-allocated', color: 'text-rose', dot: 'bg-rose' };
-    }
-  };
-
-  const allocationStatus = getAllocationStatus();
+  const allocationStatus = getAllocationStatus(totalAllocationPercent);
 
   const statusColors = {
     green: 'bg-sage-light text-sage-dark',
@@ -332,48 +256,19 @@ export default function ClientBudgetPage() {
         </div>
       </header>
 
-      {/* Sticky Budget Summary Header */}
-      <div
-        className={`fixed top-0 left-0 right-0 z-40 transition-transform duration-200 print:hidden ${
-          showStickyHeader ? 'translate-y-0' : '-translate-y-full'
-        } bg-cream border-b border-stone shadow-sm`}
-      >
-        <div className="max-w-6xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between gap-6">
-            <span className="font-semibold truncate text-charcoal">{client.name}</span>
-            {/* Desktop sticky metrics */}
-            <div className="hidden md:flex items-center gap-6 text-sm">
-              <div className="flex items-center gap-1.5">
-                <span className="text-warm-gray">Budget:</span>
-                <span className="font-medium text-charcoal">{formatCurrency(totalBudget)}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-warm-gray">{isClientView ? 'Committed:' : 'Spent:'}</span>
-                <span className="font-medium text-charcoal">{formatCurrency(totalSpent)}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-warm-gray">{remaining >= 0 ? 'Remaining:' : 'Over budget:'}</span>
-                <span className={`font-medium ${remaining >= 0 ? 'text-sage' : 'text-rose'}`}>
-                  {formatCurrency(Math.abs(remaining))}
-                </span>
-              </div>
-              {!isClientView && (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-warm-gray">Allocated:</span>
-                  <span className="font-medium text-charcoal">{formatPercent(totalAllocationPercent)}</span>
-                  <span className={`text-xs ${allocationStatus.color}`}>({allocationStatus.label})</span>
-                </div>
-              )}
-            </div>
-            {/* Mobile sticky metrics */}
-            <div className="flex md:hidden items-center gap-2 text-sm">
-              <span className="font-medium text-charcoal">{formatCurrency(totalSpent)}</span>
-              <span className="text-warm-gray">/</span>
-              <span className="text-warm-gray">{formatCurrency(totalBudget)}</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <StickyBudgetHeader
+        visible={showStickyHeader}
+        name={client.name}
+        totalBudget={totalBudget}
+        totalSpent={totalSpent}
+        remaining={remaining}
+        spentLabel={isClientView ? 'Committed:' : 'Spent:'}
+        allocation={!isClientView ? {
+          percent: totalAllocationPercent,
+          label: allocationStatus.label,
+          colorClass: allocationStatus.color,
+        } : undefined}
+      />
 
       <main className={`max-w-6xl mx-auto px-4 print:px-0 print:max-w-none ${isClientView ? 'py-10 print:py-6' : 'py-8 print:py-6'}`}>
         {isReadOnly && (
@@ -547,140 +442,31 @@ export default function ClientBudgetPage() {
             </div>
 
             {/* Layer 2 — Metrics tiles */}
-            <div className="mt-6">
-              {/* Mobile: 2x2 grid */}
-              <div className="md:hidden bg-stone-lighter rounded-lg overflow-hidden grid grid-cols-2 gap-px">
-                <div className="bg-cream p-4">
-                  <p className="text-xs text-warm-gray uppercase tracking-wider">Total Budget</p>
-                  {isEditingBudget && !isReadOnly ? (
-                    <div className="mt-1">
-                      <div className="flex items-center gap-1">
-                        <span className="text-warm-gray text-xl font-bold">$</span>
-                        <input
-                          ref={budgetInputRef}
-                          type="text"
-                          inputMode="decimal"
-                          value={budgetValue}
-                          onChange={(e) => setBudgetValue(e.target.value)}
-                          onKeyDown={handleBudgetKeyDown}
-                          onBlur={(e) => {
-                            const value = parseNumericInput(e.target.value);
-                            setBudgetValue(sanitizeNumericString(Math.max(0, value)));
-                            handleBudgetBlur();
-                          }}
-                          className="w-28 px-2 py-1 border border-stone rounded text-xl font-bold"
-                        />
-                      </div>
-                      {budgetUpdateError && (
-                        <p className="text-rose text-xs mt-1">{budgetUpdateError}</p>
-                      )}
-                    </div>
-                  ) : (
-                    <p
-                      onClick={isReadOnly ? undefined : () => handleBudgetEdit()}
-                      className={`text-xl font-bold text-charcoal mt-1 ${isReadOnly ? '' : 'cursor-pointer hover:bg-ivory'} px-1 -mx-1 rounded`}
-                    >
-                      {formatCurrency(totalBudget)}
-                    </p>
-                  )}
-                </div>
-                <div className="bg-cream p-4">
-                  <p className="text-xs text-warm-gray uppercase tracking-wider">Allocated</p>
-                  <p className="text-xl font-bold text-charcoal mt-1">
-                    {formatCurrency(totalTarget)}
-                    <span className="text-sm font-normal text-warm-gray-light ml-1.5">{formatPercent(totalAllocationPercent)}</span>
-                  </p>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span className={`w-1.5 h-1.5 rounded-full ${allocationStatus.dot}`} />
-                    <span className={`text-xs ${allocationStatus.color}`}>{allocationStatus.label}</span>
-                  </div>
-                </div>
-                <div className="bg-cream p-4">
-                  <p className="text-xs text-warm-gray uppercase tracking-wider">Total Spent</p>
-                  <p className="text-xl font-bold text-charcoal mt-1">{formatCurrency(totalSpent)}</p>
-                </div>
-                <div className="bg-cream p-4">
-                  <p className="text-xs text-warm-gray uppercase tracking-wider">Remaining</p>
-                  <p className={`text-xl font-bold mt-1 ${remaining >= 0 ? 'text-sage' : 'text-rose'}`}>
-                    {remaining >= 0 ? '' : '-'}{formatCurrency(Math.abs(remaining))}
-                  </p>
-                </div>
-              </div>
-              {/* Desktop: segmented row */}
-              <div className="hidden md:grid grid-cols-4 gap-px bg-stone-lighter rounded-lg overflow-hidden">
-                <div className="bg-cream p-4">
-                  <p className="text-xs text-warm-gray uppercase tracking-wider">Total Budget</p>
-                  {isEditingBudget && !isReadOnly ? (
-                    <div className="mt-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-warm-gray text-xl font-bold">$</span>
-                        <input
-                          ref={budgetInputRef}
-                          type="text"
-                          inputMode="decimal"
-                          value={budgetValue}
-                          onChange={(e) => setBudgetValue(e.target.value)}
-                          onKeyDown={handleBudgetKeyDown}
-                          onBlur={(e) => {
-                            const value = parseNumericInput(e.target.value);
-                            setBudgetValue(sanitizeNumericString(Math.max(0, value)));
-                            handleBudgetBlur();
-                          }}
-                          className="w-32 px-2 py-1 border border-stone rounded text-xl font-bold"
-                        />
-                      </div>
-                      {budgetUpdateError && (
-                        <p className="text-rose text-xs mt-1">{budgetUpdateError}</p>
-                      )}
-                    </div>
-                  ) : (
-                    <p
-                      onClick={isReadOnly ? undefined : () => handleBudgetEdit()}
-                      className={`text-xl font-bold text-charcoal mt-1 ${isReadOnly ? '' : 'cursor-pointer hover:bg-ivory'} px-1 -mx-1 rounded`}
-                    >
-                      {formatCurrency(totalBudget)}
-                    </p>
-                  )}
-                </div>
-                <div className="bg-cream p-4">
-                  <p className="text-xs text-warm-gray uppercase tracking-wider">Allocated</p>
-                  <p className="text-xl font-bold text-charcoal mt-1">
-                    {formatCurrency(totalTarget)}
-                    <span className="text-sm font-normal text-warm-gray-light ml-1.5">{formatPercent(totalAllocationPercent)}</span>
-                  </p>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span className={`w-1.5 h-1.5 rounded-full ${allocationStatus.dot}`} />
-                    <span className={`text-xs ${allocationStatus.color}`}>{allocationStatus.label}</span>
-                  </div>
-                </div>
-                <div className="bg-cream p-4">
-                  <p className="text-xs text-warm-gray uppercase tracking-wider">Total Spent</p>
-                  <p className="text-xl font-bold text-charcoal mt-1">{formatCurrency(totalSpent)}</p>
-                </div>
-                <div className="bg-cream p-4">
-                  <p className="text-xs text-warm-gray uppercase tracking-wider">Remaining</p>
-                  <p className={`text-xl font-bold mt-1 ${remaining >= 0 ? 'text-sage' : 'text-rose'}`}>
-                    {remaining >= 0 ? '' : '-'}{formatCurrency(Math.abs(remaining))}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <BudgetMetrics
+              totalBudget={totalBudget}
+              totalTarget={totalTarget}
+              totalSpent={totalSpent}
+              remaining={remaining}
+              totalAllocationPercent={totalAllocationPercent}
+              allocationStatus={allocationStatus}
+              isEditingBudget={editing.isEditing}
+              budgetValue={editing.budgetValue}
+              setBudgetValue={editing.setBudgetValue}
+              budgetUpdateError={editing.budgetUpdateError}
+              budgetInputRef={editing.budgetInputRef}
+              onBudgetEdit={editing.startEditing}
+              onBudgetKeyDown={editing.handleKeyDown}
+              onBudgetBlur={editing.handleBlur}
+              readOnly={isReadOnly}
+            />
 
             {/* Layer 3 — Progress bar */}
-            <div className="mt-4">
-              <div className="h-1.5 bg-stone-lighter rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all ${
-                    budgetStatus === 'green' ? 'bg-sage' : budgetStatus === 'yellow' ? 'bg-champagne' : 'bg-rose'
-                  }`}
-                  style={{ width: `${Math.min((totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0), 100)}%` }}
-                />
-              </div>
-              <div className="flex justify-between mt-1.5">
-                <span className="text-xs text-warm-gray-light">{formatCurrency(totalSpent)} committed</span>
-                <span className="text-xs text-warm-gray-light">{remaining >= 0 ? `${formatCurrency(remaining)} remaining` : `${formatCurrency(Math.abs(remaining))} over budget`}</span>
-              </div>
-            </div>
+            <BudgetProgressBar
+              budgetStatus={budgetStatus}
+              totalBudget={totalBudget}
+              totalSpent={totalSpent}
+              remaining={remaining}
+            />
 
           </div>
         )}

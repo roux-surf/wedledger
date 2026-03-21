@@ -453,7 +453,7 @@ export default function PlannerProfilePage() {
               </button>
             </div>
             {publishError && (
-              <p className="mt-3 text-sm text-red-600">{publishError}</p>
+              <p className="mt-3 text-sm text-rose">{publishError}</p>
             )}
             {!profilePublished && !publishError && (
               <p className="mt-3 text-xs text-warm-gray-light">
