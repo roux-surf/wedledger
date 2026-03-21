@@ -13,11 +13,16 @@ interface LineItemRowProps {
   onDelete: () => void;
   isClientView: boolean;
   renderMode?: 'table' | 'card';
+  isPaymentExpanded?: boolean;
+  onTogglePaymentExpand?: () => void;
 }
 
-export default function LineItemRow({ item, onUpdate, onDelete, isClientView, renderMode = 'table' }: LineItemRowProps) {
+export default function LineItemRow({ item, onUpdate, onDelete, isClientView, renderMode = 'table', isPaymentExpanded, onTogglePaymentExpand }: LineItemRowProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [localExpanded, setLocalExpanded] = useState(false);
+
+  // Use controlled expansion if props provided, otherwise use local state
+  const isExpanded = isPaymentExpanded !== undefined ? isPaymentExpanded : localExpanded;
   const [formData, setFormData] = useState({
     vendor_name: item.vendor_name,
     estimated_cost: sanitizeNumericString(item.estimated_cost),
@@ -142,7 +147,11 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
 
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsExpanded(!isExpanded);
+    if (onTogglePaymentExpand) {
+      onTogglePaymentExpand();
+    } else {
+      setLocalExpanded(!localExpanded);
+    }
   };
 
   const paymentBadge = payments.length > 0 ? (

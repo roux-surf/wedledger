@@ -74,66 +74,76 @@ export default function ClientBudgetPage() {
 
       if (categoriesError) throw categoriesError;
 
-      // Fetch line items for each category with payments
-      const categoriesWithSpend: CategoryWithSpend[] = await Promise.all(
-        categoriesData.map(async (category) => {
-          const { data: lineItems } = await supabase
+      // Batch-fetch ALL line items for all categories in one query
+      const allCategoryIds = categoriesData.map((c) => c.id);
+      const { data: allLineItems } = allCategoryIds.length > 0
+        ? await supabase
             .from('line_items')
             .select('*')
-            .eq('category_id', category.id)
-            .order('created_at', { ascending: true });
+            .in('category_id', allCategoryIds)
+            .order('created_at', { ascending: true })
+        : { data: [] };
 
-          const items = lineItems || [];
-          const lineItemIds = items.map((li: LineItem) => li.id);
+      const lineItemsList = (allLineItems || []) as LineItem[];
+      const allLineItemIds = lineItemsList.map((li) => li.id);
 
-          // Batch-fetch payments for all line items in this category
-          let paymentsData: Payment[] = [];
-          if (lineItemIds.length > 0) {
-            const { data } = await supabase
-              .from('payments')
-              .select('*')
-              .in('line_item_id', lineItemIds)
-              .order('created_at', { ascending: true });
-            paymentsData = (data || []) as Payment[];
-          }
+      // Batch-fetch ALL payments for all line items in one query
+      const { data: allPayments } = allLineItemIds.length > 0
+        ? await supabase
+            .from('payments')
+            .select('*')
+            .in('line_item_id', allLineItemIds)
+            .order('created_at', { ascending: true })
+        : { data: [] };
 
-          // Group payments by line_item_id
-          const paymentsByLineItem: Record<string, Payment[]> = {};
-          for (const payment of paymentsData) {
-            if (!paymentsByLineItem[payment.line_item_id]) {
-              paymentsByLineItem[payment.line_item_id] = [];
-            }
-            paymentsByLineItem[payment.line_item_id].push(payment);
-          }
+      const paymentsList = (allPayments || []) as Payment[];
 
-          // Attach payments to each line item
-          const lineItemsWithPayments: LineItemWithPayments[] = items.map((item: LineItem) => {
-            const itemPayments = paymentsByLineItem[item.id] || [];
-            const totalPaid = itemPayments
-              .filter((p) => p.status === 'paid')
-              .reduce((sum, p) => sum + Number(p.amount), 0);
-            const totalScheduled = itemPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+      // Group payments by line_item_id
+      const paymentsByLineItem = new Map<string, Payment[]>();
+      for (const payment of paymentsList) {
+        const arr = paymentsByLineItem.get(payment.line_item_id) || [];
+        arr.push(payment);
+        paymentsByLineItem.set(payment.line_item_id, arr);
+      }
 
-            return {
-              ...item,
-              payments: itemPayments,
-              total_paid: totalPaid,
-              total_scheduled: totalScheduled,
-            };
-          });
+      // Group line items by category_id
+      const lineItemsByCategory = new Map<string, LineItem[]>();
+      for (const li of lineItemsList) {
+        const arr = lineItemsByCategory.get(li.category_id) || [];
+        arr.push(li);
+        lineItemsByCategory.set(li.category_id, arr);
+      }
 
-          const actualSpend = lineItemsWithPayments.reduce(
-            (sum: number, item: LineItemWithPayments) => sum + (Number(item.actual_cost) || 0),
-            0
-          );
+      // Assemble categories with spend data
+      const categoriesWithSpend: CategoryWithSpend[] = categoriesData.map((category) => {
+        const items = lineItemsByCategory.get(category.id) || [];
+
+        const lineItemsWithPayments: LineItemWithPayments[] = items.map((item: LineItem) => {
+          const itemPayments = paymentsByLineItem.get(item.id) || [];
+          const totalPaid = itemPayments
+            .filter((p) => p.status === 'paid')
+            .reduce((sum, p) => sum + Number(p.amount), 0);
+          const totalScheduled = itemPayments.reduce((sum, p) => sum + Number(p.amount), 0);
 
           return {
-            ...category,
-            actual_spend: actualSpend,
-            line_items: lineItemsWithPayments,
+            ...item,
+            payments: itemPayments,
+            total_paid: totalPaid,
+            total_scheduled: totalScheduled,
           };
-        })
-      );
+        });
+
+        const actualSpend = lineItemsWithPayments.reduce(
+          (sum: number, item: LineItemWithPayments) => sum + (Number(item.actual_cost) || 0),
+          0
+        );
+
+        return {
+          ...category,
+          actual_spend: actualSpend,
+          line_items: lineItemsWithPayments,
+        };
+      });
 
       setCategories(categoriesWithSpend);
 

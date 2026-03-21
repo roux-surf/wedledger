@@ -6,12 +6,12 @@ import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import LineItemRow from './LineItemRow';
+import AddLineItemForm from './AddLineItemForm';
 
 interface CategoryRowProps {
   category: CategoryWithSpend;
   totalBudget: number;
   onUpdate: () => void;
-  onViewLineItems: () => void;
   onDelete: () => void;
   isClientView: boolean;
   onTabToNextRow?: () => void;
@@ -26,7 +26,6 @@ export default function CategoryRow({
   category,
   totalBudget,
   onUpdate,
-  onViewLineItems,
   onDelete,
   isClientView,
   onTabToNextRow,
@@ -40,6 +39,7 @@ export default function CategoryRow({
   const [targetAmount, setTargetAmount] = useState(category.target_amount.toString());
   const [allocationPercent, setAllocationPercent] = useState('');
   const [, setLoading] = useState(false);
+  const [expandedLineItemIds, setExpandedLineItemIds] = useState<Set<string>>(new Set());
   const supabase = createClient();
   const { showSaved } = useToast();
 
@@ -197,10 +197,22 @@ export default function CategoryRow({
     handleSave(amountToSave);
   };
 
+  const lineItems = category.line_items || [];
+  const hasLineItems = lineItems.length > 0;
+
+  const handleDeleteLineItem = async (itemId: string) => {
+    if (!confirm('Are you sure you want to delete this line item?')) return;
+    try {
+      const { error } = await supabase.from('line_items').delete().eq('id', itemId);
+      if (error) throw error;
+      onUpdate();
+    } catch (err) {
+      console.error('Failed to delete line item:', err);
+    }
+  };
+
   if (renderMode === 'card') {
-    const lineItems = category.line_items || [];
     const hasExpandBehavior = isClientView && onToggleExpand;
-    const hasLineItems = lineItems.length > 0;
 
     return (
       <div className={`${getRowBackground()}`}>
@@ -309,8 +321,8 @@ export default function CategoryRow({
           {/* Coordinator actions */}
           {!isClientView && !isEditing && (
             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
-              <Button size="sm" variant="secondary" onClick={onViewLineItems}>
-                Items
+              <Button size="sm" variant="secondary" onClick={onToggleExpand}>
+                {isExpanded ? 'Collapse' : 'Vendors'}
               </Button>
               <Button size="sm" variant="danger" onClick={onDelete}>
                 Delete
@@ -319,36 +331,59 @@ export default function CategoryRow({
           )}
         </div>
 
-        {/* Expanded line items (client view accordion) */}
-        {isExpanded && isClientView && lineItems.length > 0 && (
+        {/* Expanded line items */}
+        {isExpanded && (
           <div className="px-4 pb-4">
-            <div className="bg-slate-50 rounded-lg divide-y divide-slate-200">
-              {lineItems.map((item: LineItemWithPayments) => (
-                <div key={item.id} className="px-3 py-2.5 flex items-center justify-between">
-                  <span className="text-sm text-slate-700">{item.vendor_name}</span>
-                  <span className="text-sm font-medium text-slate-900">{formatCurrency(item.actual_cost)}</span>
+            {isClientView ? (
+              lineItems.length > 0 ? (
+                <div className="bg-slate-50 rounded-lg divide-y divide-slate-200">
+                  {lineItems.map((item: LineItemWithPayments) => (
+                    <div key={item.id} className="px-3 py-2.5 flex items-center justify-between">
+                      <span className="text-sm text-slate-700">{item.vendor_name}</span>
+                      <span className="text-sm font-medium text-slate-900">{formatCurrency(item.actual_cost)}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              ) : (
+                <p className="text-sm text-slate-500 italic">No line items</p>
+              )
+            ) : (
+              <>
+                {lineItems.length > 0 ? (
+                  <div className="divide-y divide-slate-100">
+                    {lineItems.map((item: LineItemWithPayments) => (
+                      <LineItemRow
+                        key={item.id}
+                        item={item}
+                        onUpdate={onUpdate}
+                        onDelete={() => handleDeleteLineItem(item.id)}
+                        isClientView={false}
+                        renderMode="card"
+                        isPaymentExpanded={expandedLineItemIds.has(item.id)}
+                        onTogglePaymentExpand={() => {
+                          setExpandedLineItemIds(prev => {
+                            const next = new Set(prev);
+                            if (next.has(item.id)) next.delete(item.id);
+                            else next.add(item.id);
+                            return next;
+                          });
+                        }}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500 italic mb-3">No line items</p>
+                )}
+                <div className="mt-3 pt-3 border-t border-slate-200">
+                  <AddLineItemForm categoryId={category.id} onItemAdded={onUpdate} />
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
     );
   }
-
-  const lineItems = category.line_items || [];
-  const hasLineItems = lineItems.length > 0;
-
-  const handleDeleteLineItem = async (itemId: string) => {
-    if (!confirm('Are you sure you want to delete this line item?')) return;
-    try {
-      const { error } = await supabase.from('line_items').delete().eq('id', itemId);
-      if (error) throw error;
-      onUpdate();
-    } catch (err) {
-      console.error('Failed to delete line item:', err);
-    }
-  };
 
   return (
     <>
@@ -447,9 +482,6 @@ export default function CategoryRow({
         {!isClientView && (
           <td className="px-4 py-3 text-sm">
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="secondary" onClick={onViewLineItems}>
-                Items
-              </Button>
               <Button size="sm" variant="danger" onClick={onDelete}>
                 Delete
               </Button>
@@ -486,6 +518,15 @@ export default function CategoryRow({
                         onUpdate={onUpdate}
                         onDelete={() => handleDeleteLineItem(item.id)}
                         isClientView={isClientView}
+                        isPaymentExpanded={expandedLineItemIds.has(item.id)}
+                        onTogglePaymentExpand={() => {
+                          setExpandedLineItemIds(prev => {
+                            const next = new Set(prev);
+                            if (next.has(item.id)) next.delete(item.id);
+                            else next.add(item.id);
+                            return next;
+                          });
+                        }}
                       />
                     ))}
                   </tbody>
@@ -493,6 +534,11 @@ export default function CategoryRow({
               </div>
             ) : (
               <p className="ml-6 text-sm text-slate-500 italic">No line items</p>
+            )}
+            {!isClientView && (
+              <div className="ml-6 mt-3 pt-3 border-t border-slate-200">
+                <AddLineItemForm categoryId={category.id} onItemAdded={onUpdate} />
+              </div>
             )}
           </td>
         </tr>

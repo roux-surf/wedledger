@@ -2,6 +2,7 @@
 
 import { Payment, formatCurrency } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
+import { useToast } from '@/components/ui/Toast';
 import PaymentRow from './PaymentRow';
 import AddPaymentForm from './AddPaymentForm';
 
@@ -15,6 +16,7 @@ interface PaymentScheduleProps {
 
 export default function PaymentSchedule({ payments, lineItemId, legacyPaidToDate, onUpdate, isClientView }: PaymentScheduleProps) {
   const supabase = createClient();
+  const { showError } = useToast();
 
   const totalScheduled = payments.reduce((sum, p) => sum + Number(p.amount), 0);
   const totalPaid = payments
@@ -30,6 +32,7 @@ export default function PaymentSchedule({ payments, lineItemId, legacyPaidToDate
       onUpdate();
     } catch (err) {
       console.error('Failed to delete payment:', err);
+      showError('Failed to delete payment');
     }
   };
 

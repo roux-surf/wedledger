@@ -23,60 +23,68 @@ async function getClientsWithBudgetStatus(userId: string): Promise<ClientWithBud
     return [];
   }
 
-  // For each client, calculate total spent from line items
-  const clientsWithStatus: ClientWithBudgetStatus[] = await Promise.all(
-    clients.map(async (client: Client) => {
-      // Get budget for this client
-      const { data: budget } = await supabase
-        .from('budgets')
-        .select('id')
-        .eq('client_id', client.id)
-        .single();
+  const clientIds = clients.map((c: Client) => c.id);
 
-      let totalSpent = 0;
+  // Batch-fetch all budgets for all clients
+  const { data: allBudgets } = clientIds.length > 0
+    ? await supabase.from('budgets').select('id, client_id').in('client_id', clientIds)
+    : { data: [] };
+  const budgetsList = allBudgets || [];
+  const budgetByClient = new Map(budgetsList.map((b) => [b.client_id, b.id]));
+  const budgetIds = budgetsList.map((b) => b.id);
 
-      if (budget) {
-        // Get all categories for this budget
-        const { data: categories } = await supabase
-          .from('categories')
-          .select('id')
-          .eq('budget_id', budget.id);
+  // Batch-fetch all categories for all budgets
+  const { data: allCategories } = budgetIds.length > 0
+    ? await supabase.from('categories').select('id, budget_id').in('budget_id', budgetIds)
+    : { data: [] };
+  const categoriesList = allCategories || [];
+  const categoryIds = categoriesList.map((c) => c.id);
 
-        if (categories && categories.length > 0) {
-          // Get sum of actual_cost from all line items
-          const categoryIds = categories.map((c) => c.id);
-          const { data: lineItems } = await supabase
-            .from('line_items')
-            .select('actual_cost')
-            .in('category_id', categoryIds);
+  // Map category -> budget -> client for spending rollup
+  const categoryToBudget = new Map(categoriesList.map((c) => [c.id, c.budget_id]));
+  const budgetToClient = new Map(budgetsList.map((b) => [b.id, b.client_id]));
 
-          if (lineItems) {
-            totalSpent = lineItems.reduce(
-              (sum, item) => sum + (Number(item.actual_cost) || 0),
-              0
-            );
-          }
-        }
-      }
+  // Batch-fetch all line items for all categories
+  const { data: allLineItems } = categoryIds.length > 0
+    ? await supabase.from('line_items').select('actual_cost, category_id').in('category_id', categoryIds)
+    : { data: [] };
 
-      // Get milestone counts
-      const { data: allMilestones } = await supabase
-        .from('milestones')
-        .select('status')
-        .eq('client_id', client.id);
+  // Calculate total spent per client
+  const spentByClient = new Map<string, number>();
+  for (const li of allLineItems || []) {
+    const budgetId = categoryToBudget.get(li.category_id);
+    const cId = budgetId ? budgetToClient.get(budgetId) : undefined;
+    if (cId) {
+      spentByClient.set(cId, (spentByClient.get(cId) || 0) + (Number(li.actual_cost) || 0));
+    }
+  }
 
-      const milestonesTotal = allMilestones?.length || 0;
-      const milestonesCompleted = allMilestones?.filter((m) => m.status === 'completed').length || 0;
+  // Batch-fetch all milestones for all clients
+  const { data: allMilestones } = clientIds.length > 0
+    ? await supabase.from('milestones').select('client_id, status').in('client_id', clientIds)
+    : { data: [] };
 
-      return {
-        ...client,
-        total_spent: totalSpent,
-        budget_status: getBudgetStatus(Number(client.total_budget), totalSpent),
-        milestones_total: milestonesTotal,
-        milestones_completed: milestonesCompleted,
-      };
-    })
-  );
+  // Group milestones by client
+  const milestonesByClient = new Map<string, { total: number; completed: number }>();
+  for (const m of allMilestones || []) {
+    const entry = milestonesByClient.get(m.client_id) || { total: 0, completed: 0 };
+    entry.total++;
+    if (m.status === 'completed') entry.completed++;
+    milestonesByClient.set(m.client_id, entry);
+  }
+
+  const clientsWithStatus: ClientWithBudgetStatus[] = clients.map((client: Client) => {
+    const totalSpent = spentByClient.get(client.id) || 0;
+    const ms = milestonesByClient.get(client.id) || { total: 0, completed: 0 };
+
+    return {
+      ...client,
+      total_spent: totalSpent,
+      budget_status: getBudgetStatus(Number(client.total_budget), totalSpent),
+      milestones_total: ms.total,
+      milestones_completed: ms.completed,
+    };
+  });
 
   return clientsWithStatus;
 }

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { CategoryWithSpend, formatCurrency, formatPercent } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import CategoryRow from './CategoryRow';
-import LineItemsModal from './LineItemsModal';
 import AddCategoryForm from './AddCategoryForm';
 
 interface CategoryTableProps {
@@ -22,7 +21,6 @@ export default function CategoryTable({
   onUpdate,
   isClientView,
 }: CategoryTableProps) {
-  const [selectedCategory, setSelectedCategory] = useState<CategoryWithSpend | null>(null);
   const [editingRowIndex, setEditingRowIndex] = useState<number | null>(null);
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
   const [expandedDesktopIds, setExpandedDesktopIds] = useState<Set<string>>(new Set());
@@ -100,7 +98,7 @@ export default function CategoryTable({
                 category={category}
                 totalBudget={totalBudget}
                 onUpdate={onUpdate}
-                onViewLineItems={() => setSelectedCategory(category)}
+
                 onDelete={() => handleDeleteCategory(category.id)}
                 isClientView={isClientView}
                 shouldStartEditing={editingRowIndex === index}
@@ -164,7 +162,6 @@ export default function CategoryTable({
               category={category}
               totalBudget={totalBudget}
               onUpdate={onUpdate}
-              onViewLineItems={() => setSelectedCategory(category)}
               onDelete={() => handleDeleteCategory(category.id)}
               isClientView={isClientView}
               shouldStartEditing={editingRowIndex === index}
@@ -223,20 +220,6 @@ export default function CategoryTable({
         </div>
       )}
 
-      {selectedCategory && (
-        <LineItemsModal
-          isOpen={!!selectedCategory}
-          onClose={() => setSelectedCategory(null)}
-          category={selectedCategory}
-          onUpdate={() => {
-            onUpdate();
-            // Refresh the selected category data
-            const updated = categories.find((c) => c.id === selectedCategory.id);
-            if (updated) setSelectedCategory(updated);
-          }}
-          isClientView={isClientView}
-        />
-      )}
     </>
   );
 }

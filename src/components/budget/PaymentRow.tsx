@@ -5,6 +5,7 @@ import { Payment, formatCurrency, formatShortDate, getPaymentUrgency, parseNumer
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
+import DateInput from '@/components/ui/DateInput';
 
 interface PaymentRowProps {
   payment: Payment;
@@ -21,12 +22,12 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
     amount: sanitizeNumericString(payment.amount),
     due_date: payment.due_date || '',
   });
-  const [, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const supabase = createClient();
-  const { showSaved } = useToast();
+  const { showSaved, showError } = useToast();
   const labelRef = useRef<HTMLInputElement>(null);
   const amountRef = useRef<HTMLInputElement>(null);
-  const dueDateRef = useRef<HTMLInputElement>(null);
+  const editContainerRef = useRef<HTMLElement>(null);
 
   const getStatusBadge = () => {
     if (payment.status === 'paid') {
@@ -45,6 +46,7 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
   };
 
   const handleSave = async () => {
+    if (loading) return;
     setLoading(true);
     try {
       const { error } = await supabase
@@ -62,6 +64,7 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
       onUpdate();
     } catch (err) {
       console.error('Failed to update payment:', err);
+      showError('Failed to update payment');
     } finally {
       setLoading(false);
     }
@@ -77,7 +80,8 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
   };
 
   const handleTogglePaid = async () => {
-    if (isClientView) return;
+    if (isClientView || loading) return;
+    setLoading(true);
     try {
       const newStatus = payment.status === 'paid' ? 'pending' : 'paid';
       const { error } = await supabase
@@ -93,6 +97,9 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
       onUpdate();
     } catch (err) {
       console.error('Failed to toggle payment status:', err);
+      showError('Failed to update payment status');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -117,9 +124,10 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
   };
 
   const handleBlur = (e: React.FocusEvent) => {
+    if (loading) return; // Skip if a save is already in-flight
     const focusedElement = e.relatedTarget as HTMLElement;
-    const editableInputs = [labelRef.current, amountRef.current, dueDateRef.current];
-    if (editableInputs.includes(focusedElement as HTMLInputElement)) {
+    // Check if focus moved to another input within the editing container
+    if (focusedElement && editContainerRef.current?.contains(focusedElement)) {
       return;
     }
     handleSave();
@@ -129,7 +137,7 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
   if (renderMode === 'card') {
     if (isEditing && !isClientView) {
       return (
-        <div className="p-3 bg-slate-50 border-b border-slate-100">
+        <div ref={editContainerRef as React.RefObject<HTMLDivElement>} className="p-3 bg-slate-50 border-b border-slate-100">
           <div className="space-y-2">
             <input
               ref={labelRef}
@@ -159,11 +167,9 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
                 className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
                 placeholder="Amount"
               />
-              <input
-                ref={dueDateRef}
-                type="date"
+              <DateInput
                 value={formData.due_date}
-                onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
+                onChange={(iso) => setFormData(prev => ({ ...prev, due_date: iso }))}
                 onKeyDown={handleKeyDown}
                 onBlur={handleBlur}
                 className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm"
@@ -196,7 +202,9 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
         {!isClientView && (
           <button
             onClick={(e) => { e.stopPropagation(); handleTogglePaid(); }}
+            disabled={loading}
             className={`shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+              loading ? 'opacity-50 cursor-not-allowed' :
               payment.status === 'paid'
                 ? 'bg-green-500 border-green-500 text-white'
                 : 'border-slate-300 hover:border-slate-400'
@@ -216,7 +224,7 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
   // Table mode (desktop)
   if (isEditing && !isClientView) {
     return (
-      <tr className="bg-slate-50">
+      <tr ref={editContainerRef as React.RefObject<HTMLTableRowElement>} className="bg-slate-50">
         <td className="px-3 py-1.5">
           <input
             ref={labelRef}
@@ -247,14 +255,12 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
           />
         </td>
         <td className="px-3 py-1.5">
-          <input
-            ref={dueDateRef}
-            type="date"
+          <DateInput
             value={formData.due_date}
-            onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
+            onChange={(iso) => setFormData(prev => ({ ...prev, due_date: iso }))}
             onKeyDown={handleKeyDown}
             onBlur={handleBlur}
-            className="px-2 py-1 border border-slate-300 rounded text-sm"
+            className="w-28 px-2 py-1 border border-slate-300 rounded text-sm"
           />
         </td>
         <td className="px-3 py-1.5">{getStatusBadge()}</td>
@@ -288,7 +294,8 @@ export default function PaymentRow({ payment, onUpdate, onDelete, isClientView, 
           {!isClientView && (
             <button
               onClick={handleTogglePaid}
-              className="text-xs text-slate-500 hover:text-slate-700 underline"
+              disabled={loading}
+              className={`text-xs underline ${loading ? 'text-slate-300 cursor-not-allowed' : 'text-slate-500 hover:text-slate-700'}`}
             >
               {payment.status === 'paid' ? 'Undo' : 'Mark Paid'}
             </button>
