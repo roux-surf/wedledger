@@ -25,60 +25,64 @@ async function getClientsWithBudgetStatus(userId: string): Promise<ClientWithBud
     return [];
   }
 
-  // For each client, calculate total spent from line items
-  const clientsWithStatus: ClientWithBudgetStatus[] = await Promise.all(
-    clients.map(async (client: Client) => {
-      // Get budget for this client
-      const { data: budget } = await supabase
-        .from('budgets')
-        .select('id')
-        .eq('client_id', client.id)
-        .single();
+  const clientIds = clients.map((c: Client) => c.id);
 
-      let totalSpent = 0;
+  // Batch-fetch all budgets for all clients
+  const { data: allBudgets } = clientIds.length > 0
+    ? await supabase.from('budgets').select('id, client_id').in('client_id', clientIds)
+    : { data: [] };
 
-      if (budget) {
-        // Get all categories for this budget
-        const { data: categories } = await supabase
-          .from('categories')
-          .select('id')
-          .eq('budget_id', budget.id);
+  const budgetByClient = new Map((allBudgets || []).map((b) => [b.client_id, b.id]));
+  const budgetIds = (allBudgets || []).map((b) => b.id);
 
-        if (categories && categories.length > 0) {
-          // Get sum of actual_cost from all line items
-          const categoryIds = categories.map((c) => c.id);
-          const { data: lineItems } = await supabase
-            .from('line_items')
-            .select('actual_cost')
-            .in('category_id', categoryIds);
+  // Batch-fetch all categories
+  const { data: allCategories } = budgetIds.length > 0
+    ? await supabase.from('categories').select('id, budget_id').in('budget_id', budgetIds)
+    : { data: [] };
 
-          if (lineItems) {
-            totalSpent = lineItems.reduce(
-              (sum, item) => sum + (Number(item.actual_cost) || 0),
-              0
-            );
-          }
-        }
-      }
+  const categoryToBudget = new Map((allCategories || []).map((c) => [c.id, c.budget_id]));
+  const categoryIds = (allCategories || []).map((c) => c.id);
 
-      // Get milestone counts
-      const { data: allMilestones } = await supabase
-        .from('milestones')
-        .select('status')
-        .eq('client_id', client.id);
+  // Batch-fetch all line items
+  const { data: allLineItems } = categoryIds.length > 0
+    ? await supabase.from('line_items').select('actual_cost, category_id').in('category_id', categoryIds)
+    : { data: [] };
 
-      const milestonesTotal = allMilestones?.length || 0;
-      const milestonesCompleted = allMilestones?.filter((m) => m.status === 'completed').length || 0;
+  // Build spending by client
+  const budgetToClient = new Map((allBudgets || []).map((b) => [b.id, b.client_id]));
+  const spentByClient = new Map<string, number>();
+  for (const li of allLineItems || []) {
+    const budgetId = categoryToBudget.get(li.category_id);
+    if (!budgetId) continue;
+    const cId = budgetToClient.get(budgetId);
+    if (!cId) continue;
+    spentByClient.set(cId, (spentByClient.get(cId) || 0) + (Number(li.actual_cost) || 0));
+  }
 
-      return {
-        ...client,
-        total_spent: totalSpent,
-        budget_status: getBudgetStatus(Number(client.total_budget), totalSpent),
-        milestones_total: milestonesTotal,
-        milestones_completed: milestonesCompleted,
-      };
-    })
-  );
+  // Batch-fetch all milestones
+  const { data: allMilestones } = clientIds.length > 0
+    ? await supabase.from('milestones').select('client_id, status').in('client_id', clientIds)
+    : { data: [] };
+
+  const milestonesByClient = new Map<string, { total: number; completed: number }>();
+  for (const m of allMilestones || []) {
+    const entry = milestonesByClient.get(m.client_id) || { total: 0, completed: 0 };
+    entry.total++;
+    if (m.status === 'completed') entry.completed++;
+    milestonesByClient.set(m.client_id, entry);
+  }
+
+  const clientsWithStatus: ClientWithBudgetStatus[] = clients.map((client: Client) => {
+    const totalSpent = spentByClient.get(client.id) || 0;
+    const ms = milestonesByClient.get(client.id) || { total: 0, completed: 0 };
+    return {
+      ...client,
+      total_spent: totalSpent,
+      budget_status: getBudgetStatus(Number(client.total_budget), totalSpent),
+      milestones_total: ms.total,
+      milestones_completed: ms.completed,
+    };
+  });
 
   return clientsWithStatus;
 }
@@ -152,59 +156,62 @@ async function getMarketplaceClients(userId: string): Promise<MarketplaceClient[
     })
     .filter((x): x is NonNullable<typeof x> => x !== null);
 
-  const marketplaceClients: MarketplaceClient[] = await Promise.all(
-    clients.map(async ({ client, eng }) => {
-      const { data: budget } = await supabase
-        .from('budgets')
-        .select('id')
-        .eq('client_id', client.id)
-        .single();
+  // Batch-fetch spending data for all marketplace clients
+  const mpClientIds = clients.map(({ client }) => client.id);
 
-      let totalSpent = 0;
+  const { data: mpBudgets } = mpClientIds.length > 0
+    ? await supabase.from('budgets').select('id, client_id').in('client_id', mpClientIds)
+    : { data: [] };
 
-      if (budget) {
-        const { data: categories } = await supabase
-          .from('categories')
-          .select('id')
-          .eq('budget_id', budget.id);
+  const mpBudgetToClient = new Map((mpBudgets || []).map((b) => [b.id, b.client_id]));
+  const mpBudgetIds = (mpBudgets || []).map((b) => b.id);
 
-        if (categories && categories.length > 0) {
-          const categoryIds = categories.map((c) => c.id);
-          const { data: lineItems } = await supabase
-            .from('line_items')
-            .select('actual_cost')
-            .in('category_id', categoryIds);
+  const { data: mpCategories } = mpBudgetIds.length > 0
+    ? await supabase.from('categories').select('id, budget_id').in('budget_id', mpBudgetIds)
+    : { data: [] };
 
-          if (lineItems) {
-            totalSpent = lineItems.reduce(
-              (sum, item) => sum + (Number(item.actual_cost) || 0),
-              0
-            );
-          }
-        }
-      }
+  const mpCatToBudget = new Map((mpCategories || []).map((c) => [c.id, c.budget_id]));
+  const mpCatIds = (mpCategories || []).map((c) => c.id);
 
-      const { data: allMilestones } = await supabase
-        .from('milestones')
-        .select('status')
-        .eq('client_id', client.id);
+  const { data: mpLineItems } = mpCatIds.length > 0
+    ? await supabase.from('line_items').select('actual_cost, category_id').in('category_id', mpCatIds)
+    : { data: [] };
 
-      const milestonesTotal = allMilestones?.length || 0;
-      const milestonesCompleted = allMilestones?.filter((m) => m.status === 'completed').length || 0;
+  const mpSpentByClient = new Map<string, number>();
+  for (const li of mpLineItems || []) {
+    const budgetId = mpCatToBudget.get(li.category_id);
+    if (!budgetId) continue;
+    const cId = mpBudgetToClient.get(budgetId);
+    if (!cId) continue;
+    mpSpentByClient.set(cId, (mpSpentByClient.get(cId) || 0) + (Number(li.actual_cost) || 0));
+  }
 
-      const coupleUserId = client.user_id as string;
+  const { data: mpMilestones } = mpClientIds.length > 0
+    ? await supabase.from('milestones').select('client_id, status').in('client_id', mpClientIds)
+    : { data: [] };
 
-      return {
-        ...client,
-        total_spent: totalSpent,
-        budget_status: getBudgetStatus(Number(client.total_budget), totalSpent),
-        milestones_total: milestonesTotal,
-        milestones_completed: milestonesCompleted,
-        engagement_type: eng.type,
-        couple_name: nameMap.get(coupleUserId) ?? 'Unknown',
-      };
-    })
-  );
+  const mpMsByClient = new Map<string, { total: number; completed: number }>();
+  for (const m of mpMilestones || []) {
+    const entry = mpMsByClient.get(m.client_id) || { total: 0, completed: 0 };
+    entry.total++;
+    if (m.status === 'completed') entry.completed++;
+    mpMsByClient.set(m.client_id, entry);
+  }
+
+  const marketplaceClients: MarketplaceClient[] = clients.map(({ client, eng }) => {
+    const totalSpent = mpSpentByClient.get(client.id) || 0;
+    const ms = mpMsByClient.get(client.id) || { total: 0, completed: 0 };
+    const coupleUserId = client.user_id as string;
+    return {
+      ...client,
+      total_spent: totalSpent,
+      budget_status: getBudgetStatus(Number(client.total_budget), totalSpent),
+      milestones_total: ms.total,
+      milestones_completed: ms.completed,
+      engagement_type: eng.type,
+      couple_name: nameMap.get(coupleUserId) ?? 'Unknown',
+    };
+  });
 
   return marketplaceClients;
 }

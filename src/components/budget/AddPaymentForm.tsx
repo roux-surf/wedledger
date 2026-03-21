@@ -5,6 +5,7 @@ import { useSupabaseClient } from '@/lib/supabase/client';
 import { parseNumericInput, sanitizeNumericString, formatCurrency } from '@/lib/types';
 import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
+import DateInput from '@/components/ui/DateInput';
 
 interface AddPaymentFormProps {
   lineItemId: string;
@@ -109,10 +110,9 @@ export default function AddPaymentForm({ lineItemId, actualCost, totalScheduled 
       </div>
       <div className="w-full md:w-36">
         <label className="block text-xs font-medium text-warm-gray mb-1">Due Date</label>
-        <input
-          type="date"
+        <DateInput
           value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
+          onChange={(iso) => setDueDate(iso)}
           onKeyDown={handleKeyDown}
           className="w-full px-2 py-1.5 border border-stone rounded text-sm"
         />
