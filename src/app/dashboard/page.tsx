@@ -133,15 +133,16 @@ async function getMarketplaceClients(userId: string): Promise<MarketplaceClient[
     ])
   );
 
-  // Backfill: if any engagement is missing client_id, set it now
+  // Backfill: if any engagement is missing client_id, set it (fire-and-forget)
   for (const eng of engagements) {
     if (!eng.client_id) {
       const client = clientByCouple.get(eng.couple_user_id as string);
       if (client) {
-        await supabase
+        supabase
           .from('engagements')
           .update({ client_id: client.id })
-          .eq('id', eng.id);
+          .eq('id', eng.id)
+          .then(() => {});
       }
     }
   }
@@ -410,7 +411,7 @@ export default async function DashboardPage() {
             <p className="text-warm-gray mt-1">
               {clients.length} client{clients.length !== 1 ? 's' : ''}
               {marketplaceClients.length > 0 && (
-                <span className="text-purple-600">
+                <span className="text-champagne-dark">
                   {' '}+ {marketplaceClients.length} marketplace
                 </span>
               )}

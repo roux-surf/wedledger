@@ -130,6 +130,22 @@ export function getBudgetStatus(totalBudget: number, totalSpent: number): Budget
   return 'green';
 }
 
+export interface AllocationStatus {
+  label: string;
+  color: string;
+  dot: string;
+}
+
+export function getAllocationStatus(allocationPercent: number): AllocationStatus {
+  if (allocationPercent < 99) {
+    return { label: 'Under-allocated', color: 'text-champagne-dark', dot: 'bg-champagne' };
+  } else if (allocationPercent <= 101) {
+    return { label: 'Fully allocated', color: 'text-sage', dot: 'bg-sage' };
+  } else {
+    return { label: 'Over-allocated', color: 'text-rose', dot: 'bg-rose' };
+  }
+}
+
 export function formatCurrency(amount: number): string {
   // Round to avoid floating-point artifacts
   const rounded = Math.round(amount * 100) / 100;

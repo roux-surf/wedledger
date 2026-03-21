@@ -101,7 +101,7 @@ export default function AddCategoryForm({ budgetId, onCategoryAdded }: AddCatego
       <Button type="submit" disabled={loading || !name.trim()}>
         {loading ? 'Adding...' : 'Add'}
       </Button>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-rose">{error}</p>}
     </form>
   );
 }

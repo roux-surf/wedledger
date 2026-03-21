@@ -274,16 +274,9 @@ export default function CategoryTable({
           </>
         )}
 
-        {/* Inline add form — desktop */}
+        {/* Inline add form */}
         {!isClientView && orderedCategories.length > 0 && (
-          <div className="hidden md:block px-4 py-3 border-t border-stone-lighter bg-stone-lighter/50">
-            <AddCategoryForm budgetId={budgetId} onCategoryAdded={onUpdate} />
-          </div>
-        )}
-
-        {/* Inline add form — mobile */}
-        {!isClientView && orderedCategories.length > 0 && (
-          <div className="md:hidden px-4 py-3 border-t border-stone-lighter bg-stone-lighter/50">
+          <div className="px-4 py-3 border-t border-stone-lighter bg-stone-lighter/50">
             <AddCategoryForm budgetId={budgetId} onCategoryAdded={onUpdate} />
           </div>
         )}
