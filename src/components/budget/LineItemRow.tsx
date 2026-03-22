@@ -151,6 +151,18 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
     }
   }, [isClientView]);
 
+  // Click-outside handler to exit edit mode
+  useEffect(() => {
+    if (!isEditing) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (formRef.current && !formRef.current.contains(e.target as Node)) {
+        handleSave();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isEditing]);
+
   const handleStartEdit = (field?: 'vendor' | 'estimated' | 'actual') => {
     if (isClientView) return;
     setFormData({
@@ -182,24 +194,6 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
     }
   };
 
-  const handleBlur = (e: React.FocusEvent) => {
-    const focusedElement = e.relatedTarget as HTMLElement;
-    const editableInputs = [
-      vendorInputRef.current,
-      estimatedInputRef.current,
-      actualInputRef.current,
-      phoneInputRef.current,
-      emailInputRef.current,
-    ];
-    if ((editableInputs as (HTMLElement | null)[]).includes(focusedElement)) {
-      return;
-    }
-    // Don't auto-save if focus moved to a select or button inside the form
-    if (formRef.current?.contains(focusedElement)) {
-      return;
-    }
-    handleSave();
-  };
 
   const remaining = (isEditing ? parseNumericInput(formData.actual_cost) : item.actual_cost) - displayPaid;
 
@@ -260,7 +254,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
   if (renderMode === 'card') {
     if (isEditing && !isClientView) {
       return (
-        <div className="p-4 bg-stone-lighter">
+        <div ref={formRef as React.RefObject<HTMLDivElement>} className="p-4 bg-stone-lighter">
           <div className="space-y-3">
             <div>
               <label className="block text-xs font-medium text-warm-gray uppercase mb-1">Vendor</label>
@@ -271,7 +265,6 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                 value={formData.vendor_name}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                onBlur={handleBlur}
                 onFocus={(e) => e.target.select()}
                 className="w-full px-2 py-1.5 border border-stone rounded text-sm"
               />
@@ -302,10 +295,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                   value={formData.estimated_cost}
                   onChange={handleChange}
                   onKeyDown={handleKeyDown}
-                  onBlur={(e) => {
-                    handleNumericBlur('estimated_cost', e.target.value);
-                    handleBlur(e);
-                  }}
+                  onBlur={(e) => handleNumericBlur('estimated_cost', e.target.value)}
                   onFocus={(e) => e.target.select()}
                   className="w-full px-2 py-1.5 border border-stone rounded text-sm"
                 />
@@ -320,10 +310,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                   value={formData.actual_cost}
                   onChange={handleChange}
                   onKeyDown={handleKeyDown}
-                  onBlur={(e) => {
-                    handleNumericBlur('actual_cost', e.target.value);
-                    handleBlur(e);
-                  }}
+                  onBlur={(e) => handleNumericBlur('actual_cost', e.target.value)}
                   onFocus={(e) => e.target.select()}
                   className="w-full px-2 py-1.5 border border-stone rounded text-sm"
                 />
@@ -348,7 +335,6 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                     value={formData.vendor_phone}
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
-                    onBlur={handleBlur}
                     className="w-full px-2 py-1.5 border border-stone rounded text-sm"
                     placeholder="555-123-4567"
                   />
@@ -362,15 +348,29 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                     value={formData.vendor_email}
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
-                    onBlur={handleBlur}
                     className="w-full px-2 py-1.5 border border-stone rounded text-sm"
                     placeholder="vendor@email.com"
                   />
                 </div>
               </div>
             )}
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] text-warm-gray-light">Enter to save · Esc to cancel</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  className="px-3 py-1 rounded text-xs font-medium bg-sage text-white hover:bg-sage-dark transition-colors"
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="px-3 py-1 rounded text-xs font-medium text-warm-gray hover:bg-stone transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={onDelete}
@@ -473,7 +473,6 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                 value={formData.vendor_name}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                onBlur={handleBlur}
                 onFocus={(e) => e.target.select()}
                 className="w-full px-2 py-1 border border-stone rounded text-sm"
               />
@@ -501,7 +500,6 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                   value={formData.vendor_phone}
                   onChange={handleChange}
                   onKeyDown={handleKeyDown}
-                  onBlur={handleBlur}
                   className="w-28 px-2 py-1 border border-stone rounded text-xs"
                   placeholder="Phone"
                 />
@@ -512,7 +510,6 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                   value={formData.vendor_email}
                   onChange={handleChange}
                   onKeyDown={handleKeyDown}
-                  onBlur={handleBlur}
                   className="flex-1 px-2 py-1 border border-stone rounded text-xs"
                   placeholder="Email"
                 />
@@ -552,10 +549,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
               value={formData.estimated_cost}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
-              onBlur={(e) => {
-                handleNumericBlur('estimated_cost', e.target.value);
-                handleBlur(e);
-              }}
+              onBlur={(e) => handleNumericBlur('estimated_cost', e.target.value)}
               onFocus={(e) => e.target.select()}
               className="w-24 px-2 py-1 border border-stone rounded text-sm text-right"
             />
@@ -569,10 +563,7 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
               value={formData.actual_cost}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
-              onBlur={(e) => {
-                handleNumericBlur('actual_cost', e.target.value);
-                handleBlur(e);
-              }}
+              onBlur={(e) => handleNumericBlur('actual_cost', e.target.value)}
               onFocus={(e) => e.target.select()}
               className="w-24 px-2 py-1 border border-stone rounded text-sm text-right"
             />
@@ -582,7 +573,23 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
             <span className={getRemainingColor()}>{formatCurrency(remaining)}</span>
           </td>
           <td className="px-4 py-3 text-sm">
-            <div className="flex flex-col items-end gap-1">
+            <div className="flex flex-col items-end gap-1.5">
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  className="px-2 py-1 rounded text-xs font-medium bg-sage text-white hover:bg-sage-dark transition-colors"
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="px-2 py-1 rounded text-xs font-medium text-warm-gray hover:bg-stone transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={onDelete}
@@ -594,7 +601,6 @@ export default function LineItemRow({ item, onUpdate, onDelete, isClientView, re
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </button>
-              <span className="text-[10px] text-warm-gray-light whitespace-nowrap">Enter to save · Esc to cancel</span>
             </div>
           </td>
         </tr>

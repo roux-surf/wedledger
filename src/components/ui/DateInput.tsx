@@ -41,6 +41,7 @@ interface DateInputProps {
 export default function DateInput({ value, onChange, onKeyDown, onBlur, className, placeholder }: DateInputProps) {
   const [display, setDisplay] = useState(() => isoToDisplay(value));
   const inputRef = useRef<HTMLInputElement>(null);
+  const pickerRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!inputRef.current || document.activeElement !== inputRef.current) {
@@ -79,19 +80,48 @@ export default function DateInput({ value, onChange, onKeyDown, onBlur, classNam
     onKeyDown?.(e);
   };
 
+  const handlePickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const iso = e.target.value;
+    if (iso) {
+      onChange(iso);
+      setDisplay(isoToDisplay(iso));
+    }
+  };
+
   return (
-    <input
-      ref={inputRef}
-      type="text"
-      inputMode="numeric"
-      maxLength={10}
-      value={display}
-      onChange={handleChange}
-      onBlur={handleBlur}
-      onKeyDown={handleKeyDown}
-      onFocus={(e) => e.target.select()}
-      className={className}
-      placeholder={placeholder || 'MM/DD/YYYY'}
-    />
+    <div className="relative inline-flex items-center w-full">
+      <input
+        ref={inputRef}
+        type="text"
+        inputMode="numeric"
+        maxLength={10}
+        value={display}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        onFocus={(e) => e.target.select()}
+        className={`${className} pr-7`}
+        placeholder={placeholder || 'MM/DD/YYYY'}
+      />
+      <button
+        type="button"
+        tabIndex={-1}
+        onClick={() => pickerRef.current?.showPicker()}
+        className="absolute right-1.5 p-0.5 text-warm-gray-light hover:text-warm-gray transition-colors"
+        aria-label="Open calendar"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </button>
+      <input
+        ref={pickerRef}
+        type="date"
+        value={value}
+        onChange={handlePickerChange}
+        className="absolute inset-0 opacity-0 pointer-events-none"
+        tabIndex={-1}
+      />
+    </div>
   );
 }
